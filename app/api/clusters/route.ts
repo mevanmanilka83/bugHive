@@ -11,17 +11,26 @@ export async function GET(request: NextRequest) {
   const { user } = authResult
   const userId = ensureValidUUID(user.id)
 
-  // Get clusters where user is owner or member
-  const { data: clusters, error } = await supabase
+  // Get all clusters and filter where user is owner or member
+  // This is more reliable than using Supabase array operators
+  const { data: allClusters, error } = await supabase
     .from('clusters')
     .select('*')
-    .or(`owner_id.eq.${userId},members.cs.{${userId}}`)
-
+    
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+  
+  // Filter clusters where user is owner or member
+  const clusters = (allClusters || []).filter((cluster: any) => {
+    const isOwner = cluster.owner_id === userId
+    const isMember = cluster.members && 
+                     Array.isArray(cluster.members) && 
+                     cluster.members.includes(userId)
+    return isOwner || isMember
+  })
 
-  return NextResponse.json({ clusters: clusters || [] })
+  return NextResponse.json({ clusters })
 }
 
 export async function POST(request: NextRequest) {

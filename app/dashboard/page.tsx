@@ -9,6 +9,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
+import { saveUserToSupabase } from "@/app/actions/User"
 
 import data from "./data.json"
 
@@ -17,6 +18,23 @@ export default async function DashboardPage() {
 
   if (!session) {
     redirect("/auth/signin")
+  }
+
+  // Save user data to Supabase if not already saved
+  // This runs in Node.js runtime, so Supabase works here
+  // Use Promise to avoid blocking page render
+  const userEmail = session.user?.email
+  if (userEmail) {
+    const user = session.user
+    // Don't await - let it run in background to avoid blocking page load
+    saveUserToSupabase(
+      userEmail,
+      user?.name || null,
+      user?.image || null,
+      null // email_verified - could be set based on provider
+    ).catch(() => {
+      // Silently handle errors - user data saving is non-critical for page load
+    })
   }
 
   return (

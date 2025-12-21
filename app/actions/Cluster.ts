@@ -49,8 +49,7 @@ export async function createCluster(
     if (error) {
       return { 
         success: false, 
-        error: error.message || 'Failed to create cluster',
-        details: error.code || 'UNKNOWN_ERROR'
+        error: error.message || 'Failed to create cluster'
       }
     }
 
@@ -66,17 +65,19 @@ export async function createCluster(
   }
 }
 
-export async function inviteUserToCluster(clusterId: string, inviteeEmail: string) {
+export async function inviteUserToCluster(
+  clusterId: string, 
+  inviteeEmail?: string, 
+  inviteeUsername?: string
+) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return { success: false, error: "Unauthorized" }
     }
 
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(inviteeEmail)) {
-      return { success: false, error: "Invalid email address" }
+    if (!inviteeEmail && !inviteeUsername) {
+      return { success: false, error: "Email or username is required" }
     }
 
     // Get cluster to verify ownership
@@ -120,7 +121,45 @@ export async function inviteUserToCluster(clusterId: string, inviteeEmail: strin
       return uuid
     }
 
-    const inviteeUserId = generateUUIDFromEmailSync(inviteeEmail)
+    // Determine the email to use for invitation
+    let finalEmail = inviteeEmail?.trim().toLowerCase()
+
+    // If email is not provided but username is, look up user by username
+    if (!finalEmail && inviteeUsername) {
+      const trimmedUsername = inviteeUsername.trim()
+      
+      if (!trimmedUsername) {
+        return { success: false, error: "Username cannot be empty" }
+      }
+
+      // Use function to lookup user by username (bypasses RLS)
+      const { data: userData, error: userError } = await supabase
+        .rpc('lookup_user_by_username', { p_username: trimmedUsername })
+
+      if (userError) {
+        return { 
+          success: false, 
+          error: `Error looking up user: ${userError.message}` 
+        }
+      }
+
+      if (!userData || userData.length === 0 || !userData[0]) {
+        return { 
+          success: false, 
+          error: `User not found with username "${trimmedUsername}". Please check the username or use email address instead.` 
+        }
+      }
+
+      finalEmail = userData[0].email
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!finalEmail || !emailRegex.test(finalEmail)) {
+      return { success: false, error: "Invalid email address" }
+    }
+
+    const inviteeUserId = generateUUIDFromEmailSync(finalEmail)
 
     // Check if user is already a member
     if (cluster.members && cluster.members.includes(inviteeUserId)) {
@@ -144,8 +183,7 @@ export async function inviteUserToCluster(clusterId: string, inviteeEmail: strin
     if (updateError) {
       return { 
         success: false, 
-        error: updateError.message || 'Failed to send invitation',
-        details: updateError.code || 'UNKNOWN_ERROR'
+        error: updateError.message || 'Failed to send invitation'
       }
     }
 
@@ -163,10 +201,7 @@ export async function inviteUserToCluster(clusterId: string, inviteeEmail: strin
       .from('notifications')
       .insert(notificationData)
 
-    if (notificationError) {
-      // Invite was added but notification failed - log but don't fail
-      console.error("Failed to create notification:", notificationError)
-    }
+    // Notification creation is non-critical, silently fail if it errors
 
     return { 
       success: true, 
@@ -220,8 +255,7 @@ export async function acceptClusterInvite(clusterId: string) {
     if (updateError) {
       return { 
         success: false, 
-        error: updateError.message || 'Failed to accept invitation',
-        details: updateError.code || 'UNKNOWN_ERROR'
+        error: updateError.message || 'Failed to accept invitation'
       }
     }
 

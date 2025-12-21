@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconBell, IconCheck, IconTrash, IconUsers, IconMail, IconBug, IconX } from "@tabler/icons-react"
+import { IconBell, IconCheck, IconTrash, IconUsers, IconMail, IconBug, IconX, IconUserPlus } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -111,6 +111,40 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     }
   }
 
+  const handleAcceptInvite = async (notification: any) => {
+    if (!notification.cluster_id) {
+      toast.error("Invalid invitation")
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/clusters/${notification.cluster_id}/accept`, {
+        method: 'POST',
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to accept invitation')
+      }
+
+      // Update notification to read
+      setNotifications(prev => 
+        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+      )
+
+      window.dispatchEvent(new Event("notification:updated"))
+      toast.success("Invitation accepted! You are now a member of the cluster.")
+      
+      // Refresh after a short delay to show the cluster
+      setTimeout(() => {
+        window.location.href = '/dashboard/clusters'
+      }, 1000)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to accept invitation")
+    }
+  }
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'cluster_invite':
@@ -192,6 +226,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                   notification={notification}
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
+                  onAcceptInvite={handleAcceptInvite}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -225,6 +260,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                   notification={notification}
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
+                  onAcceptInvite={handleAcceptInvite}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -241,11 +277,12 @@ interface NotificationCardProps {
   notification: any
   onMarkAsRead: (id: string) => void
   onDelete: (id: string) => void
+  onAcceptInvite?: (notification: any) => void
   getIcon: (type: string) => React.ReactNode
   getColor: (type: string) => string
 }
 
-function NotificationCard({ notification, onMarkAsRead, onDelete, getIcon, getColor }: NotificationCardProps) {
+function NotificationCard({ notification, onMarkAsRead, onDelete, onAcceptInvite, getIcon, getColor }: NotificationCardProps) {
   const created = notification.created_at ? new Date(notification.created_at) : new Date()
   const timeAgo = getTimeAgo(created)
 
@@ -285,6 +322,18 @@ function NotificationCard({ notification, onMarkAsRead, onDelete, getIcon, getCo
             </div>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
+            {notification.type === 'cluster_invite' && !notification.read && onAcceptInvite && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onAcceptInvite(notification)}
+                className="h-8"
+                title="Accept invitation"
+              >
+                <IconUserPlus className="size-4 mr-1" />
+                Accept
+              </Button>
+            )}
             {!notification.read && (
               <Button
                 variant="ghost"

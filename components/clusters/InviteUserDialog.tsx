@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconMail } from "@tabler/icons-react"
+import { IconMail, IconUser } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -24,17 +24,19 @@ interface InviteUserDialogProps {
 
 export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: InviteUserDialogProps) {
   const [email, setEmail] = React.useState("")
+  const [username, setUsername] = React.useState("")
   const [loading, setLoading] = React.useState(false)
 
   React.useEffect(() => {
     if (!open) {
       setEmail("")
+      setUsername("")
     }
   }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!cluster || !email.trim()) return
+    if (!cluster || (!email.trim() && !username.trim())) return
 
     setLoading(true)
     try {
@@ -43,7 +45,10 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ 
+          email: email.trim() || undefined,
+          username: username.trim() || undefined,
+        }),
       })
 
       const data = await res.json()
@@ -54,6 +59,7 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
 
       toast.success("Invitation sent successfully")
       setEmail("")
+      setUsername("")
       onSuccess?.()
       onOpenChange(false)
     } catch (error) {
@@ -65,6 +71,8 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
 
   if (!cluster) return null
 
+  const hasInput = email.trim() || username.trim()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -72,27 +80,39 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
           <DialogHeader>
             <DialogTitle>Invite User to {cluster.name}</DialogTitle>
             <DialogDescription>
-              Enter the email address of the user you want to invite to this cluster.
+              Enter the email address or username of the user you want to invite to this cluster.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email Address *</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="user@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Provide either an email address or username (or both).
+            </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !email.trim()}>
+            <Button type="submit" disabled={loading || !hasInput}>
               <IconMail className="size-4 mr-2" />
               {loading ? "Sending..." : "Send Invitation"}
             </Button>

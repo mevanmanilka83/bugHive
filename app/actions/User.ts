@@ -1,0 +1,181 @@
+"use server"
+
+import { createClient } from "@supabase/supabase-js"
+
+// Create Supabase client with service role key for server actions
+// This bypasses RLS policies
+function getSupabaseClient() {
+  const supabaseUrl = process.env.SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+
+  if (!supabaseUrl) {
+    throw new Error('SUPABASE_URL environment variable is not set')
+  }
+
+  if (!supabaseServiceKey && !supabaseAnonKey) {
+    throw new Error('Either SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY must be set')
+  }
+
+  // Use service role key if available (bypasses RLS), otherwise fall back to anon key
+  const supabaseKey = supabaseServiceKey || supabaseAnonKey!
+
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+}
+
+// Generate a deterministic UUID from an email address (same as in auth.ts)
+function generateUUIDFromEmailSync(email: string): string {
+  let hash = 0
+  const normalizedEmail = email.toLowerCase().trim()
+  for (let i = 0; i < normalizedEmail.length; i++) {
+    const char = normalizedEmail.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash
+  }
+  const hashStr = Math.abs(hash).toString(16).padStart(8, '0')
+  const hashStr2 = ((hash * 31) >>> 0).toString(16).padStart(8, '0')
+  const hashStr3 = ((hash * 17) >>> 0).toString(16).padStart(8, '0')
+  const hashStr4 = ((hash * 7) >>> 0).toString(16).padStart(8, '0')
+  const fullHash = (hashStr + hashStr2 + hashStr3 + hashStr4).substring(0, 32)
+  const uuid = [
+    fullHash.substring(0, 8),
+    fullHash.substring(8, 12),
+    '4' + fullHash.substring(13, 16),
+    ((parseInt(fullHash.substring(16, 17), 16) & 0x3) | 0x8).toString(16) + fullHash.substring(17, 20),
+    fullHash.substring(20, 32)
+  ].join('-')
+  return uuid
+}
+
+// This function runs in Node.js runtime, so we can use Supabase
+export async function saveUserToSupabase(
+  email: string,
+  name?: string | null,
+  image?: string | null,
+  emailVerified?: string | null
+) {
+  try {
+    if (!email) {
+      return { success: false, error: "Email is required" }
+    }
+
+    const userIdFromEmail = generateUUIDFromEmailSync(email)
+    
+    const userData = {
+      id: userIdFromEmail,
+      email: email.toLowerCase().trim(),
+      name: name || email.split('@')[0],
+      image: image || null,
+      email_verified: emailVerified || null,
+      updated_at: new Date().toISOString(),
+    }
+
+    let supabase
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    try {
+      supabase = getSupabaseClient()
+    } catch (clientError) {
+      const errorMsg = clientError instanceof Error ? clientError.message : String(clientError)
+      return { 
+        success: false, 
+        error: `Failed to initialize Supabase client: ${errorMsg}`
+      }
+    }
+
+    try {
+      // If we don't have service role key, try using the function instead
+      if (!supabaseServiceKey) {
+        const { data: functionData, error: functionError } = await supabase.rpc('register_user', {
+          p_id: userData.id,
+          p_email: userData.email,
+          p_name: userData.name,
+          p_image: userData.image,
+          p_email_verified: userData.email_verified
+        })
+
+        if (functionError) {
+          // Fall through to try regular upsert
+        } else {
+          // Function succeeded - it returns the user ID
+          // The function uses SECURITY DEFINER so it bypasses RLS
+          // Try to fetch the user, but if RLS blocks it, that's okay - we know the function worked
+          const { data: fetchedData, error: fetchError } = await supabase
+            .from('users')
+            .select()
+            .eq('email', userData.email)
+            .maybeSingle()
+
+          // If we got data, return it. Otherwise, return success anyway since function worked
+          if (fetchedData) {
+            return { success: true, message: "User data saved successfully", data: fetchedData }
+          } else {
+            // Function succeeded but we can't verify due to RLS - that's okay
+            return { 
+              success: true, 
+              message: "User data saved successfully", 
+              data: { id: userData.id, email: userData.email, name: userData.name }
+            }
+          }
+        }
+      }
+
+      // Try regular upsert (works with service role key)
+      const response = await supabase
+        .from('users')
+        .upsert(userData, {
+          onConflict: 'email'
+        })
+        .select()
+
+      const { data, error: upsertError } = response
+
+      if (upsertError) {
+        const errorMessage = upsertError.message || upsertError.details || upsertError.hint || 'Unknown error saving user'
+        return { 
+          success: false, 
+          error: errorMessage,
+          details: {
+            code: upsertError.code,
+            message: upsertError.message
+          }
+        }
+      }
+
+      if (!data || data.length === 0) {
+        // Try to fetch the user to confirm
+        const { data: fetchedData, error: fetchError } = await supabase
+          .from('users')
+          .select()
+          .eq('email', userData.email)
+          .single()
+        
+        if (fetchError) {
+          return { success: false, error: 'User save may have failed - could not verify' }
+        } else if (fetchedData) {
+          return { success: true, message: "User data saved successfully", data: fetchedData }
+        } else {
+          return { success: false, error: 'User save may have failed - user not found after upsert' }
+        }
+      } else {
+        return { success: true, message: "User data saved successfully", data: data[0] }
+      }
+    } catch (supabaseError) {
+      const errorMessage = supabaseError instanceof Error ? supabaseError.message : String(supabaseError)
+      return {
+        success: false,
+        error: `Supabase operation failed: ${errorMessage}`
+      }
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return { 
+      success: false, 
+      error: errorMessage || "Internal server error"
+    }
+  }
+}
