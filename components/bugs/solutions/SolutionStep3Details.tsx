@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { IconUpload, IconX, IconPaperclip } from "@tabler/icons-react"
-import { type SolutionDialogErrors } from "@/lib/types/bugSolution"
+import { type SolutionDialogErrors } from "@/lib/schemas/types/bugSolution"
 
 type AttachmentFile = {
   file: File

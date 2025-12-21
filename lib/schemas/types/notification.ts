@@ -1,4 +1,4 @@
 import { z } from "zod"
-import { getNotificationSchema } from "../schemas/zod/notification"
+import { getNotificationSchema } from "../zod/notification"
 
 export type NotificationPayload = z.infer<ReturnType<typeof getNotificationSchema>>
