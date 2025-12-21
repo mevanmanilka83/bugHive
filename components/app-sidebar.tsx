@@ -44,7 +44,7 @@ const data = {
     },
     {
       title: "My Bugs",
-      url: "/dashboard/bugs?filter=mine",
+      url: "/dashboard/my-bugs",
       icon: IconFileDescription,
     },
     {

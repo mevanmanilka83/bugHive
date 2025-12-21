@@ -42,7 +42,18 @@ export const createGetHandler = (table: string, idField: string = 'id') =>
       const id = await extractBugId(context)
       return { [table.slice(0, -1)]: await getSingleRecord(table, id, idField) }
     }
-    return { [table]: await getMultipleRecords(table) }
+    // Handle query parameters
+    const searchParams = request.nextUrl.searchParams
+    const filterField = searchParams.get('created_by') || undefined
+    const filterValue = filterField ? searchParams.get('created_by') : undefined
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined
+    
+    const records = await getMultipleRecords(table, filterField, filterValue)
+    
+    // Apply limit if specified
+    const limitedRecords = limit ? records.slice(0, limit) : records
+    
+    return { [table]: limitedRecords }
   })
 
 export const createPostHandler = (
