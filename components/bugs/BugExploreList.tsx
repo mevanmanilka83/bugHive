@@ -767,7 +767,6 @@ export function BugExploreList() {
             })
           )}
         </div>
-      )}
 
       {/* Details Drawer */}
       <Drawer open={detailsOpen} onOpenChange={setDetailsOpen}>

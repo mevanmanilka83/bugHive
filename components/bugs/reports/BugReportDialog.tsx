@@ -25,10 +25,15 @@ type AttachmentFile = {
 }
 
 export function BugReportDialog() {
+  const [mounted, setMounted] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState<1 | 2 | 3 | 4 | 5>(1)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [errors, setErrors] = React.useState<BugDialogErrors>({})
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const [title, setTitle] = React.useState("")
   const [description, setDescription] = React.useState("")
@@ -316,6 +321,15 @@ export function BugReportDialog() {
 
   const canNextFromStep1 = React.useMemo(() => validateStep(1), [title, description, errors])
   const canNextFromStep2 = React.useMemo(() => validateStep(2), [priority, visibility, environment, errors])
+
+  if (!mounted) {
+    return (
+      <Button size="sm" className="justify-start gap-2" disabled>
+        <IconReport />
+        Report Bug
+      </Button>
+    )
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>

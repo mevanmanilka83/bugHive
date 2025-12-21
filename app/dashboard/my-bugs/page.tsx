@@ -11,9 +11,13 @@ import { MyBugsList } from "@/components/bugs/MyBugsList"
 export default async function MyBugsPage() {
   const session = await auth()
 
-  if (!session) {
+  if (!session?.user?.id) {
     redirect("/auth/signin")
   }
+
+  // TypeScript narrowing: at this point we know session.user exists
+  const user = session.user
+  const userId = user.id!
 
   return (
     <SidebarProvider
@@ -24,15 +28,15 @@ export default async function MyBugsPage() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" user={session.user} />
+      <AppSidebar variant="inset" user={user} />
       <SidebarInset>
-        <SiteHeader user={session.user} />
+        <SiteHeader user={user} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
               <div className="px-4 lg:px-6">
                 <h1 className="text-2xl font-semibold mb-4">My Bugs</h1>
-                <MyBugsList userId={session.user.id} />
+                <MyBugsList userId={userId} />
               </div>
             </div>
           </div>
