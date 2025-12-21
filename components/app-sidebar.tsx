@@ -30,8 +30,60 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  navMain: [
+export function AppSidebar({ 
+  user, 
+  ...props 
+}: React.ComponentProps<typeof Sidebar> & {
+  user?: {
+    name?: string | null
+    email?: string | null
+    image?: string | null
+  }
+}) {
+  const [notificationCount, setNotificationCount] = React.useState(0)
+
+  React.useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch('/api/notifications?unread=true&limit=100')
+        if (res.ok) {
+          const data = await res.json()
+          const unreadCount = data?.notifications?.filter((n: any) => !n.read).length || 0
+          setNotificationCount(unreadCount)
+        }
+      } catch (error) {
+        // Silently fail
+      }
+    }
+
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 30000) // Poll every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [])
+
+  React.useEffect(() => {
+    const onNotificationUpdate = () => {
+      fetch('/api/notifications?unread=true&limit=100')
+        .then(res => res.json())
+        .then(data => {
+          const unreadCount = data?.notifications?.filter((n: any) => !n.read).length || 0
+          setNotificationCount(unreadCount)
+        })
+        .catch(() => {})
+    }
+
+    window.addEventListener("notification:updated", onNotificationUpdate as EventListener)
+    return () => window.removeEventListener("notification:updated", onNotificationUpdate as EventListener)
+  }, [])
+
+  const userData = {
+    name: user?.name || "User",
+    email: user?.email || "user@example.com",
+    avatar: user?.image || "/next.svg",
+  }
+
+  const navMain = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -49,24 +101,26 @@ const data = {
     },
     {
       title: "Team Clusters",
-      url: "/dashboard/bugs?view=clusters",
+      url: "/dashboard/clusters",
       icon: IconUsers,
     },
-  ],
-  navClouds: [],
-  navSecondary: [
+  ]
+
+  const navSecondary = [
     {
       title: "Notifications",
-      url: "/dashboard?view=notifications",
+      url: "/dashboard/notifications",
       icon: IconBell,
+      notificationCount,
     },
     {
       title: "Settings",
       url: "/dashboard/settings",
       icon: IconSettings,
     },
-  ],
-  documents: [
+  ]
+
+  const documents = [
     {
       name: "Data Library",
       url: "#",
@@ -82,24 +136,7 @@ const data = {
       url: "#",
       icon: IconFileWord,
     },
-  ],
-}
-
-export function AppSidebar({ 
-  user, 
-  ...props 
-}: React.ComponentProps<typeof Sidebar> & {
-  user?: {
-    name?: string | null
-    email?: string | null
-    image?: string | null
-  }
-}) {
-  const userData = {
-    name: user?.name || "User",
-    email: user?.email || "user@example.com",
-    avatar: user?.image || "/next.svg",
-  }
+  ]
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -121,9 +158,9 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavDocuments items={documents} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />

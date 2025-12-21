@@ -43,7 +43,10 @@ export const createGetHandler = (table: string, idField: string = 'id') =>
       return { [table.slice(0, -1)]: await getSingleRecord(table, id, idField) }
     }
     // Handle query parameters
-    const searchParams = request.nextUrl.searchParams
+    const searchParams = request?.nextUrl?.searchParams
+    if (!searchParams) {
+      return { [table]: [] }
+    }
     const createdByParam = searchParams.get('created_by')
     const filterField = createdByParam ? 'created_by' : undefined
     const filterValue: string | undefined = createdByParam ?? undefined
@@ -181,7 +184,7 @@ export const createSolutionHandler = () => ({
     const bugId = await extractBugId(context)
     const body = await request.json().catch(() => ({}))
     
-    const solutionId = body.solution_id || request.nextUrl.searchParams.get('solution_id')
+    const solutionId = body.solution_id || request?.nextUrl?.searchParams?.get('solution_id')
     if (!solutionId) {
       throw new Error("Solution ID is required")
     }
@@ -211,7 +214,7 @@ export const createSolutionHandler = () => ({
   }),
   DELETE: createApiHandler(async (request, context) => {
     const bugId = await extractBugId(context)
-    const solutionId = request.nextUrl.searchParams.get('solution_id')
+    const solutionId = request?.nextUrl?.searchParams?.get('solution_id')
     
     if (!solutionId) {
       throw new Error("Solution ID is required")

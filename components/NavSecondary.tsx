@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { type Icon } from "@tabler/icons-react"
+import { NotificationBadge } from "@/components/NotificationBadge"
 
 import {
   SidebarGroup,
@@ -19,6 +20,7 @@ export function NavSecondary({
     title: string
     url: string
     icon: Icon
+    notificationCount?: number
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
@@ -28,9 +30,12 @@ export function NavSecondary({
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <a href={item.url}>
+                <a href={item.url} className="flex items-center w-full">
                   <item.icon />
                   <span>{item.title}</span>
+                  {item.notificationCount !== undefined && (
+                    <NotificationBadge count={item.notificationCount} />
+                  )}
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>

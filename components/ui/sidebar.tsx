@@ -510,6 +510,11 @@ function SidebarMenuButton({
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button"
   const { isMobile, state } = useSidebar()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const button = (
     <Comp
@@ -530,6 +535,11 @@ function SidebarMenuButton({
     tooltip = {
       children: tooltip,
     }
+  }
+
+  // Only render tooltip after mount to avoid hydration mismatch
+  if (!mounted) {
+    return button
   }
 
   return (

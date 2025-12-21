@@ -1,0 +1,325 @@
+"use client"
+
+import * as React from "react"
+import { IconBell, IconCheck, IconTrash, IconUsers, IconMail, IconBug, IconX } from "@tabler/icons-react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+interface NotificationsListProps {
+  userId: string
+}
+
+export function NotificationsList({ userId }: NotificationsListProps) {
+  const [notifications, setNotifications] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(false)
+  const [activeTab, setActiveTab] = React.useState<"all" | "unread">("unread")
+
+  const fetchNotifications = React.useCallback(async (unreadOnly: boolean = false) => {
+    try {
+      setLoading(true)
+      const url = unreadOnly ? '/api/notifications?unread=true&limit=100' : '/api/notifications?limit=100'
+      const res = await fetch(url)
+      if (!res.ok) return
+      const data = await res.json()
+      setNotifications(data?.notifications || [])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    fetchNotifications(activeTab === "unread")
+  }, [fetchNotifications, activeTab])
+
+  React.useEffect(() => {
+    const onNotificationUpdate = () => {
+      fetchNotifications(activeTab === "unread")
+      // Trigger sidebar update
+      window.dispatchEvent(new Event("notification:updated"))
+    }
+    window.addEventListener("notification:updated", onNotificationUpdate as EventListener)
+    return () => window.removeEventListener("notification:updated", onNotificationUpdate as EventListener)
+  }, [fetchNotifications, activeTab])
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      const res = await fetch(`/api/notifications/${notificationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ read: true }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to mark as read')
+      }
+
+      // Update local state
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      )
+      
+      // Trigger sidebar update
+      window.dispatchEvent(new Event("notification:updated"))
+      toast.success("Notification marked as read")
+    } catch (error) {
+      toast.error("Failed to mark notification as read")
+    }
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const unreadNotifications = notifications.filter(n => !n.read)
+      const promises = unreadNotifications.map(n => 
+        fetch(`/api/notifications/${n.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ read: true }),
+        })
+      )
+
+      await Promise.all(promises)
+
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+      window.dispatchEvent(new Event("notification:updated"))
+      toast.success("All notifications marked as read")
+    } catch (error) {
+      toast.error("Failed to mark all as read")
+    }
+  }
+
+  const handleDelete = async (notificationId: string) => {
+    try {
+      const res = await fetch(`/api/notifications/${notificationId}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to delete notification')
+      }
+
+      setNotifications(prev => prev.filter(n => n.id !== notificationId))
+      window.dispatchEvent(new Event("notification:updated"))
+      toast.success("Notification deleted")
+    } catch (error) {
+      toast.error("Failed to delete notification")
+    }
+  }
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'cluster_invite':
+        return <IconUsers className="size-5" />
+      case 'cluster_joined':
+        return <IconUsers className="size-5" />
+      case 'cluster_removed':
+        return <IconUsers className="size-5" />
+      case 'bug_assigned':
+      case 'bug_updated':
+        return <IconBug className="size-5" />
+      default:
+        return <IconBell className="size-5" />
+    }
+  }
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'cluster_invite':
+        return 'bg-blue-500'
+      case 'cluster_joined':
+        return 'bg-green-500'
+      case 'cluster_removed':
+        return 'bg-red-500'
+      case 'bug_assigned':
+      case 'bug_updated':
+        return 'bg-orange-500'
+      default:
+        return 'bg-gray-500'
+    }
+  }
+
+  const unreadCount = notifications.filter(n => !n.read).length
+  const allNotifications = notifications
+  const unreadNotifications = notifications.filter(n => !n.read)
+
+  return (
+    <div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "unread")}>
+        <div className="mb-4 flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="unread">
+              Unread ({unreadCount})
+            </TabsTrigger>
+            <TabsTrigger value="all">
+              All ({notifications.length})
+            </TabsTrigger>
+          </TabsList>
+          {unreadCount > 0 && (
+            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
+              <IconCheck className="size-4 mr-2" />
+              Mark all as read
+            </Button>
+          )}
+        </div>
+
+        <TabsContent value="unread" className="mt-4">
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-4 w-full mt-2" />
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : unreadNotifications.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <IconBell className="size-12 mx-auto mb-4 opacity-50" />
+              <p>No unread notifications</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {unreadNotifications.map((notification) => (
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                  getIcon={getNotificationIcon}
+                  getColor={getNotificationColor}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="all" className="mt-4">
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-4 w-full mt-2" />
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : allNotifications.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <IconBell className="size-12 mx-auto mb-4 opacity-50" />
+              <p>No notifications</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {allNotifications.map((notification) => (
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                  getIcon={getNotificationIcon}
+                  getColor={getNotificationColor}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+interface NotificationCardProps {
+  notification: any
+  onMarkAsRead: (id: string) => void
+  onDelete: (id: string) => void
+  getIcon: (type: string) => React.ReactNode
+  getColor: (type: string) => string
+}
+
+function NotificationCard({ notification, onMarkAsRead, onDelete, getIcon, getColor }: NotificationCardProps) {
+  const created = notification.created_at ? new Date(notification.created_at) : new Date()
+  const timeAgo = getTimeAgo(created)
+
+  return (
+    <Card className={notification.read ? "opacity-60" : ""}>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3 flex-1">
+            <div className={`${getColor(notification.type)} text-white rounded-full p-2 flex-shrink-0`}>
+              {getIcon(notification.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <CardTitle className="text-base">{notification.title}</CardTitle>
+                {!notification.read && (
+                  <Badge variant="default" className="h-5 px-1.5 text-xs">New</Badge>
+                )}
+              </div>
+              {notification.message && (
+                <CardDescription className="mt-1">{notification.message}</CardDescription>
+              )}
+              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                <span>{timeAgo}</span>
+                {notification.cluster_id && (
+                  <span className="flex items-center gap-1">
+                    <IconUsers className="size-3" />
+                    Cluster
+                  </span>
+                )}
+                {notification.bug_id && (
+                  <span className="flex items-center gap-1">
+                    <IconBug className="size-3" />
+                    Bug
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {!notification.read && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onMarkAsRead(notification.id)}
+                className="h-8 w-8"
+                title="Mark as read"
+              >
+                <IconCheck className="size-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(notification.id)}
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              title="Delete"
+            >
+              <IconTrash className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  )
+}
+
+function getTimeAgo(date: Date): string {
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffInSeconds < 60) return "Just now"
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+  
+  return date.toLocaleDateString()
+}
