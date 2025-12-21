@@ -3,7 +3,7 @@
  * 
  * PostgreSQL implementation for fetching multiple records with optional filtering.
  */
-import { query } from "./query_postgres"
+import { query } from "./queryPostgres"
 
 /**
  * Fetches multiple records with optional filtering using PostgreSQL

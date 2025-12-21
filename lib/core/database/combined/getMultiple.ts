@@ -5,8 +5,8 @@
  */
 import { executeWithFallback } from "./fallback"
 import { wrapSupabaseOperation } from "./fallback/wrapper"
-import { getMultipleRecordsSupabase } from "../supabase/get_multiple_supabase"
-import { getMultipleRecordsPostgres } from "../postgres/get_multiple_postgres"
+import { getMultipleRecordsSupabase } from "../supabase/getMultipleSupabase"
+import { getMultipleRecordsPostgres } from "../postgres/getMultiplePostgres"
 
 /**
  * Fetches multiple records with optional filtering

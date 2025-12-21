@@ -5,8 +5,8 @@
  */
 import { executeWithFallback } from "./fallback"
 import { wrapSupabaseOperation } from "./fallback/wrapper"
-import { insertRecordSupabase } from "../supabase/insert_record_supabase"
-import { insertRecordPostgres } from "../postgres/insert_record_postgres"
+import { insertRecordSupabase } from "../supabase/insertRecordSupabase"
+import { insertRecordPostgres } from "../postgres/insertRecordPostgres"
 
 /**
  * Inserts a new record into the database

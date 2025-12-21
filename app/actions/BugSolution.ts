@@ -2,7 +2,8 @@
 
 import { auth } from "@/auth"
 import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/core"
-import { getBugSolutionSchema, type SolutionPayload } from "@/lib/schemas/bugSolution"
+import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
+import { type SolutionPayload } from "@/lib/types/bugSolution"
 
 export async function createBugSolution(formData: FormData, bugId: string) {
   try {

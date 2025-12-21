@@ -3,7 +3,7 @@
  * 
  * PostgreSQL implementation for inserting a new record.
  */
-import { query } from "./query_postgres"
+import { query } from "./queryPostgres"
 
 /**
  * Inserts a new record using PostgreSQL

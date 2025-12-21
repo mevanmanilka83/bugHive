@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { SolutionDialogErrors } from "@/lib/schemas/bugSolution"
+import { type SolutionDialogErrors } from "@/lib/types/bugSolution"
 
 interface SolutionStep1BasicProps {
   title: string

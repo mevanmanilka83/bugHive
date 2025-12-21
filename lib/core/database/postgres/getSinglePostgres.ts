@@ -3,7 +3,7 @@
  * 
  * PostgreSQL implementation for fetching a single record by ID.
  */
-import { query } from "./query_postgres"
+import { query } from "./queryPostgres"
 
 /**
  * Fetches a single record by ID using PostgreSQL

@@ -8,8 +8,8 @@
  */
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { s3Client } from "../config"
-import { generateUUID } from "../utils"
-import { parseFormData } from "../form"
+import { generateUUID } from "../utils/utils"
+import { parseFormData } from "../form/form"
 
 /**
  * Handles file uploads to S3

@@ -5,7 +5,7 @@
  * - Single bug: GET /api/bugs/[id]
  * - Multiple bugs: GET /api/bugs?created_by=xxx&cluster_id=yyy&limit=100
  */
-import { getSingleRecord, getMultipleRecords, extractBugId } from "@/lib/core"
+import { getSingleRecord, getMultipleRecords, extractBugId, parseQueryFilters } from "@/lib/core"
 import { createApiHandler } from "../../base"
 import { enrichBugWithCluster, enrichBugsWithClusters } from "./bug_utils"
 
@@ -34,12 +34,7 @@ export const createBugGetHandler = () =>
       return { bugs: [] }
     }
     
-    const createdByParam = searchParams.get('created_by')
-    const clusterIdParam = searchParams.get('cluster_id')
-    const filterField = clusterIdParam ? 'cluster_id' : (createdByParam ? 'created_by' : undefined)
-    const filterValue: string | undefined = clusterIdParam ?? createdByParam ?? undefined
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined
-    
+    const { filterField, filterValue, limit } = parseQueryFilters(searchParams)
     const records = await getMultipleRecords('bugs', filterField, filterValue)
     
     // Enrich bugs with cluster names

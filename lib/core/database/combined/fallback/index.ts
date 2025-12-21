@@ -22,6 +22,8 @@ export async function executeWithFallback<T>(
     }
   }
   
+  // For void operations (like delete), data will be true, not null
+  // For other operations, null indicates record not found
   if (data === null) {
     throw new Error("Record not found")
   }

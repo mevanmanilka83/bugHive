@@ -24,8 +24,11 @@ export {
   successResponse,
   addTimestamps,
   parseArrayField,
-  validateRequiredFields
-} from "./utils"
+  validateRequiredFields,
+  parseQueryFilters,
+  isValidEmail,
+  extractUsernameFromEmail
+} from "./utils/utils"
 
 // Database exports
 export {
@@ -45,7 +48,7 @@ export {
 } from "./storage"
 
 // Form exports
-export { parseFormData } from "./form"
+export { parseFormData } from "./form/form"
 
 // Auth exports
 export { checkAuth, extractBugId } from "./auth"

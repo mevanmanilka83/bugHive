@@ -3,7 +3,7 @@
  * 
  * PostgreSQL implementation for updating an existing record.
  */
-import { query } from "./query_postgres"
+import { query } from "./queryPostgres"
 
 /**
  * Updates an existing record using PostgreSQL

@@ -7,7 +7,7 @@
  * - Single record: GET /api/resource/[id]
  * - Multiple records: GET /api/resource?created_by=xxx&cluster_id=yyy&limit=100
  */
-import { extractBugId, getSingleRecord, getMultipleRecords } from "@/lib/core"
+import { extractBugId, getSingleRecord, getMultipleRecords, parseQueryFilters } from "@/lib/core"
 import { createApiHandler } from "../../base"
 
 /**
@@ -31,12 +31,7 @@ export const createGetHandler = (table: string, idField: string = 'id') =>
       return { [table]: [] }
     }
     
-    const createdByParam = searchParams.get('created_by')
-    const clusterIdParam = searchParams.get('cluster_id')
-    const filterField = clusterIdParam ? 'cluster_id' : (createdByParam ? 'created_by' : undefined)
-    const filterValue: string | undefined = clusterIdParam ?? createdByParam ?? undefined
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined
-    
+    const { filterField, filterValue, limit } = parseQueryFilters(searchParams)
     const records = await getMultipleRecords(table, filterField, filterValue)
     
     // Apply limit if specified

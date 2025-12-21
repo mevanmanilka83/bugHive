@@ -3,7 +3,7 @@
  * 
  * PostgreSQL implementation for deleting a record.
  */
-import { query } from "./query_postgres"
+import { query } from "./queryPostgres"
 
 /**
  * Deletes a record using PostgreSQL

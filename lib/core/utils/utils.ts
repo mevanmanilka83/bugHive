@@ -127,3 +127,51 @@ export function validateRequiredFields(data: Record<string, any>, requiredFields
     throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
   }
 }
+
+/**
+ * Parses query parameters for filtering and limiting records
+ * 
+ * @param searchParams - URLSearchParams object from the request
+ * @returns Object with filterField, filterValue, and limit
+ */
+export function parseQueryFilters(searchParams: URLSearchParams | null): {
+  filterField?: string
+  filterValue?: string
+  limit?: number
+} {
+  if (!searchParams) {
+    return {}
+  }
+  
+  const createdByParam = searchParams.get('created_by')
+  const clusterIdParam = searchParams.get('cluster_id')
+  const filterField = clusterIdParam ? 'cluster_id' : (createdByParam ? 'created_by' : undefined)
+  const filterValue: string | undefined = clusterIdParam ?? createdByParam ?? undefined
+  const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined
+  
+  return { filterField, filterValue, limit }
+}
+
+/**
+ * Validates email format
+ * 
+ * @param email - Email address to validate
+ * @returns true if email format is valid, false otherwise
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+/**
+ * Extracts username from email address
+ * 
+ * @param email - Email address
+ * @param fallback - Fallback value if email is invalid (default: 'User')
+ * @returns Username extracted from email (part before @) or fallback
+ */
+export function extractUsernameFromEmail(email: string | null | undefined, fallback: string = 'User'): string {
+  if (!email) return fallback
+  const parts = email.split('@')
+  return parts[0] || fallback
+}

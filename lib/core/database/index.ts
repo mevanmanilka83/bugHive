@@ -20,18 +20,18 @@ export {
 } from "./combined"
 
 // Query operations
-export { query } from "./postgres/query_postgres"
+export { query } from "./postgres/queryPostgres"
 
 // Supabase-specific operations (for direct use if needed)
-export { getSingleRecordSupabase } from "./supabase/get_single_supabase"
-export { getMultipleRecordsSupabase } from "./supabase/get_multiple_supabase"
-export { insertRecordSupabase } from "./supabase/insert_record_supabase"
-export { updateRecordSupabase } from "./supabase/update_record_supabase"
-export { deleteRecordSupabase } from "./supabase/delete_record_supabase"
+export { getSingleRecordSupabase } from "./supabase/getSingleSupabase"
+export { getMultipleRecordsSupabase } from "./supabase/getMultipleSupabase"
+export { insertRecordSupabase } from "./supabase/insertRecordSupabase"
+export { updateRecordSupabase } from "./supabase/updateRecordSupabase"
+export { deleteRecordSupabase } from "./supabase/deleteRecordSupabase"
 
 // PostgreSQL-specific operations (for direct use if needed)
-export { getSingleRecordPostgres } from "./postgres/get_single_postgres"
-export { getMultipleRecordsPostgres } from "./postgres/get_multiple_postgres"
-export { insertRecordPostgres } from "./postgres/insert_record_postgres"
-export { updateRecordPostgres } from "./postgres/update_record_postgres"
-export { deleteRecordPostgres } from "./postgres/delete_record_postgres"
+export { getSingleRecordPostgres } from "./postgres/getSinglePostgres"
+export { getMultipleRecordsPostgres } from "./postgres/getMultiplePostgres"
+export { insertRecordPostgres } from "./postgres/insertRecordPostgres"
+export { updateRecordPostgres } from "./postgres/updateRecordPostgres"
+export { deleteRecordPostgres } from "./postgres/deleteRecordPostgres"

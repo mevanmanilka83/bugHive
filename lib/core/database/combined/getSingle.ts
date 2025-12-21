@@ -5,8 +5,8 @@
  */
 import { executeWithFallback } from "./fallback"
 import { wrapSupabaseOperation } from "./fallback/wrapper"
-import { getSingleRecordSupabase } from "../supabase/get_single_supabase"
-import { getSingleRecordPostgres } from "../postgres/get_single_postgres"
+import { getSingleRecordSupabase } from "../supabase/getSingleSupabase"
+import { getSingleRecordPostgres } from "../postgres/getSinglePostgres"
 
 /**
  * Fetches a single record by ID

@@ -2,7 +2,8 @@
 
 import { auth } from "@/auth"
 import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/core"
-import { getBugReportSchema, type BugPayload } from "@/lib/schemas/bugReport"
+import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
+import { type BugPayload } from "@/lib/types/bugReport"
 
 export async function createBugReport(formData: FormData) {
   try {

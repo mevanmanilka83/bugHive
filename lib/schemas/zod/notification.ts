@@ -14,5 +14,3 @@ export function getNotificationSchema() {
     read: z.boolean().default(false),
   })
 }
-
-export type NotificationPayload = z.infer<ReturnType<typeof getNotificationSchema>>
