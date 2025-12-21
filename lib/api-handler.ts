@@ -44,8 +44,8 @@ export const createGetHandler = (table: string, idField: string = 'id') =>
     }
     // Handle query parameters
     const searchParams = request.nextUrl.searchParams
-    const filterField = searchParams.get('created_by') || undefined
-    const filterValue = filterField ? searchParams.get('created_by') : undefined
+    const filterValue = searchParams.get('created_by')
+    const filterField = filterValue ? 'created_by' : undefined
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined
     
     const records = await getMultipleRecords(table, filterField, filterValue)

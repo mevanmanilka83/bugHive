@@ -44,7 +44,7 @@ export function MyBugsList({ userId }: MyBugsListProps) {
     },
   }
 
-  async function fetchBugs() {
+  const fetchBugs = React.useCallback(async () => {
     try {
       setLoading(true)
       const res = await fetch(`/api/bugs?created_by=${userId}&limit=200`)
@@ -68,17 +68,17 @@ export function MyBugsList({ userId }: MyBugsListProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
 
   React.useEffect(() => {
     fetchBugs()
-  }, [userId])
+  }, [fetchBugs])
 
   React.useEffect(() => {
     const onCreated = () => fetchBugs()
     window.addEventListener("bug:created", onCreated as EventListener)
     return () => window.removeEventListener("bug:created", onCreated as EventListener)
-  }, [])
+  }, [fetchBugs])
 
   async function openBugDetails(bugId: string) {
     try {
