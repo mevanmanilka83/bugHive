@@ -1,0 +1,24 @@
+/**
+ * Get Single Record
+ * 
+ * Fetches a single record by ID from the database with Supabase/PostgreSQL fallback.
+ */
+import { executeWithFallback } from "./fallback"
+import { wrapSupabaseOperation } from "./fallback/wrapper"
+import { getSingleRecordSupabase } from "../supabase/get_single_supabase"
+import { getSingleRecordPostgres } from "../postgres/get_single_postgres"
+
+/**
+ * Fetches a single record by ID
+ */
+export async function getSingleRecord(
+  table: string,
+  id: string,
+  idField: string = 'id'
+): Promise<any> {
+  return executeWithFallback(
+    () => wrapSupabaseOperation(() => getSingleRecordSupabase(table, id, idField)),
+    () => getSingleRecordPostgres(table, id, idField),
+    `Failed to fetch ${table} record`
+  )
+}

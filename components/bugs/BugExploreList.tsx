@@ -716,7 +716,14 @@ export function BugExploreList() {
               return (
                 <Card key={bug.id} className="@container/card">
                   <CardHeader className="flex flex-col px-4 gap-1">
+                    <div className="flex items-center justify-between gap-2">
                     <CardDescription className="capitalize text-xs">{status}</CardDescription>
+                      {bug.cluster_name && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                          {bug.cluster_name}
+                        </Badge>
+                      )}
+                    </div>
                     <CardTitle className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg" title={bugTitle}>
                       {bugTitle}
                     </CardTitle>

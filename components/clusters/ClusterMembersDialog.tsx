@@ -96,15 +96,15 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
         // Fallback: use stored usernames directly if user fetch fails
         const memberData = memberIds.map((memberId: string, index: number) => {
           const storedUsername = memberUsernames[index] || null
-          return {
-            id: memberId,
-            email: null,
+            return {
+              id: memberId,
+              email: null,
             name: storedUsername, // Use stored username
-            image: null,
-            isOwner: memberId === ownerId,
+              image: null,
+              isOwner: memberId === ownerId,
           }
         })
-        
+
         setMembers(memberData)
       } catch (error) {
         setMembers([])
@@ -163,10 +163,10 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
                   if (nameParts.length > 1) {
                     // Multiple words: use first letter of each word
                     initials = nameParts
-                      .map((n) => n[0])
-                      .join('')
-                      .toUpperCase()
-                      .slice(0, 2)
+                    .map((n) => n[0])
+                    .join('')
+                    .toUpperCase()
+                    .slice(0, 2)
                   } else {
                     // Single word: use first 2 characters
                     initials = member.name.slice(0, 2).toUpperCase()

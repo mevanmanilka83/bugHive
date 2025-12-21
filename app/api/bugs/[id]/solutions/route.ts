@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { createSolutionHandler } from "@/lib/api-handler"
+import { createSolutionHandler } from "@/lib/api-handlers"
 
 const solutionHandler = createSolutionHandler()
 

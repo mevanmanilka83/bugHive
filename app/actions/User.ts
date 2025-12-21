@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
+import { generateUUIDFromEmailSync } from "@/lib/core"
 
 /**
  * User Management Server Actions
@@ -54,29 +55,6 @@ function getSupabaseClient() {
   })
 }
 
-// Generate a deterministic UUID from an email address (same as in auth.ts)
-function generateUUIDFromEmailSync(email: string): string {
-  let hash = 0
-  const normalizedEmail = email.toLowerCase().trim()
-  for (let i = 0; i < normalizedEmail.length; i++) {
-    const char = normalizedEmail.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash
-  }
-  const hashStr = Math.abs(hash).toString(16).padStart(8, '0')
-  const hashStr2 = ((hash * 31) >>> 0).toString(16).padStart(8, '0')
-  const hashStr3 = ((hash * 17) >>> 0).toString(16).padStart(8, '0')
-  const hashStr4 = ((hash * 7) >>> 0).toString(16).padStart(8, '0')
-  const fullHash = (hashStr + hashStr2 + hashStr3 + hashStr4).substring(0, 32)
-  const uuid = [
-    fullHash.substring(0, 8),
-    fullHash.substring(8, 12),
-    '4' + fullHash.substring(13, 16),
-    ((parseInt(fullHash.substring(16, 17), 16) & 0x3) | 0x8).toString(16) + fullHash.substring(17, 20),
-    fullHash.substring(20, 32)
-  ].join('-')
-  return uuid
-}
 
 // This function runs in Node.js runtime, so we can use Supabase
 export async function saveUserToSupabase(
