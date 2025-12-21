@@ -16,6 +16,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
@@ -119,16 +120,16 @@ export function MyBugsList({ userId }: MyBugsListProps) {
     }
   }
 
-  if (loading) {
-    return <div className="text-muted-foreground">Loading your bugs...</div>
-  }
-
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
-        </p>
+        {loading ? (
+          <Skeleton className="h-5 w-24" />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
+          </p>
+        )}
         <div className="flex items-center gap-1">
           <button 
             type="button" 
@@ -149,7 +150,26 @@ export function MyBugsList({ userId }: MyBugsListProps) {
         </div>
       </div>
       <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-        {bugs.length === 0 ? (
+        {loading ? (
+          Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="@container/card">
+              <CardHeader className="flex flex-col px-4 gap-1">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-5 w-full" />
+              </CardHeader>
+              <CardFooter className="px-4 items-center justify-between gap-2">
+                <Skeleton className="h-4 w-20" />
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                </div>
+              </CardFooter>
+            </Card>
+          ))
+        ) : bugs.length === 0 ? (
           <div className="col-span-full text-center py-12 text-muted-foreground">
             No bugs found. Create your first bug report!
           </div>
