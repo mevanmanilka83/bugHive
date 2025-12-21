@@ -47,11 +47,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Cluster name is required and must be at least 3 characters" }, { status: 400 })
   }
 
+  // Get owner username
+  const ownerEmail = user.email || ''
+  const ownerUsername = user.name || (ownerEmail ? ownerEmail.split('@')[0] : 'User')
+
   const clusterData = addTimestamps({
     name,
     description,
     owner_id: ensureValidUUID(user.id),
+    owner_username: ownerUsername,
     members: [ensureValidUUID(user.id)],
+    members_usernames: [ownerUsername],
     invites: [],
   })
 

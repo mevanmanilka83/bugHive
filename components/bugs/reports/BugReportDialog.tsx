@@ -24,7 +24,7 @@ type AttachmentFile = {
   preview?: string
 }
 
-export function BugReportDialog() {
+export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   const [mounted, setMounted] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState<1 | 2 | 3 | 4 | 5>(1)
@@ -85,6 +85,7 @@ export function BugReportDialog() {
       tags: tags.length ? tags : undefined,
       sources: sources.length ? sources : undefined,
       attachments: attachments.map(att => att.file),
+      cluster_id: clusterId || undefined,
     }
   }
 
@@ -291,6 +292,7 @@ export function BugReportDialog() {
       if (payload.environment) formData.append('environment', payload.environment)
       if (payload.expected_behavior) formData.append('expected_behavior', payload.expected_behavior)
       if (payload.actual_behavior) formData.append('actual_behavior', payload.actual_behavior)
+      if (payload.cluster_id) formData.append('cluster_id', payload.cluster_id)
       
       // Add attachments
       payload.attachments?.forEach((file, index) => {

@@ -31,15 +31,39 @@ export async function POST(
     return NextResponse.json({ error: "No pending invitation found" }, { status: 400 })
   }
 
+  // Always ensure user record exists and is up-to-date in Supabase
+  const userEmail = user.email || ''
+  const username = user.name || (userEmail ? userEmail.split('@')[0] : 'User')
+  
+  // Upsert user record with current session data
+  const { error: userUpsertError } = await supabase
+    .from('users')
+    .upsert({
+      id: userId,
+      email: userEmail || null,
+      name: user.name || username,
+      image: user.image || null,
+      email_verified: null,
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'id'
+    })
+
+  if (userUpsertError) {
+    // Continue anyway - user creation is not critical for accepting invitation
+  }
+
   // Remove from invites and add to members
   const updatedInvites = (cluster.invites || []).filter((id: string) => id !== userId)
   const updatedMembers = [...(cluster.members || []), userId]
+  const updatedMembersUsernames = [...(cluster.members_usernames || []), username]
 
   const { error: updateError } = await supabase
     .from('clusters')
     .update({ 
       invites: updatedInvites,
-      members: updatedMembers
+      members: updatedMembers,
+      members_usernames: updatedMembersUsernames
     })
     .eq('id', clusterId)
 

@@ -21,6 +21,7 @@ import { createBugSolution } from "@/app/actions/BugSolution"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
+import { toast } from "sonner"
 
 export function SectionCards() {
   const [open, setOpen] = React.useState(false)

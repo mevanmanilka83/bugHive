@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { inviteUserToCluster } from "@/app/actions/cluster"
 
 interface InviteUserDialogProps {
   open: boolean
@@ -40,24 +41,17 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/clusters/${cluster.id}/invite`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: email.trim() || undefined,
-          username: username.trim() || undefined,
-        }),
-      })
+      const result = await inviteUserToCluster(
+        cluster.id,
+        email.trim() || undefined,
+        username.trim() || undefined
+      )
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to send invitation')
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send invitation')
       }
 
-      toast.success("Invitation sent successfully")
+      toast.success(result.message || "Invitation sent successfully")
       setEmail("")
       setUsername("")
       onSuccess?.()

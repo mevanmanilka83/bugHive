@@ -1,32 +1,48 @@
 "use client"
 
 import * as React from "react"
-import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings } from "@tabler/icons-react"
+import { useRouter } from "next/navigation"
+import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { CreateClusterDialog } from "./CreateClusterDialog"
 import { InviteUserDialog } from "./InviteUserDialog"
+import { getClusters, deleteCluster } from "@/app/actions/cluster"
 
 interface ClustersListProps {
   userId: string
 }
 
 export function ClustersList({ userId }: ClustersListProps) {
+  const router = useRouter()
   const [clusters, setClusters] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(false)
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
+  const [clusterToDelete, setClusterToDelete] = React.useState<any | null>(null)
+  const [deleting, setDeleting] = React.useState(false)
   const [selectedCluster, setSelectedCluster] = React.useState<any | null>(null)
 
   const fetchClusters = React.useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/clusters')
-      if (!res.ok) return
-      const data = await res.json()
-      setClusters(data?.clusters || [])
+      const result = await getClusters()
+      if (result.success) {
+        setClusters(result.clusters || [])
+      }
+    } catch (error) {
+      // Handle error silently
     } finally {
       setLoading(false)
     }
@@ -48,25 +64,30 @@ export function ClustersList({ userId }: ClustersListProps) {
     return () => window.removeEventListener("cluster:created", onCreated as EventListener)
   }, [fetchClusters])
 
-  const handleDeleteCluster = async (clusterId: string) => {
-    if (!confirm("Are you sure you want to delete this cluster? This action cannot be undone.")) {
-      return
-    }
+  const handleDeleteClick = (cluster: any) => {
+    setClusterToDelete(cluster)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteCluster = async () => {
+    if (!clusterToDelete) return
 
     try {
-      const res = await fetch(`/api/clusters/${clusterId}`, {
-        method: 'DELETE',
-      })
+      setDeleting(true)
+      const result = await deleteCluster(clusterToDelete.id)
 
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || 'Failed to delete cluster')
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete cluster')
       }
 
-      toast.success("Cluster deleted successfully")
+      toast.success(result.message || "Cluster deleted successfully")
+      setDeleteDialogOpen(false)
+      setClusterToDelete(null)
       fetchClusters()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete cluster")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -116,7 +137,17 @@ export function ClustersList({ userId }: ClustersListProps) {
             const inviteCount = cluster.invites?.length || 0
 
             return (
-              <Card key={cluster.id}>
+              <Card 
+                key={cluster.id}
+                className="cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={(e) => {
+                  // Don't navigate if clicking on action buttons
+                  if ((e.target as HTMLElement).closest('button')) {
+                    return
+                  }
+                  router.push(`/dashboard/clusters/${cluster.id}`)
+                }}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -130,7 +161,10 @@ export function ClustersList({ userId }: ClustersListProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleInviteClick(cluster)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleInviteClick(cluster)
+                          }}
                           className="h-8 w-8"
                         >
                           <IconMail className="size-4" />
@@ -138,7 +172,10 @@ export function ClustersList({ userId }: ClustersListProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteCluster(cluster.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteClick(cluster)
+                          }}
                           className="h-8 w-8 text-destructive hover:text-destructive"
                         >
                           <IconTrash className="size-4" />
@@ -190,6 +227,39 @@ export function ClustersList({ userId }: ClustersListProps) {
           toast.success("Invitation sent successfully")
         }}
       />
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <IconAlertTriangle className="size-5 text-destructive" />
+              Delete Cluster
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{clusterToDelete?.name}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setClusterToDelete(null)
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteCluster}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

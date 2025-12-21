@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
-import { createCluster } from "@/app/actions/Cluster"
+import { createCluster } from "@/app/actions/cluster"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -35,7 +35,7 @@ function SubmitButton() {
 
 export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClusterDialogProps) {
   const [state, formAction] = useActionState(createCluster, null)
-  const [hasShownSuccess, setHasShownSuccess] = React.useState(false)
+  const hasProcessedRef = React.useRef<string | null>(null)
   const onSuccessRef = React.useRef(onSuccess)
 
   // Keep ref updated
@@ -43,23 +43,28 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
     onSuccessRef.current = onSuccess
   }, [onSuccess])
 
-  // Reset state when dialog closes
+  // Reset when dialog closes
   React.useEffect(() => {
     if (!open) {
-      setHasShownSuccess(false)
+      hasProcessedRef.current = null
     }
   }, [open])
 
   React.useEffect(() => {
-    if (state?.success && !hasShownSuccess) {
-      toast.success("Cluster created successfully")
-      setHasShownSuccess(true)
-      onSuccessRef.current?.()
-    } else if (state?.error && !hasShownSuccess) {
-      toast.error(state.error)
-      setHasShownSuccess(true)
+    // Create a unique key for this state to prevent duplicate processing
+    const stateKey = state?.success ? 'success' : state?.error ? `error-${state.error}` : null
+    
+    if (stateKey && state && hasProcessedRef.current !== stateKey) {
+      hasProcessedRef.current = stateKey
+      
+      if (state.success) {
+        toast.success("Cluster created successfully")
+        onSuccessRef.current?.()
+      } else if (state.error) {
+        toast.error(state.error)
+      }
     }
-  }, [state, hasShownSuccess])
+  }, [state])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

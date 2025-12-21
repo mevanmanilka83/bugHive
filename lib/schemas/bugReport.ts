@@ -54,6 +54,7 @@ export function getBugReportSchema() {
         return files.length <= 5
       }, "Maximum 5 attachments allowed")
       .optional(),
+    cluster_id: z.string().uuid().optional(),
   })
 }
 

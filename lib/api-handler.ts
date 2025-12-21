@@ -48,8 +48,9 @@ export const createGetHandler = (table: string, idField: string = 'id') =>
       return { [table]: [] }
     }
     const createdByParam = searchParams.get('created_by')
-    const filterField = createdByParam ? 'created_by' : undefined
-    const filterValue: string | undefined = createdByParam ?? undefined
+    const clusterIdParam = searchParams.get('cluster_id')
+    const filterField = clusterIdParam ? 'cluster_id' : (createdByParam ? 'created_by' : undefined)
+    const filterValue: string | undefined = clusterIdParam ?? createdByParam ?? undefined
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined
     
     const records = await getMultipleRecords(table, filterField, filterValue)

@@ -1,8 +1,7 @@
-import { checkAuth, supabase, ensureValidUUID } from "@/lib/core"
-import { NextRequest, NextResponse } from "next/server"
+"use server"
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
+import { auth } from "@/auth"
+import { supabase, ensureValidUUID } from "@/lib/core"
 
 // Generate deterministic UUID for invitee from email
 function generateUUIDFromEmailSync(email: string): string {
@@ -28,23 +27,19 @@ function generateUUIDFromEmailSync(email: string): string {
   return uuid
 }
 
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+export async function inviteUserToCluster(
+  clusterId: string, 
+  inviteeEmail?: string, 
+  inviteeUsername?: string
 ) {
-  const authResult = await checkAuth()
-  if (authResult instanceof NextResponse) return authResult
-
-  const { user } = authResult
-  const { id: clusterId } = await context.params
-  const userId = ensureValidUUID(user.id)
-
   try {
-    const body = await request.json()
-    const { email, username } = body
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized" }
+    }
 
-    if (!email && !username) {
-      return NextResponse.json({ error: "Email or username is required" }, { status: 400 })
+    if (!inviteeEmail && !inviteeUsername) {
+      return { success: false, error: "Email or username is required" }
     }
 
     // Get cluster to verify ownership
@@ -55,23 +50,23 @@ export async function POST(
       .single()
 
     if (clusterError || !cluster) {
-      return NextResponse.json({ error: "Cluster not found" }, { status: 404 })
+      return { success: false, error: "Cluster not found" }
     }
 
     // Check if user is the owner
-    if (cluster.owner_id !== userId) {
-      return NextResponse.json({ error: "Only cluster owners can invite members" }, { status: 403 })
+    if (cluster.owner_id !== ensureValidUUID(session.user.id)) {
+      return { success: false, error: "Only cluster owners can invite members" }
     }
 
     // Determine the email to use for invitation
-    let finalEmail = email?.trim().toLowerCase()
+    let finalEmail = inviteeEmail?.trim().toLowerCase()
 
     // If email is not provided but username is, look up user by username
-    if (!finalEmail && username) {
-      const trimmedUsername = username.trim()
+    if (!finalEmail && inviteeUsername) {
+      const trimmedUsername = inviteeUsername.trim()
       
       if (!trimmedUsername) {
-        return NextResponse.json({ error: "Username cannot be empty" }, { status: 400 })
+        return { success: false, error: "Username cannot be empty" }
       }
 
       // Use function to lookup user by username (bypasses RLS)
@@ -79,15 +74,17 @@ export async function POST(
         .rpc('lookup_user_by_username', { p_username: trimmedUsername })
 
       if (userError) {
-        return NextResponse.json({ 
+        return { 
+          success: false, 
           error: `Error looking up user: ${userError.message}` 
-        }, { status: 500 })
+        }
       }
 
       if (!userData || userData.length === 0 || !userData[0]) {
-        return NextResponse.json({ 
+        return { 
+          success: false, 
           error: `User not found with username "${trimmedUsername}". Please check the username or use email address instead.` 
-        }, { status: 404 })
+        }
       }
 
       finalEmail = userData[0].email
@@ -96,19 +93,19 @@ export async function POST(
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!finalEmail || !emailRegex.test(finalEmail)) {
-      return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
+      return { success: false, error: "Invalid email address" }
     }
 
     const inviteeUserId = generateUUIDFromEmailSync(finalEmail)
 
     // Check if user is already a member
     if (cluster.members && cluster.members.includes(inviteeUserId)) {
-      return NextResponse.json({ error: "User is already a member of this cluster" }, { status: 400 })
+      return { success: false, error: "User is already a member of this cluster" }
     }
 
     // Check if user already has a pending invite
     if (cluster.invites && cluster.invites.includes(inviteeUserId)) {
-      return NextResponse.json({ error: "User already has a pending invitation" }, { status: 400 })
+      return { success: false, error: "User already has a pending invitation" }
     }
 
     // Create user record in Supabase if it doesn't exist
@@ -145,9 +142,10 @@ export async function POST(
       .eq('id', clusterId)
 
     if (updateError) {
-      return NextResponse.json({ 
-        error: updateError.message || 'Failed to send invitation' 
-      }, { status: 500 })
+      return { 
+        success: false, 
+        error: updateError.message || 'Failed to send invitation'
+      }
     }
 
     // Create notification for the invitee
@@ -155,7 +153,7 @@ export async function POST(
       user_id: inviteeUserId,
       type: 'cluster_invite',
       title: `Invitation to join ${cluster.name}`,
-      message: `${user.email || user.name || 'Someone'} invited you to join the cluster "${cluster.name}"`,
+      message: `${session.user.email || session.user.name || 'Someone'} invited you to join the cluster "${cluster.name}"`,
       cluster_id: clusterId,
       read: false,
     }
@@ -164,13 +162,15 @@ export async function POST(
       .from('notifications')
       .insert(notificationData)
 
-    return NextResponse.json({ 
-      message: "Invitation sent successfully",
-      cluster 
-    }, { status: 200 })
+    return { 
+      success: true, 
+      message: "Invitation sent successfully" 
+    }
   } catch (error) {
-    return NextResponse.json({ 
+    return { 
+      success: false, 
       error: error instanceof Error ? error.message : "Internal server error" 
-    }, { status: 500 })
+    }
   }
 }
+

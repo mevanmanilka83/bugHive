@@ -302,7 +302,6 @@ export async function handleFileUploads(formData: any, folder: string = 'bugs'):
 
     return await Promise.all(uploadPromises)
   } catch (uploadError) {
-    console.error('File upload error:', uploadError)
     return []
   }
 }

@@ -2,6 +2,32 @@
 
 import { createClient } from "@supabase/supabase-js"
 
+/**
+ * User Management Server Actions
+ * 
+ * PURPOSE: Direct server-side functions for user data persistence
+ * 
+ * Why Server Actions vs API Routes?
+ * - Server Actions: Direct function calls from server components, no HTTP overhead
+ *   - Better TypeScript support and type safety
+ *   - Automatic server-side execution context
+ *   - Can be called directly from server components and other server actions
+ *   - Use when: Calling from server-side code, form actions, or when you don't need HTTP
+ * 
+ * - API Routes: HTTP endpoints for external clients or form submissions
+ *   - Use when: Client-side fetch calls, external integrations, or when you need HTTP semantics
+ * 
+ * Architecture:
+ * - This module: Server action for saving user data (saveUserToSupabase)
+ * - /api/auth/signup: API route that uses this server action for HTTP signup requests
+ * - /api/users: API routes for fetching user data (GET requests)
+ * 
+ * Key Features:
+ * - Generates deterministic UUIDs from email addresses (same logic as auth.ts)
+ * - Handles Supabase RLS policies and service role key fallbacks
+ * - Single source of truth for user data persistence
+ */
+
 // Create Supabase client with service role key for server actions
 // This bypasses RLS policies
 function getSupabaseClient() {

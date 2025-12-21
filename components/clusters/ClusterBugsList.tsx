@@ -1,12 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { IconLayoutGrid, IconList, IconEye, IconExternalLink, IconChartArea, IconBulb, IconTrendingUp } from "@tabler/icons-react"
-
+import { IconLayoutGrid, IconList, IconEye, IconChartArea, IconBulb } from "@tabler/icons-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -16,13 +14,17 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { createBugSolution } from "@/app/actions/BugSolution"
-import { ChartConfig } from "@/components/ui/chart"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
-import { toast } from "sonner"
+import { ChartConfig } from "@/components/ui/chart"
 
-export function RecentBugs() {
+interface ClusterBugsListProps {
+  clusterId: string
+  userId: string
+}
+
+export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
   const [bugs, setBugs] = React.useState<any[]>([])
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
   const [detailsOpen, setDetailsOpen] = React.useState(false)
@@ -32,8 +34,6 @@ export function RecentBugs() {
   const [solutionOpen, setSolutionOpen] = React.useState(false)
   const [solutions, setSolutions] = React.useState<any[]>([])
   const [solutionsLoading, setSolutionsLoading] = React.useState(false)
-  const [isSubmittingSolution, setIsSubmittingSolution] = React.useState(false)
-  const [solutionErrors, setSolutionErrors] = React.useState<{ title?: string; description?: string; solution_type?: string; priority?: string; status?: string; assignee?: string; estimated_hours?: string; links?: string }>({})
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
   const [loading, setLoading] = React.useState(false)
 
@@ -44,10 +44,10 @@ export function RecentBugs() {
     },
   }
 
-  async function fetchBugs() {
+  const fetchBugs = React.useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/bugs?limit=200")
+      const res = await fetch(`/api/bugs?cluster_id=${clusterId}&limit=200`)
       if (!res.ok) return
       const data = await res.json()
       const items: any[] = data?.bugs || []
@@ -68,18 +68,17 @@ export function RecentBugs() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [clusterId])
 
   React.useEffect(() => {
     fetchBugs()
-  }, [])
+  }, [fetchBugs])
 
   React.useEffect(() => {
     const onCreated = () => fetchBugs()
     window.addEventListener("bug:created", onCreated as EventListener)
     return () => window.removeEventListener("bug:created", onCreated as EventListener)
-  }, [])
-
+  }, [fetchBugs])
 
   async function openBugDetails(bugId: string) {
     try {
@@ -91,7 +90,7 @@ export function RecentBugs() {
         setSelectedBug(data?.bug || null)
         return
       }
-      const listRes = await fetch(`/api/bugs?limit=200`)
+      const listRes = await fetch(`/api/bugs?cluster_id=${clusterId}&limit=200`)
       if (listRes.ok) {
         const list = await listRes.json()
         const all: any[] = list?.bugs || []
@@ -120,111 +119,111 @@ export function RecentBugs() {
     }
   }
 
-  async function submitSolution(formData: any) {
-    if (!selectedBug?.id) return
-
-    // Validate form data
-    const errors: any = {}
-    if (!formData.title?.trim()) errors.title = "Title is required"
-    if (!formData.description?.trim()) errors.description = "Description is required"
-    if (!formData.solution_type) errors.solution_type = "Solution type is required"
-    
-    // Validate links if provided
-    if (formData.links) {
-      const links = formData.links.split(',').map((s: string) => s.trim()).filter(Boolean)
-      const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i
-      if (links.length && !links.every((l: string) => urlRegex.test(l))) {
-        errors.links = "All links must be valid URLs starting with http(s)://"
-      }
-    }
-
-    setSolutionErrors(errors)
-    if (Object.keys(errors).length > 0) return
-
-    try {
-      setIsSubmittingSolution(true)
-      
-      // Create FormData for server action
-      const formDataToSend = new FormData()
-      formDataToSend.append('title', formData.title.trim())
-      formDataToSend.append('description', formData.description.trim())
-      formDataToSend.append('solution_type', formData.solution_type)
-      formDataToSend.append('priority', formData.priority)
-      formDataToSend.append('status', formData.status)
-      if (formData.assignee) formDataToSend.append('assignee', formData.assignee)
-      if (formData.estimated_hours) formDataToSend.append('estimated_hours', formData.estimated_hours)
-      if (formData.links) formDataToSend.append('links', formData.links)
-
-      // Use server action instead of fetch
-      const result = await createBugSolution(formDataToSend, selectedBug.id)
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to submit solution")
-      }
-
-      toast.success('Solution submitted successfully')
-      setSolutionErrors({})
-      await fetchSolutions(selectedBug.id)
-    } catch (e: any) {
-      toast.error(e?.message || 'Something went wrong')
-    } finally {
-      setIsSubmittingSolution(false)
-    }
-  }
-
   return (
-    <div className="px-4 lg:px-6 mt-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground">Recent Bugs</h3>
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        {loading ? (
+          <Skeleton className="h-5 w-24" />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
+          </p>
+        )}
         <div className="flex items-center gap-1">
-          <button type="button" aria-label="Grid view" onClick={() => setViewMode("grid")} className={`rounded-md p-1.5 border transition-colors ${viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+          <button 
+            type="button" 
+            aria-label="Grid view" 
+            onClick={() => setViewMode("grid")} 
+            className={`rounded-md p-1.5 border transition-colors ${viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
             <IconLayoutGrid className="size-4" />
           </button>
-          <button type="button" aria-label="List view" onClick={() => setViewMode("list")} className={`rounded-md p-1.5 border transition-colors ${viewMode === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+          <button 
+            type="button" 
+            aria-label="List view" 
+            onClick={() => setViewMode("list")} 
+            className={`rounded-md p-1.5 border transition-colors ${viewMode === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
             <IconList className="size-4" />
           </button>
         </div>
       </div>
       <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-        {bugs.map((bug) => {
-          const createdAt = bug.created_at || bug.createdAt
-          const created = createdAt ? new Date(createdAt) : undefined
-          const status = (bug.status || "open") as string
-          const priority = (bug.priority || "medium") as string
-          const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
-          return (
-            <Card key={bug.id} className="@container/card">
+        {loading ? (
+          Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="@container/card">
               <CardHeader className="flex flex-col px-4 gap-1">
-                <CardDescription className="capitalize text-xs">{status}</CardDescription>
-                <CardTitle className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg" title={bugTitle}>
-                  {bugTitle}
-                </CardTitle>
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-5 w-full" />
               </CardHeader>
-              <CardFooter className="px-4 items-center justify-between gap-2 text-xs">
-                <div className="text-muted-foreground text-xs">{created ? created.toLocaleDateString() : ""}</div>
+              <CardFooter className="px-4 items-center justify-between gap-2">
+                <Skeleton className="h-4 w-20" />
                 <div className="flex items-center gap-1.5">
-                  <Badge variant="outline" className="capitalize text-[11px] px-1.5 py-0.5">{priority}</Badge>
-                  <button type="button" aria-label="View bug" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" onClick={() => openBugDetails(bug.id)}>
-                    <IconEye className="size-3.5" />
-                  </button>
-                  <button type="button" aria-label="View graph" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" onClick={() => setGraphOpen(true)}>
-                    <IconChartArea className="size-3.5" />
-                  </button>
-                  <button type="button" aria-label="View solutions" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" onClick={() => { 
-                    setSelectedBug(bug)
-                    setSolutionOpen(true)
-                    void fetchSolutions(bug.id) 
-                  }}>
-                    <IconBulb className="size-3.5" />
-                  </button>
-                  <button type="button" aria-label="Open details" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border">
-                    <IconExternalLink className="size-3.5" />
-                  </button>
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
                 </div>
               </CardFooter>
             </Card>
-          )
-        })}
+          ))
+        ) : bugs.length === 0 ? (
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            No bugs found for this cluster. Create your first bug report!
+          </div>
+        ) : (
+          bugs.map((bug) => {
+            const createdAt = bug.created_at || bug.createdAt
+            const created = createdAt ? new Date(createdAt) : undefined
+            const status = (bug.status || "open") as string
+            const priority = (bug.priority || "medium") as string
+            const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
+            return (
+              <Card key={bug.id} className="@container/card">
+                <CardHeader className="flex flex-col px-4 gap-1">
+                  <CardDescription className="capitalize text-xs">{status}</CardDescription>
+                  <CardTitle className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg" title={bugTitle}>
+                    {bugTitle}
+                  </CardTitle>
+                </CardHeader>
+                <CardFooter className="px-4 items-center justify-between gap-2 text-xs">
+                  <div className="text-muted-foreground text-xs">{created ? created.toLocaleDateString() : ""}</div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="capitalize text-[11px] px-1.5 py-0.5">{priority}</Badge>
+                    <button 
+                      type="button" 
+                      aria-label="View bug" 
+                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
+                      onClick={() => openBugDetails(bug.id)}
+                    >
+                      <IconEye className="size-3.5" />
+                    </button>
+                    <button 
+                      type="button" 
+                      aria-label="View graph" 
+                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
+                      onClick={() => setGraphOpen(true)}
+                    >
+                      <IconChartArea className="size-3.5" />
+                    </button>
+                    <button 
+                      type="button" 
+                      aria-label="View solutions" 
+                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
+                      onClick={() => { 
+                        setSelectedBug(bug)
+                        setSolutionOpen(true)
+                        void fetchSolutions(bug.id) 
+                      }}
+                    >
+                      <IconBulb className="size-3.5" />
+                    </button>
+                  </div>
+                </CardFooter>
+              </Card>
+            )
+          })
+        )}
       </div>
 
       {/* Details Drawer */}
@@ -316,14 +315,11 @@ export function RecentBugs() {
         open={solutionOpen}
         onOpenChange={(open) => {
           setSolutionOpen(open)
-          if (!open) {
-            setSolutionErrors({})
-          }
         }}
         solutions={solutions}
         solutionsLoading={solutionsLoading}
-        isSubmitting={isSubmittingSolution}
-        errors={solutionErrors}
+        isSubmitting={false}
+        errors={{}}
         bugData={selectedBug ? {
           id: selectedBug.id,
           title: selectedBug.title || selectedBug.header || selectedBug.name || "Untitled Bug",
@@ -342,7 +338,4 @@ export function RecentBugs() {
     </div>
   )
 }
-
-export default RecentBugs
-
 

@@ -200,8 +200,6 @@ export function SolutionDialog({
     try {
       setSubmitting(true)
 
-      console.log("Submitting solution with form data:", formData)
-
       const fd = new FormData()
       fd.set("title", formData.title)
       fd.set("description", formData.description)
@@ -214,14 +212,6 @@ export function SolutionDialog({
       if (linksArray.length) fd.set("links", JSON.stringify(linksArray))
       attachments.forEach((att, idx) => {
         fd.append(`attachment_${idx}`, att.file)
-      })
-
-      console.log("FormData contents:", {
-        title: fd.get("title"),
-        description: fd.get("description"),
-        solution_type: fd.get("solution_type"),
-        priority: fd.get("priority"),
-        status: fd.get("status")
       })
 
       // Use server action instead of fetch

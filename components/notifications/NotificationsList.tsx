@@ -118,14 +118,11 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     }
 
     try {
-      const res = await fetch(`/api/clusters/${notification.cluster_id}/accept`, {
-        method: 'POST',
-      })
+      const { acceptClusterInvite } = await import("@/app/actions/cluster")
+      const result = await acceptClusterInvite(notification.cluster_id)
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to accept invitation')
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to accept invitation')
       }
 
       // Update notification to read
@@ -134,7 +131,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
       )
 
       window.dispatchEvent(new Event("notification:updated"))
-      toast.success("Invitation accepted! You are now a member of the cluster.")
+      toast.success(result.message || "Invitation accepted! You are now a member of the cluster.")
       
       // Refresh after a short delay to show the cluster
       setTimeout(() => {

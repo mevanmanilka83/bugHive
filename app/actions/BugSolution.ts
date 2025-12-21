@@ -12,8 +12,6 @@ export async function createBugSolution(formData: FormData, bugId: string) {
       return { success: false, error: "Unauthorized" }
     }
 
-    console.log("Creating solution for bug:", bugId, "by user:", session.user.id)
-
     // Extract form data
     const title = (formData.get('title') as string) || ''
     const description = (formData.get('description') as string) || ''
@@ -24,34 +22,19 @@ export async function createBugSolution(formData: FormData, bugId: string) {
     const estimated_hours = formData.get('estimated_hours') as string | null
     const links = formData.get('links') as string | null
     
-    console.log("Received form data:", {
-      title,
-      description,
-      solution_type,
-      priority,
-      status,
-      assignee,
-      estimated_hours,
-      links
-    })
-    
     // Early validation to prevent storing error messages as data
     if (!title.trim()) {
-      console.error("Validation failed: Title is empty")
       return { success: false, error: "Title is required" }
     }
     if (!description.trim()) {
-      console.error("Validation failed: Description is empty")
       return { success: false, error: "Description is required" }
     }
     if (!solution_type) {
-      console.error("Validation failed: Solution type is empty")
       return { success: false, error: "Solution type is required" }
     }
 
     // Additional safety check to prevent error messages from being stored as data
     if (title.includes("Missing required fields") || description.includes("Missing required fields")) {
-      console.error("Prevented storing error message as data")
       return { success: false, error: "Invalid form data detected" }
     }
     
@@ -109,16 +92,6 @@ export async function createBugSolution(formData: FormData, bugId: string) {
         created_by: ensureValidUUID(session.user.id),
       }
 
-      console.log("Inserting solution with data:", {
-        bug_id: bugId,
-        title: title.trim(),
-        description: description.trim(),
-        solution_type,
-        priority,
-        status,
-        userId: ensureValidUUID(session.user.id)
-      })
-
       const { data, error } = await supabase
         .from('bug_solution_details')
         .insert(solutionData)
@@ -126,7 +99,6 @@ export async function createBugSolution(formData: FormData, bugId: string) {
         .single()
 
       if (error) {
-        console.error("Supabase error:", error)
         return { 
           success: false, 
           error: error.message || 'Failed to save solution',
@@ -139,7 +111,6 @@ export async function createBugSolution(formData: FormData, bugId: string) {
         solution: data 
       }
     } catch (sqlErr: any) {
-      console.error("Database error:", sqlErr)
       return { 
         success: false, 
         error: sqlErr?.message || 'Failed to save solution',
@@ -147,7 +118,6 @@ export async function createBugSolution(formData: FormData, bugId: string) {
       }
     }
   } catch (error) {
-    console.error("Solution creation error:", error)
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Internal server error" 
