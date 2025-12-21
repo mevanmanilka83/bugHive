@@ -1,0 +1,66 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { BugDialogErrors } from "@/lib/schemas/bugReport"
+
+type Props = {
+  title: string
+  description: string
+  errors: BugDialogErrors
+  onChangeTitle: (value: string) => void
+  onChangeDescription: (value: string) => void
+  canNext: boolean
+  onNext: () => void
+  onCancel: () => void
+}
+
+export function BugReportStep1Basic({
+  title,
+  description,
+  errors,
+  onChangeTitle,
+  onChangeDescription,
+  canNext,
+  onNext,
+  onCancel,
+}: Props) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="bug-title">Title <span className="text-red-500">*</span></Label>
+        <Input
+          id="bug-title"
+          placeholder="Short, descriptive title"
+          value={title}
+          onChange={(e) => onChangeTitle(e.target.value)}
+          className={errors.title ? "border-red-500" : ""}
+        />
+        {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="bug-desc">Description <span className="text-red-500">*</span></Label>
+        <Textarea
+          id="bug-desc"
+          placeholder="What's happening? Brief overview of the issue."
+          value={description}
+          onChange={(e) => onChangeDescription(e.target.value)}
+          rows={4}
+          className={errors.description ? "border-red-500" : ""}
+        />
+        {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button onClick={onNext} disabled={!canNext}>Next</Button>
+      </div>
+    </div>
+  )
+}
+
+export default BugReportStep1Basic
+
+
+
