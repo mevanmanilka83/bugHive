@@ -375,7 +375,7 @@ export function RecentBugs({ userId }: RecentBugsProps = {} as RecentBugsProps) 
                             void updateBugStatus(selectedBug.id, value)
                           }}
                         >
-                          <SelectTrigger className="capitalize">
+                          <SelectTrigger className="capitalize w-full">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -387,7 +387,23 @@ export function RecentBugs({ userId }: RecentBugsProps = {} as RecentBugsProps) 
                           </SelectContent>
                         </Select>
                       ) : (
-                      <Input value={(selectedBug.status || "open") as string} disabled className="capitalize" />
+                        <Badge 
+                          variant="outline" 
+                          className="capitalize w-fit text-white"
+                          style={
+                            (() => {
+                              const status = (selectedBug.status || "open") as string
+                              return status === 'open' ? { backgroundColor: '#0d9488', color: '#ffffff', borderColor: '#0d9488' }
+                                : status === 'closed' ? { backgroundColor: '#64748b', color: '#ffffff', borderColor: '#64748b' }
+                                : status === 'in_progress' ? { backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }
+                                : status === 'resolved' ? { backgroundColor: '#4f46e5', color: '#ffffff', borderColor: '#4f46e5' }
+                                : status === 'reopened' ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }
+                                : undefined
+                            })()
+                          }
+                        >
+                          {((selectedBug.status || "open") as string).replace(/_/g, ' ')}
+                        </Badge>
                       )}
                     </div>
                     <div className="flex flex-col gap-1.5">
