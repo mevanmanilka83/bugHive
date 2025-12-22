@@ -27,7 +27,7 @@ export function generateUUID(): string {
 /**
  * Generate a deterministic UUID from an email address
  * This ensures the same email always gets the same user ID
- * Note: auth.ts has its own version for Edge runtime compatibility
+ * Works in both Node.js and Edge runtime environments
  */
 export function generateUUIDFromEmailSync(email: string): string {
   let hash = 0

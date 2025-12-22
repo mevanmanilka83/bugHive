@@ -54,4 +54,4 @@ export {
 export { parseFormData } from "./formParser"
 
 // Auth exports
-export { checkAuth } from "./auth"
+export { checkAuth } from "../shared/auth"

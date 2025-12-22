@@ -1,47 +1,7 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
-
-// Edge-compatible UUID generation (for middleware)
-function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0
-    const v = c === 'x' ? r : (r & 0x3 | 0x8)
-    return v.toString(16)
-  })
-}
-
-// Generate a deterministic UUID from an email address
-// This ensures the same email always gets the same user ID
-// Uses a synchronous hash function that works in Edge Runtime
-function generateUUIDFromEmailSync(email: string): string {
-  // Simple hash function that works in Edge Runtime
-  let hash = 0
-  const normalizedEmail = email.toLowerCase().trim()
-  for (let i = 0; i < normalizedEmail.length; i++) {
-    const char = normalizedEmail.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
-  }
-  
-  // Convert to positive number and pad
-  const hashStr = Math.abs(hash).toString(16).padStart(8, '0')
-  const hashStr2 = ((hash * 31) >>> 0).toString(16).padStart(8, '0')
-  const hashStr3 = ((hash * 17) >>> 0).toString(16).padStart(8, '0')
-  const hashStr4 = ((hash * 7) >>> 0).toString(16).padStart(8, '0')
-  const fullHash = (hashStr + hashStr2 + hashStr3 + hashStr4).substring(0, 32)
-  
-  // Convert to UUID v4 format
-  const uuid = [
-    fullHash.substring(0, 8),
-    fullHash.substring(8, 12),
-    '4' + fullHash.substring(13, 16),
-    ((parseInt(fullHash.substring(16, 17), 16) & 0x3) | 0x8).toString(16) + fullHash.substring(17, 20),
-    fullHash.substring(20, 32)
-  ].join('-')
-  
-  return uuid
-}
+import { generateUUID, generateUUIDFromEmailSync } from "@/lib/shared/utils"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
