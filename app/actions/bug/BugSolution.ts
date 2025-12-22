@@ -107,6 +107,53 @@ export async function createBugSolution(formData: FormData, bugId: string) {
         }
       }
 
+      // Create notifications for cluster members if bug belongs to a cluster
+      try {
+        // Get the bug to check if it has a cluster_id
+        const { data: bug } = await supabase
+          .from('bugs')
+          .select('id, cluster_id, title, created_by')
+          .eq('id', bugId)
+          .single()
+
+        if (bug?.cluster_id) {
+          // Get cluster members
+          const { data: cluster } = await supabase
+            .from('clusters')
+            .select('id, members, name')
+            .eq('id', bug.cluster_id)
+            .single()
+
+          if (cluster?.members && Array.isArray(cluster.members)) {
+            const solutionCreatorId = ensureValidUUID(session.user.id)
+            const solutionCreatorName = session.user.name || session.user.email?.split('@')[0] || 'Someone'
+            const bugTitle = bug.title || 'Untitled Bug'
+
+            // Create notifications for all cluster members except the solution creator
+            const notifications = cluster.members
+              .filter((memberId: string) => ensureValidUUID(memberId) !== solutionCreatorId)
+              .map((memberId: string) => ({
+                user_id: ensureValidUUID(memberId),
+                type: 'solution_created',
+                title: `New solution for "${bugTitle}"`,
+                message: `${solutionCreatorName} provided a solution for bug "${bugTitle}" in cluster "${cluster.name}"`,
+                cluster_id: bug.cluster_id,
+                bug_id: bugId,
+                read: false,
+              }))
+
+            if (notifications.length > 0) {
+              await supabase
+                .from('notifications')
+                .insert(notifications)
+            }
+          }
+        }
+      } catch (notificationError) {
+        // Don't fail solution creation if notification fails
+        console.error('Failed to create notifications:', notificationError)
+      }
+
       return { 
         success: true, 
         solution: data 

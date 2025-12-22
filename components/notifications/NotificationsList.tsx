@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconBell, IconCheck, IconTrash, IconUsers, IconMail, IconBug, IconX, IconUserPlus } from "@tabler/icons-react"
+import { IconBell, IconCheck, IconTrash, IconUsers, IconMail, IconBug, IconX, IconUserPlus, IconBulb } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -153,6 +153,8 @@ export function NotificationsList({ userId }: NotificationsListProps) {
       case 'bug_assigned':
       case 'bug_updated':
         return <IconBug className="size-5" />
+      case 'solution_created':
+        return <IconBulb className="size-5" />
       default:
         return <IconBell className="size-5" />
     }
@@ -169,6 +171,8 @@ export function NotificationsList({ userId }: NotificationsListProps) {
       case 'bug_assigned':
       case 'bug_updated':
         return 'bg-orange-500'
+      case 'solution_created':
+        return 'bg-purple-500'
       default:
         return 'bg-gray-500'
     }
