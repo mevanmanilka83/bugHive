@@ -202,61 +202,11 @@ export function MyBugsList({ userId }: MyBugsListProps) {
     }
   }
 
-  return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        {loading ? (
-          <Skeleton className="h-5 w-24" />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
-          </p>
-        )}
-        <div className="flex items-center gap-1">
-          <button 
-            type="button" 
-            aria-label="Grid view" 
-            onClick={() => setViewMode("grid")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconLayoutGrid className="size-4" />
-          </button>
-          <button 
-            type="button" 
-            aria-label="List view" 
-            onClick={() => setViewMode("list")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconList className="size-4" />
-          </button>
-        </div>
-      </div>
-      <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-        {loading ? (
-          Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="@container/card">
-              <CardHeader className="flex flex-col px-4 gap-1">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-5 w-full" />
-              </CardHeader>
-              <CardFooter className="px-4 items-center justify-between gap-2">
-                <Skeleton className="h-4 w-20" />
-                <div className="flex items-center gap-1.5">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                </div>
-              </CardFooter>
-            </Card>
-          ))
-        ) : bugs.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            No bugs found. Create your first bug report!
-          </div>
-        ) : (
-          bugs.map((bug) => {
+  // Separate bugs into private and public
+  const privateBugs = bugs.filter(bug => (bug.visibility || "public").toLowerCase() === "private")
+  const publicBugs = bugs.filter(bug => (bug.visibility || "public").toLowerCase() !== "private")
+
+  const renderBugCard = (bug: any) => {
             const createdAt = bug.created_at || bug.createdAt
             const created = createdAt ? new Date(createdAt) : undefined
             const status = (bug.status || "open") as string
@@ -333,9 +283,95 @@ export function MyBugsList({ userId }: MyBugsListProps) {
                 </CardFooter>
               </Card>
             )
-          })
+          }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        {loading ? (
+          <Skeleton className="h-5 w-24" />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
+          </p>
         )}
+        <div className="flex items-center gap-1">
+          <button 
+            type="button" 
+            aria-label="Grid view" 
+            onClick={() => setViewMode("grid")} 
+            className={`rounded-md p-1.5 border transition-colors ${viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <IconLayoutGrid className="size-4" />
+          </button>
+          <button 
+            type="button" 
+            aria-label="List view" 
+            onClick={() => setViewMode("list")} 
+            className={`rounded-md p-1.5 border transition-colors ${viewMode === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <IconList className="size-4" />
+          </button>
+        </div>
       </div>
+
+      {/* Only for me section - Private bugs */}
+      {privateBugs.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-base font-medium text-muted-foreground mb-4">Only for me</h2>
+          <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
+            {privateBugs.map(renderBugCard)}
+          </div>
+        </div>
+      )}
+
+      {/* My Bugs section - Public bugs created by user */}
+      {publicBugs.length > 0 && (
+        <div className={privateBugs.length > 0 ? "mt-8" : ""}>
+          <h2 className="text-base font-medium text-muted-foreground mt-4 mb-4">My Bugs</h2>
+          <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
+            {publicBugs.map(renderBugCard)}
+          </div>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && (
+        <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="@container/card">
+              <CardHeader className="flex flex-col px-4 gap-1">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-5 w-full" />
+              </CardHeader>
+              <CardFooter className="px-4 items-center justify-between gap-2">
+                <Skeleton className="h-4 w-20" />
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && bugs.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">
+          No bugs found. Create your first bug report!
+        </div>
+      )}
+
+      {/* Empty state when only private bugs exist */}
+      {!loading && publicBugs.length === 0 && privateBugs.length > 0 && (
+        <div className="text-center py-12 text-muted-foreground">
+          No public bugs found.
+        </div>
+      )}
 
       {/* Details Drawer */}
       <Drawer open={detailsOpen} onOpenChange={setDetailsOpen}>
@@ -394,7 +430,7 @@ export function MyBugsList({ userId }: MyBugsListProps) {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label>Visibility</Label>
-                      <Input value={(selectedBug.visibility || "team") as string} disabled className="capitalize" />
+                      <Input value={(selectedBug.visibility || "public") as string} disabled className="capitalize" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -424,15 +460,39 @@ export function MyBugsList({ userId }: MyBugsListProps) {
                   <div className="flex flex-col gap-1.5">
                     <Label>Attachments</Label>
                     <div className="grid gap-2">
-                      {Array.isArray(selectedBug.attachments) && selectedBug.attachments.length ? (
-                        selectedBug.attachments.map((att: any, idx: number) => (
-                          <a key={idx} className="underline underline-offset-4 break-all" href={att.url || att.link || att} target="_blank" rel="noreferrer">
-                            {att.name || att.filename || att.url || att}
-                          </a>
-                        ))
-                      ) : (
-                        <Input value="—" disabled />
-                      )}
+                      {(() => {
+                        // Normalize attachments - handle JSON string, array, or null
+                        let attachments = selectedBug.attachments
+                        if (typeof attachments === 'string') {
+                          try {
+                            attachments = JSON.parse(attachments)
+                          } catch {
+                            attachments = null
+                          }
+                        }
+                        return Array.isArray(attachments) && attachments.length ? (
+                          attachments.map((att: any, idx: number) => {
+                            // Handle both string URLs and object formats
+                            const url = typeof att === 'string' ? att : (att.url || att.link || att)
+                            const filename = typeof att === 'string' 
+                              ? att.split('/').pop() || att 
+                              : (att.name || att.filename || url?.split('/').pop() || url)
+                            return (
+                              <a 
+                                key={idx} 
+                                className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800" 
+                                href={url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                              >
+                                {filename}
+                              </a>
+                            )
+                          })
+                        ) : (
+                          <Input value="—" disabled />
+                        )
+                      })()}
                     </div>
                   </div>
                 </div>

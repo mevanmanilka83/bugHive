@@ -17,7 +17,7 @@ export async function createBugReport(formData: FormData) {
     const title = (formData.get('title') as string) || ''
     const description = (formData.get('description') as string) || ''
     const priority = (formData.get('priority') as string) || 'medium'
-    const visibility = (formData.get('visibility') as string) || 'team'
+    const visibility = (formData.get('visibility') as string) || 'public'
     const environment = formData.get('environment') as string | null
     const expected_behavior = formData.get('expected_behavior') as string | null
     const actual_behavior = formData.get('actual_behavior') as string | null
@@ -29,10 +29,22 @@ export async function createBugReport(formData: FormData) {
     const sources = parseArrayField(formData.get('sources') as string | null)
 
     // Handle attachments using centralized utility
-    const formDataObj: any = {}
-    for (const [key, value] of formData.entries()) {
-      formDataObj[key] = value
+    // Extract files from FormData and create object with metadata for folder determination
+    const formDataObj: any = {
+      visibility,
+      cluster_id: cluster_id || null
     }
+    
+    // Copy all FormData entries, preserving File objects
+    for (const [key, value] of formData.entries()) {
+      // Preserve File objects as-is, convert other values to strings
+      if (value instanceof File) {
+        formDataObj[key] = value
+      } else {
+        formDataObj[key] = value
+      }
+    }
+    
     const attachment_urls = await handleFileUploads(formDataObj, 'bugs')
 
     // Basic validation for required fields

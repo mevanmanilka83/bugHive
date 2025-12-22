@@ -12,4 +12,4 @@
 // Re-export all service clients
 export { supabase } from "./supabaseConfig"
 export { pool } from "./postgresConfig"
-export { s3Client } from "./s3Config"
+export { s3Client, getS3Client } from "./s3Config"

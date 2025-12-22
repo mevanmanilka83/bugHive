@@ -25,7 +25,7 @@ export function transformBugData(formData: any, authResult: any) {
     title: formData.title.trim(),
     description: formData.description.trim(),
     priority: formData.priority || "medium",
-    visibility: formData.visibility || "team",
+    visibility: formData.visibility || "public",
     environment: formData.environment || null,
     expected_behavior: formData.expected_behavior || null,
     actual_behavior: formData.actual_behavior || null,

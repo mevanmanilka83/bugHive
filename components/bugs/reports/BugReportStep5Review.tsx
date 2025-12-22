@@ -74,7 +74,6 @@ export function BugReportStep5Review({
                 <div className="font-medium text-sm">Visibility</div>
                 <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded capitalize flex items-center gap-1">
                   {visibility === 'private' && <IconLock className="size-3" />}
-                  {visibility === 'team' && <IconUsers className="size-3" />}
                   {visibility === 'public' && <IconEye className="size-3" />}
                   {visibility}
                 </div>

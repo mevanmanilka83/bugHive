@@ -62,7 +62,12 @@ export function SectionCards({ userId }: SectionCardsProps) {
       const res = await fetch("/api/bugs?limit=200")
       if (!res.ok) return
       const data = await res.json()
-      const bugs: any[] = data?.bugs || []
+      const items: any[] = data?.bugs || []
+      // Filter out private bugs - only show public bugs
+      const bugs = items.filter(bug => {
+        const visibility = (bug.visibility || "public").toLowerCase().trim()
+        return visibility !== "private"
+      })
       setBugs(bugs)
 
       // Fetch solutions for chart
@@ -580,7 +585,7 @@ export function SectionCards({ userId }: SectionCardsProps) {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label>Visibility</Label>
-                    <Input value={(selectedBug.visibility || "team") as string} disabled className="capitalize" />
+                    <Input value={(selectedBug.visibility || "public") as string} disabled className="capitalize" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -610,21 +615,39 @@ export function SectionCards({ userId }: SectionCardsProps) {
                 <div className="flex flex-col gap-1.5">
                   <Label>Attachments</Label>
                   <div className="grid gap-2">
-                    {Array.isArray(selectedBug.attachments) && selectedBug.attachments.length ? (
-                      selectedBug.attachments.map((att: any, idx: number) => (
-                        <a
-                          key={idx}
-                          className="underline underline-offset-4 break-all"
-                          href={att.url || att.link || att}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {att.name || att.filename || att.url || att}
-                        </a>
-                      ))
-                    ) : (
-                      <Input value="—" disabled />
-                    )}
+                    {(() => {
+                      // Normalize attachments - handle JSON string, array, or null
+                      let attachments = selectedBug.attachments
+                      if (typeof attachments === 'string') {
+                        try {
+                          attachments = JSON.parse(attachments)
+                        } catch {
+                          attachments = null
+                        }
+                      }
+                      return Array.isArray(attachments) && attachments.length ? (
+                        attachments.map((att: any, idx: number) => {
+                          // Handle both string URLs and object formats
+                          const url = typeof att === 'string' ? att : (att.url || att.link || att)
+                          const filename = typeof att === 'string' 
+                            ? att.split('/').pop() || att 
+                            : (att.name || att.filename || url?.split('/').pop() || url)
+                          return (
+                            <a
+                              key={idx}
+                              className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {filename}
+                            </a>
+                          )
+                        })
+                      ) : (
+                        <Input value="—" disabled />
+                      )
+                    })()}
                   </div>
                 </div>
               </div>

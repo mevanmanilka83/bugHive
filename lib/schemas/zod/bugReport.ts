@@ -11,7 +11,7 @@ export function getBugReportSchema() {
       .min(5, "Description must be at least 5 characters")
       .max(STRING_VALIDATIONS.description.max, STRING_VALIDATIONS.description.maxMessage),
     priority: z.enum(PRIORITY_ENUM),
-    visibility: z.enum(["private", "team", "public"]),
+    visibility: z.enum(["private", "public"]),
     environment: z.string()
       .max(200, "Environment description must be less than 200 characters")
       .optional(),

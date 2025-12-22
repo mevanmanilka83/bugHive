@@ -1,7 +1,7 @@
 "use client"
 
 import { type BugDialogErrors } from "@/lib/schemas/types/bugReport"
-import { IconAlertTriangle, IconEye, IconUsers, IconLock } from "@tabler/icons-react"
+import { IconAlertTriangle, IconEye, IconLock } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,12 +66,6 @@ export function BugReportStep2Priority({
               <div className="flex items-center gap-2">
                 <IconLock className="size-4" />
                 Private - Only you can see this
-              </div>
-            </SelectItem>
-            <SelectItem value="team">
-              <div className="flex items-center gap-2">
-                <IconUsers className="size-4" />
-                Team - Your team members can see this
               </div>
             </SelectItem>
             <SelectItem value="public">

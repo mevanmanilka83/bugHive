@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconLayoutGrid, IconList, IconEye, IconExternalLink, IconChartArea, IconBulb, IconFilter, IconSearch } from "@tabler/icons-react"
+import { IconLayoutGrid, IconList, IconEye, IconExternalLink, IconChartArea, IconBulb, IconFilter, IconSearch, IconX } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +49,9 @@ interface FilterState {
   status: string[]
   priority: string[]
   tags: string[]
+  browser: string
+  os: string
+  device: string
   dateCreatedFrom: string
   dateCreatedTo: string
   dateModifiedFrom: string
@@ -80,6 +83,9 @@ export function BugExploreList({ userId }: BugExploreListProps) {
     status: [],
     priority: [],
     tags: [],
+    browser: "",
+    os: "",
+    device: "",
     dateCreatedFrom: "",
     dateCreatedTo: "",
     dateModifiedFrom: "",
@@ -103,7 +109,12 @@ export function BugExploreList({ userId }: BugExploreListProps) {
       if (!res.ok) return
       const data = await res.json()
       const items: any[] = data?.bugs || []
-      setAllBugs(items)
+      // Filter out private bugs - only show public bugs in Bug Explore
+      const publicBugs = items.filter(bug => {
+        const visibility = (bug.visibility || "public").toLowerCase().trim()
+        return visibility !== "private"
+      })
+      setAllBugs(publicBugs)
       
       // Extract unique tags and assignees
       const tagSet = new Set<string>()
@@ -194,6 +205,19 @@ export function BugExploreList({ userId }: BugExploreListProps) {
       })
     }
 
+    // Environment filters (Browser / OS / Device - simple substring match on environment field)
+    if (filters.browser) {
+      const browserQuery = filters.browser.toLowerCase()
+      filtered = filtered.filter(bug => (bug.environment || "").toLowerCase().includes(browserQuery))
+    }
+    if (filters.os) {
+      const osQuery = filters.os.toLowerCase()
+      filtered = filtered.filter(bug => (bug.environment || "").toLowerCase().includes(osQuery))
+    }
+    if (filters.device) {
+      const deviceQuery = filters.device.toLowerCase()
+      filtered = filtered.filter(bug => (bug.environment || "").toLowerCase().includes(deviceQuery))
+    }
 
     // Assignee filter
     if (filters.assignee) {
@@ -254,6 +278,9 @@ export function BugExploreList({ userId }: BugExploreListProps) {
       status: [],
       priority: [],
       tags: [],
+      browser: "",
+      os: "",
+      device: "",
       dateCreatedFrom: "",
       dateCreatedTo: "",
       dateModifiedFrom: "",
@@ -268,6 +295,9 @@ export function BugExploreList({ userId }: BugExploreListProps) {
       filters.status.length > 0 ||
       filters.priority.length > 0 ||
       filters.tags.length > 0 ||
+      filters.browser !== "" ||
+      filters.os !== "" ||
+      filters.device !== "" ||
       filters.dateCreatedFrom !== "" ||
       filters.dateCreatedTo !== "" ||
       filters.dateModifiedFrom !== "" ||
@@ -426,6 +456,44 @@ export function BugExploreList({ userId }: BugExploreListProps) {
       </div>
       <Separator />
 
+      {/* Environment */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Environment</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="space-y-1">
+            <Label htmlFor="env-browser" className="text-xs text-muted-foreground">Browser</Label>
+            <Input
+              id="env-browser"
+              placeholder="e.g. Chrome"
+              value={filters.browser}
+              onChange={(e) => setFilters(prev => ({ ...prev, browser: e.target.value }))}
+              className="h-8"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="env-os" className="text-xs text-muted-foreground">OS</Label>
+            <Input
+              id="env-os"
+              placeholder="e.g. macOS, Windows"
+              value={filters.os}
+              onChange={(e) => setFilters(prev => ({ ...prev, os: e.target.value }))}
+              className="h-8"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="env-device" className="text-xs text-muted-foreground">Device</Label>
+            <Input
+              id="env-device"
+              placeholder="e.g. iPhone 15"
+              value={filters.device}
+              onChange={(e) => setFilters(prev => ({ ...prev, device: e.target.value }))}
+              className="h-8"
+            />
+          </div>
+        </div>
+      </div>
+      <Separator />
+
       {/* Date filters in columns */}
       <div className="grid grid-cols-2 gap-4">
         {/* Date Created */}
@@ -565,6 +633,9 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                         filters.status.length,
                         filters.priority.length,
                         filters.tags.length,
+                        filters.browser ? 1 : 0,
+                        filters.os ? 1 : 0,
+                        filters.device ? 1 : 0,
                         filters.dateCreatedFrom || filters.dateCreatedTo ? 1 : 0,
                         filters.dateModifiedFrom || filters.dateModifiedTo ? 1 : 0,
                         filters.assignee ? 1 : 0,
@@ -606,6 +677,9 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                         filters.status.length,
                         filters.priority.length,
                         filters.tags.length,
+                        filters.browser ? 1 : 0,
+                        filters.os ? 1 : 0,
+                        filters.device ? 1 : 0,
                         filters.dateCreatedFrom || filters.dateCreatedTo ? 1 : 0,
                         filters.dateModifiedFrom || filters.dateModifiedTo ? 1 : 0,
                         filters.assignee ? 1 : 0,
@@ -669,6 +743,39 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                 </button>
               </Badge>
             ))}
+            {filters.browser && (
+              <Badge variant="secondary" className="gap-1">
+                Browser: {filters.browser}
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, browser: "" }))}
+                  className="ml-1 hover:bg-secondary rounded-full"
+                >
+                  <IconX className="size-3" />
+                </button>
+              </Badge>
+            )}
+            {filters.os && (
+              <Badge variant="secondary" className="gap-1">
+                OS: {filters.os}
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, os: "" }))}
+                  className="ml-1 hover:bg-secondary rounded-full"
+                >
+                  <IconX className="size-3" />
+                </button>
+              </Badge>
+            )}
+            {filters.device && (
+              <Badge variant="secondary" className="gap-1">
+                Device: {filters.device}
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, device: "" }))}
+                  className="ml-1 hover:bg-secondary rounded-full"
+                >
+                  <IconX className="size-3" />
+                </button>
+              </Badge>
+            )}
             {(filters.dateCreatedFrom || filters.dateCreatedTo) && (
               <Badge variant="secondary" className="gap-1">
                 Created: {filters.dateCreatedFrom || '...'} to {filters.dateCreatedTo || '...'}
@@ -899,7 +1006,7 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label>Visibility</Label>
-                      <Input value={(selectedBug.visibility || "team") as string} disabled className="capitalize" />
+                      <Input value={(selectedBug.visibility || "public") as string} disabled className="capitalize" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -929,15 +1036,39 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                   <div className="flex flex-col gap-1.5">
                     <Label>Attachments</Label>
                     <div className="grid gap-2">
-                      {Array.isArray(selectedBug.attachments) && selectedBug.attachments.length ? (
-                        selectedBug.attachments.map((att: any, idx: number) => (
-                          <a key={idx} className="underline underline-offset-4 break-all" href={att.url || att.link || att} target="_blank" rel="noreferrer">
-                            {att.name || att.filename || att.url || att}
-                          </a>
-                        ))
-                      ) : (
-                        <Input value="—" disabled />
-                      )}
+                      {(() => {
+                        // Normalize attachments - handle JSON string, array, or null
+                        let attachments = selectedBug.attachments
+                        if (typeof attachments === 'string') {
+                          try {
+                            attachments = JSON.parse(attachments)
+                          } catch {
+                            attachments = null
+                          }
+                        }
+                        return Array.isArray(attachments) && attachments.length ? (
+                          attachments.map((att: any, idx: number) => {
+                            // Handle both string URLs and object formats
+                            const url = typeof att === 'string' ? att : (att.url || att.link || att)
+                            const filename = typeof att === 'string' 
+                              ? att.split('/').pop() || att 
+                              : (att.name || att.filename || url?.split('/').pop() || url)
+                            return (
+                              <a 
+                                key={idx} 
+                                className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800" 
+                                href={url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                              >
+                                {filename}
+                              </a>
+                            )
+                          })
+                        ) : (
+                          <Input value="—" disabled />
+                        )
+                      })()}
                     </div>
                   </div>
                 </div>

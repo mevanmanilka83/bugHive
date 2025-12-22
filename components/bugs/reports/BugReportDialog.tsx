@@ -39,7 +39,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   const [title, setTitle] = React.useState("")
   const [description, setDescription] = React.useState("")
   const [priority, setPriority] = React.useState("medium")
-  const [visibility, setVisibility] = React.useState("team")
+  const [visibility, setVisibility] = React.useState("public")
   const [environment, setEnvironment] = React.useState("")
   const [expectedBehavior, setExpectedBehavior] = React.useState("")
   const [actualBehavior, setActualBehavior] = React.useState("")
@@ -53,7 +53,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     setTitle("")
     setDescription("")
     setPriority("medium")
-    setVisibility("team")
+    setVisibility("public")
     setEnvironment("")
     setExpectedBehavior("")
     setActualBehavior("")
@@ -78,7 +78,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       title,
       description,
       priority: priority as "low" | "medium" | "high" | "critical",
-      visibility: visibility as "private" | "team" | "public",
+      visibility: visibility as "private" | "public",
       environment: environment || undefined,
       expected_behavior: expectedBehavior,
       actual_behavior: actualBehavior,
@@ -188,7 +188,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         title: "test", // minimal valid title
         description: "test", // minimal valid description
         priority: "medium" as const,
-        visibility: "team" as const,
+        visibility: "public" as const,
         attachments: [...attachments.map(att => att.file), file]
       }
       
