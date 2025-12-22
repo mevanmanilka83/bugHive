@@ -3,7 +3,7 @@
  * 
  * Supabase implementation for fetching multiple records with optional filtering.
  */
-import { supabase } from "../../config"
+import { supabase } from "../../config/config"
 
 /**
  * Fetches multiple records with optional filtering using Supabase

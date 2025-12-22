@@ -9,7 +9,7 @@
  * - database/: Database operations (CRUD with fallback)
  * - s3Uploads.ts: S3 file upload operations
  * - formParser.ts: Form data parsing
- * - auth.ts: Authentication helpers
+ * - apiAuth.ts: API route authentication helpers
  */
 
 // Configuration exports
@@ -54,4 +54,4 @@ export {
 export { parseFormData } from "./formParser"
 
 // Auth exports
-export { checkAuth } from "./auth"
+export { checkAuth } from "./apiAuth"

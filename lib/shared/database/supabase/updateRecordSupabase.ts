@@ -3,7 +3,7 @@
  * 
  * Supabase implementation for updating an existing record.
  */
-import { supabase } from "../../config"
+import { supabase } from "../../config/config"
 
 /**
  * Updates an existing record using Supabase

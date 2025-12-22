@@ -1,15 +1,13 @@
 /**
- * Bug GET Handler
+ * Cluster Bug GET Handler
  * 
- * Handles fetching general bugs (without cluster_id) and applies cluster filtering:
- * - Single bug: GET /api/bugs/[id]
- * - Multiple bugs: GET /api/bugs?created_by=xxx&limit=100
+ * Handles fetching cluster-specific bugs with access control:
+ * - Single cluster bug: GET /api/bugs/[id] (when bug has cluster_id)
+ * - Multiple cluster bugs: GET /api/bugs?cluster_id=xxx&limit=100
  * 
- * Note: For cluster-specific bugs, use clusterBugGet handler
- * 
- * Cluster filtering:
- * - Bugs without cluster_id are visible to all users (global bugs)
- * - Bugs with cluster_id are filtered by user's cluster membership
+ * Cluster Bug Rules:
+ * - Only returns bugs that belong to clusters the user is a member/owner of
+ * - Validates cluster access before returning bugs
  */
 import { getSingleRecord, getMultipleRecords, extractBugId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
@@ -31,12 +29,12 @@ async function getUserClusterIds(userId: string): Promise<Set<string>> {
 
 // Helper: Filter bugs by cluster access
 function filterBugsByClusterAccess(bugs: any[], userClusterIds: Set<string>): any[] {
-  return bugs.filter(bug => !bug.cluster_id || userClusterIds.has(bug.cluster_id))
+  return bugs.filter(bug => bug.cluster_id && userClusterIds.has(bug.cluster_id))
 }
 
 // Helper: Validate bug cluster access
 async function validateBugClusterAccess(userId: string, bug: any): Promise<boolean> {
-  if (!bug?.cluster_id) return true
+  if (!bug?.cluster_id) return false
   const userClusterIds = await getUserClusterIds(userId)
   return userClusterIds.has(bug.cluster_id)
 }
@@ -58,60 +56,65 @@ async function enrichBugsWithClusters(bugs: any[]): Promise<any[]> {
 }
 
 /**
- * Creates GET handler for bugs
+ * Creates GET handler for cluster-specific bugs
  * 
  * Features:
- * - Fetches single or multiple bugs
+ * - Fetches single or multiple cluster bugs
  * - Enriches bugs with cluster names
  * - Filters bugs by user's cluster membership
- * - Supports filtering by created_by or cluster_id
+ * - Validates cluster access for all operations
+ * - Supports filtering by cluster_id
  * - Supports limit parameter
  */
-export const createBugGetHandler = () => 
+export const createClusterBugGetHandler = () => 
   createApiHandler(async (request, context, authResult) => {
+    if (!authResult?.user?.id) {
+      throw new Error("Unauthorized")
+    }
+
     if (context?.params) {
-      // Single bug fetch - include cluster name and check access
+      // Single cluster bug fetch - validate access
       const id = await extractBugId(context)
       const bug = await getSingleRecord('bugs', id)
       
       if (!bug) {
         return { bug: null }
       }
+
+      // Cluster bugs require cluster access validation
+      if (!bug.cluster_id) {
+        // Not a cluster bug, return null (use general bug handler instead)
+        return { bug: null }
+      }
       
-      // Check if user has access to this bug's cluster
-      if (authResult?.user?.id) {
-        const hasAccess = await validateBugClusterAccess(authResult.user.id, bug)
-        if (!hasAccess) {
-          // User doesn't have access to this cluster bug
-          return { bug: null }
-        }
+      // Validate cluster access
+      const hasAccess = await validateBugClusterAccess(authResult.user.id, bug)
+      if (!hasAccess) {
+        // User doesn't have access to this cluster bug
+        return { bug: null }
       }
       
       const enrichedBug = await enrichBugWithCluster(bug)
       return { bug: enrichedBug }
     }
     
-    // Multiple bugs fetch - include cluster names and filter by access
+    // Multiple cluster bugs fetch - filter by cluster access
     const searchParams = request?.nextUrl?.searchParams
     if (!searchParams) {
       return { bugs: [] }
     }
     
     const { filterField, filterValue, limit } = parseQueryFilters(searchParams)
+    
+    // Only fetch bugs with cluster_id (cluster-specific bugs)
     const records = await getMultipleRecords('bugs', filterField, filterValue)
     
-    // Exclude cluster bugs when no cluster_id filter is provided
-    // This ensures Bug Explore, Dashboard, and Recent Bugs only show general bugs
-    const excludeClusterBugs = filterField !== 'cluster_id'
-    let filteredBugs = excludeClusterBugs 
-      ? records.filter(bug => !bug.cluster_id) // Only show bugs without cluster_id
-      : records // If cluster_id filter is provided, show those cluster bugs
+    // Filter to only cluster bugs
+    const clusterBugs = records.filter(bug => bug.cluster_id)
     
-    // Filter bugs by user's cluster membership (only if cluster_id filter is provided)
-    if (!excludeClusterBugs && authResult?.user?.id) {
-      const userClusterIds = await getUserClusterIds(authResult.user.id)
-      filteredBugs = filterBugsByClusterAccess(filteredBugs, userClusterIds)
-    }
+    // Filter bugs by user's cluster membership
+    const userClusterIds = await getUserClusterIds(authResult.user.id)
+    const filteredBugs = filterBugsByClusterAccess(clusterBugs, userClusterIds)
     
     // Enrich bugs with cluster names
     const bugsWithClusters = await enrichBugsWithClusters(filteredBugs)

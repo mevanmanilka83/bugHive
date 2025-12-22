@@ -1,10 +1,12 @@
 /**
  * Bug POST Handler
  * 
- * Handles creating new bugs:
- * - POST /api/bugs
+ * Handles creating new general bugs (without cluster_id):
+ * - POST /api/bugs (when cluster_id is not provided)
  * - Supports file uploads for attachments
  * - Transforms form data into bug record format
+ * 
+ * Note: For cluster-specific bugs, use clusterBugPost handler
  */
 import { parseArrayField } from "@/lib/shared/shared"
 import { createPostHandler } from "../../genericHandlers/postHandler"
@@ -17,6 +19,8 @@ import { createPostHandler } from "../../genericHandlers/postHandler"
  * @returns Transformed bug data ready for database insertion
  */
 export function transformBugData(formData: any, authResult: any) {
+  // General bug handler - don't set cluster_id
+  // If cluster_id is provided, it should use clusterBugPost handler instead
   return {
     title: formData.title.trim(),
     description: formData.description.trim(),
@@ -29,6 +33,7 @@ export function transformBugData(formData: any, authResult: any) {
     tags: parseArrayField(formData.tags),
     sources: parseArrayField(formData.sources),
     attachments: formData.attachments || null,
+    // Don't set cluster_id for general bugs
   }
 }
 

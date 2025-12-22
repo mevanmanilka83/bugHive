@@ -1,0 +1,109 @@
+/**
+ * Cluster Bug POST Handler
+ * 
+ * Handles creating new cluster-specific bugs:
+ * - POST /api/bugs (when cluster_id is provided)
+ * - Supports file uploads for attachments
+ * - Validates cluster access before creation
+ * - Transforms form data into cluster bug record format
+ */
+import { 
+  parseArrayField, 
+  ensureValidUUID,
+  parseFormData,
+  validateRequiredFields,
+  addTimestamps,
+  processFormDataWithUploads,
+  supabase
+} from "@/lib/shared/shared"
+import { createApiHandler } from "../../../handlerFactory"
+import { insertRecord } from "@/lib/shared/shared"
+
+// Helper: Check cluster access
+async function hasClusterAccess(userId: string, clusterId: string): Promise<boolean> {
+  const userUuid = ensureValidUUID(userId)
+  const { data: clusters } = await supabase.from('clusters').select('id, owner_id, members')
+  if (clusters) {
+    for (const cluster of clusters) {
+      if (cluster.id === clusterId && (cluster.owner_id === userUuid || cluster.members?.includes(userUuid))) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * Transforms form data into cluster bug record format
+ * 
+ * @param formData - Form data from request
+ * @param authResult - Authentication result with user info
+ * @returns Transformed cluster bug data ready for database insertion
+ */
+async function transformClusterBugData(formData: any, authResult: any) {
+  // Cluster bugs require cluster_id
+  if (!formData.cluster_id) {
+    throw new Error("cluster_id is required for cluster bugs")
+  }
+
+  // Validate cluster access
+  if (!authResult?.user?.id) {
+    throw new Error("Unauthorized")
+  }
+
+  const clusterId = ensureValidUUID(formData.cluster_id)
+  const hasAccess = await hasClusterAccess(authResult.user.id, clusterId)
+  if (!hasAccess) {
+    throw new Error("You don't have access to create bugs in this cluster")
+  }
+  
+  return {
+    title: formData.title.trim(),
+    description: formData.description.trim(),
+    priority: formData.priority || "medium",
+    visibility: formData.visibility || "team",
+    environment: formData.environment || null,
+    expected_behavior: formData.expected_behavior || null,
+    actual_behavior: formData.actual_behavior || null,
+    steps_to_reproduce: formData.steps_to_reproduce || null,
+    tags: parseArrayField(formData.tags),
+    sources: parseArrayField(formData.sources),
+    attachments: formData.attachments || null,
+    cluster_id: clusterId,
+  }
+}
+
+/**
+ * Creates POST handler for cluster-specific bugs
+ * 
+ * Features:
+ * - Validates required fields (title, description, cluster_id)
+ * - Validates cluster access before creation
+ * - Transforms form data to cluster bug format
+ * - Supports file uploads (attachments)
+ * - Uploads files to 'bugs' folder in S3
+ */
+export const createClusterBugPostHandler = () => 
+  createApiHandler(async (request, context, authResult) => {
+    if (!authResult?.user?.id) {
+      throw new Error("Unauthorized")
+    }
+
+    // Parse form data (with file uploads)
+    const formData = await processFormDataWithUploads(request, 'bugs')
+    
+    // Validate required fields
+    validateRequiredFields(formData, ['title', 'description', 'cluster_id'])
+
+    // Transform data
+    const transformedData = await transformClusterBugData(formData, authResult)
+
+    // Add timestamps and created_by field
+    const recordData = addTimestamps({
+      ...transformedData,
+      created_by: ensureValidUUID(authResult.user.id)
+    })
+
+    const record = await insertRecord('bugs', recordData)
+    return { bug: record }
+  }, 201)
