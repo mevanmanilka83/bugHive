@@ -1,4 +1,4 @@
-import { checkAuth, supabase, ensureValidUUID, generateUUIDFromEmailSync, isValidEmail, extractUsernameFromEmail } from "@/lib/core"
+import { checkAuth, supabase, ensureValidUUID, generateUUIDFromEmailSync, isValidEmail, extractUsernameFromEmail } from "@/lib/shared/core"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

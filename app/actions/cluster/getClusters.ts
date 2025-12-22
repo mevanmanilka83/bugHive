@@ -1,7 +1,7 @@
 "use server"
 
 import { auth } from "@/auth"
-import { supabase, ensureValidUUID } from "@/lib/core"
+import { supabase, ensureValidUUID } from "@/lib/shared/core"
 
 export async function getClusters() {
   try {
@@ -46,4 +46,5 @@ export async function getClusters() {
     }
   }
 }
+
 

@@ -10,7 +10,7 @@
  * Use API routes when you need HTTP endpoints for external clients or form submissions
  */
 import { NextRequest } from "next/server"
-import { errorResponse, successResponse, isValidEmail } from "@/lib/core"
+import { errorResponse, successResponse, isValidEmail, isValidPassword, validateRequiredFields } from "@/lib/core/core"
 import { saveUserToSupabase } from "@/app/actions/User"
 
 export const runtime = 'nodejs'
@@ -18,21 +18,23 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json()
+    const body = await request.json()
+    const { email, password, name } = body
 
     // Validate required fields
-    if (!email || !password || !name) {
-      return errorResponse("Email, password, and name are required", 400)
+    try {
+      validateRequiredFields(body, ['email', 'password', 'name'])
+    } catch (error) {
+      return errorResponse(error instanceof Error ? error.message : "Missing required fields", 400)
     }
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       return errorResponse("Invalid email format", 400)
     }
 
-    // Validate password strength (minimum 6 characters)
-    if (password.length < 6) {
+    // Validate password strength
+    if (!isValidPassword(password)) {
       return errorResponse("Password must be at least 6 characters", 400)
     }
 

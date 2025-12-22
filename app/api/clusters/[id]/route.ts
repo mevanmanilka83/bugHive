@@ -1,4 +1,4 @@
-import { getSingleRecord, updateRecord, deleteRecord, addTimestamps, ensureValidUUID, checkAuth } from "@/lib/core"
+import { getSingleRecord, updateRecord, deleteRecord, addTimestamps, ensureValidUUID, checkAuth } from "@/lib/shared/core"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'
