@@ -327,8 +327,8 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
   if (!mounted) {
     return (
-      <Button size="sm" className="justify-start gap-2" disabled>
-        <IconReport />
+      <Button disabled>
+        <IconReport className="size-4 mr-2" />
         Report Bug
       </Button>
     )
@@ -337,8 +337,8 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
       <DialogTrigger asChild>
-        <Button size="sm" className="justify-start gap-2">
-          <IconReport />
+        <Button>
+          <IconReport className="size-4 mr-2" />
           Report Bug
         </Button>
       </DialogTrigger>

@@ -10,32 +10,32 @@
 import { getSingleRecord, extractRouteId, updateRecord, addTimestamps, supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
-// Helper: Get user's cluster IDs
-async function getUserClusterIds(userId: string): Promise<Set<string>> {
+// Helper: Check if user is owner or member of a cluster
+async function isClusterOwnerOrMember(userId: string, clusterId: string): Promise<boolean> {
   const userUuid = ensureValidUUID(userId)
-  const clusterIds = new Set<string>()
-  const { data: clusters } = await supabase.from('clusters').select('id, owner_id, members')
-  if (clusters) {
-    for (const cluster of clusters) {
-      if (cluster.owner_id === userUuid || (cluster.members?.includes(userUuid))) {
-        clusterIds.add(cluster.id)
-      }
-    }
-  }
-  return clusterIds
+  const { data: cluster } = await supabase
+    .from('clusters')
+    .select('id, owner_id, members')
+    .eq('id', clusterId)
+    .single()
+  
+  if (!cluster) return false
+  
+  const isOwner = cluster.owner_id === userUuid
+  const isMember = cluster.members && Array.isArray(cluster.members) && cluster.members.includes(userUuid)
+  
+  return isOwner || isMember
 }
 
-// Helper: Validate bug cluster access
+// Helper: Validate bug cluster access (only owner/member)
 async function validateBugClusterAccess(userId: string, bug: any): Promise<boolean> {
   if (!bug?.cluster_id) return false
-  const userClusterIds = await getUserClusterIds(userId)
-  return userClusterIds.has(bug.cluster_id)
+  return await isClusterOwnerOrMember(userId, bug.cluster_id)
 }
 
-// Helper: Check cluster access
+// Helper: Check cluster access (only owner/member)
 async function hasClusterAccess(userId: string, clusterId: string): Promise<boolean> {
-  const userClusterIds = await getUserClusterIds(userId)
-  return userClusterIds.has(clusterId)
+  return await isClusterOwnerOrMember(userId, clusterId)
 }
 
 /**
@@ -81,17 +81,40 @@ export const createClusterBugPatchHandler = () =>
       throw new Error("This handler is for cluster bugs only")
     }
 
-    // Validate cluster access for the existing bug
-    const hasAccess = await validateBugClusterAccess(authResult.user.id, existingBug)
-    if (!hasAccess) {
-      throw new Error("You don't have access to update this cluster bug")
+    // Validate that user is owner or member of the cluster
+    const isAuthorized = await validateBugClusterAccess(authResult.user.id, existingBug)
+    if (!isAuthorized) {
+      throw new Error("Only cluster owners and members can update cluster bugs")
     }
 
-    // If updating cluster_id, validate access to the new cluster
+    // Check if user is trying to close the bug
+    if (body.status === 'closed') {
+      const userUuid = ensureValidUUID(authResult.user.id)
+      const bugCreatorId = existingBug.created_by ? ensureValidUUID(existingBug.created_by) : null
+      
+      // Check if user is the bug creator
+      const isCreator = bugCreatorId && bugCreatorId === userUuid
+      
+      // Check if user is the cluster owner
+      const { data: cluster } = await supabase
+        .from('clusters')
+        .select('owner_id')
+        .eq('id', existingBug.cluster_id)
+        .single()
+      
+      const isClusterOwner = cluster?.owner_id === userUuid
+      
+      // Only creator or cluster owner can close the bug
+      if (!isCreator && !isClusterOwner) {
+        throw new Error("Only the bug creator or cluster owner can close this bug")
+      }
+    }
+
+    // If updating cluster_id, validate that user is owner or member of the new cluster
     if (body.cluster_id && body.cluster_id !== existingBug.cluster_id) {
       const hasNewClusterAccess = await hasClusterAccess(authResult.user.id, body.cluster_id)
       if (!hasNewClusterAccess) {
-        throw new Error("You don't have access to move this bug to the specified cluster")
+        throw new Error("Only cluster owners and members can move bugs to a cluster")
       }
     }
 

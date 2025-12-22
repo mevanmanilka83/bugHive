@@ -125,3 +125,155 @@ export async function createBugSolution(formData: FormData, bugId: string) {
     }
   }
 }
+
+/**
+ * Fetch all solutions for charting purposes
+ */
+export async function getAllSolutions() {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized", solutions: [] }
+    }
+
+    const { data, error } = await supabase
+      .from('bug_solution_details')
+      .select('id, created_at, bug_id')
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      return { 
+        success: false, 
+        error: error.message || 'Failed to fetch solutions',
+        solutions: []
+      }
+    }
+
+    return { 
+      success: true, 
+      solutions: data || []
+    }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Internal server error",
+      solutions: []
+    }
+  }
+}
+
+/**
+ * Fetch solutions for bugs in a specific cluster
+ */
+export async function getSolutionsByCluster(clusterId: string) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized", solutions: [] }
+    }
+
+    // First get all bugs in this cluster
+    const { data: bugs, error: bugsError } = await supabase
+      .from('bugs')
+      .select('id')
+      .eq('cluster_id', clusterId)
+
+    if (bugsError) {
+      return { 
+        success: false, 
+        error: bugsError.message || 'Failed to fetch cluster bugs',
+        solutions: []
+      }
+    }
+
+    if (!bugs || bugs.length === 0) {
+      return { success: true, solutions: [] }
+    }
+
+    const bugIds = bugs.map(b => b.id)
+
+    // Then get all solutions for those bugs
+    const { data, error } = await supabase
+      .from('bug_solution_details')
+      .select('id, created_at, bug_id')
+      .in('bug_id', bugIds)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      return { 
+        success: false, 
+        error: error.message || 'Failed to fetch solutions',
+        solutions: []
+      }
+    }
+
+    return { 
+      success: true, 
+      solutions: data || []
+    }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Internal server error",
+      solutions: []
+    }
+  }
+}
+
+/**
+ * Fetch solutions for bugs created by a specific user
+ */
+export async function getSolutionsByUser(userId: string) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized", solutions: [] }
+    }
+
+    // First get all bugs created by this user
+    const { data: bugs, error: bugsError } = await supabase
+      .from('bugs')
+      .select('id')
+      .eq('created_by', userId)
+
+    if (bugsError) {
+      return { 
+        success: false, 
+        error: bugsError.message || 'Failed to fetch user bugs',
+        solutions: []
+      }
+    }
+
+    if (!bugs || bugs.length === 0) {
+      return { success: true, solutions: [] }
+    }
+
+    const bugIds = bugs.map(b => b.id)
+
+    // Then get all solutions for those bugs
+    const { data, error } = await supabase
+      .from('bug_solution_details')
+      .select('id, created_at, bug_id')
+      .in('bug_id', bugIds)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      return { 
+        success: false, 
+        error: error.message || 'Failed to fetch solutions',
+        solutions: []
+      }
+    }
+
+    return { 
+      success: true, 
+      solutions: data || []
+    }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Internal server error",
+      solutions: []
+    }
+  }
+}

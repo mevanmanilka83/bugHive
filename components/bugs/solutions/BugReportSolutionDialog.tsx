@@ -198,6 +198,15 @@ export function SolutionDialog({
       return
     }
 
+    // Check if a solution with the same title already exists
+    const existingSolution = solutions.find(
+      (sol) => sol.title?.toLowerCase().trim() === formData.title.toLowerCase().trim()
+    )
+    if (existingSolution) {
+      toast.error("A solution with this title already exists. Please use a different title.")
+      return
+    }
+
     try {
       setSubmitting(true)
 
@@ -220,6 +229,11 @@ export function SolutionDialog({
 
       if (!result.success) {
         throw new Error(result.error || "Failed to save solution")
+      }
+
+      // Dispatch event to notify other components (like charts) to refresh
+      if (typeof window !== 'undefined' && result.solution) {
+        window.dispatchEvent(new CustomEvent('solution:created', { detail: { solution: result.solution, bugId: bugData.id } }))
       }
 
       toast.success("Solution submitted")

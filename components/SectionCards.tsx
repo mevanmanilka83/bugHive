@@ -17,13 +17,24 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { createBugSolution } from "@/app/actions/bug/BugSolution"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { createBugSolution, getAllSolutions } from "@/app/actions/bug/BugSolution"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis, Dot } from "recharts"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { toast } from "sonner"
 
-export function SectionCards() {
+interface SectionCardsProps {
+  userId: string
+}
+
+export function SectionCards({ userId }: SectionCardsProps) {
   const [open, setOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
@@ -46,26 +57,39 @@ export function SectionCards() {
   async function fetchBugStats() {
     try {
       setLoading(true)
+      
+      // Fetch bugs for card metrics
       const res = await fetch("/api/bugs?limit=200")
       if (!res.ok) return
       const data = await res.json()
       const bugs: any[] = data?.bugs || []
       setBugs(bugs)
 
-      // Aggregate by day
+      // Fetch solutions for chart
+      const solutionsResult = await getAllSolutions()
+      const solutions: any[] = solutionsResult?.solutions || []
+
+      // Aggregate solutions by day and convert to cumulative
       const byDay = new Map<string, number>()
-      for (const bug of bugs) {
-        const createdAt = bug.created_at || bug.createdAt || bug.createdat
+      for (const solution of solutions) {
+        const createdAt = solution.created_at || solution.createdAt || solution.createdat
         const d = createdAt ? new Date(createdAt) : new Date()
         const key = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString().slice(0, 10)
         byDay.set(key, (byDay.get(key) || 0) + 1)
       }
       const sorted = Array.from(byDay.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([date, count]) => ({ date, count }))
-      setChartData(sorted)
+      
+      // Convert to cumulative (running total) - starts from flow (low) to high
+      let cumulative = 0
+      const cumulativeData = sorted.map(([date, count]) => {
+        cumulative += count
+        return { date, count: cumulative }
+      })
+      
+      setChartData(cumulativeData)
 
-      // Card metrics
+      // Card metrics (still based on bugs)
       setTotalBugs(bugs.length)
       const now = new Date()
       const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
@@ -95,8 +119,15 @@ export function SectionCards() {
     const onCreated = () => {
       fetchBugStats()
     }
+    const onSolutionCreated = () => {
+      fetchBugStats()
+    }
     window.addEventListener("bug:created", onCreated as EventListener)
-    return () => window.removeEventListener("bug:created", onCreated as EventListener)
+    window.addEventListener("solution:created", onSolutionCreated as EventListener)
+    return () => {
+      window.removeEventListener("bug:created", onCreated as EventListener)
+      window.removeEventListener("solution:created", onSolutionCreated as EventListener)
+    }
   }, [])
 
   React.useEffect(() => {
@@ -106,7 +137,7 @@ export function SectionCards() {
 
   const chartConfig: ChartConfig = {
     count: {
-      label: "Bugs",
+      label: "Solutions",
       color: "var(--primary)",
     },
   }
@@ -149,6 +180,56 @@ export function SectionCards() {
       setSolutions(Array.isArray(data?.solutions) ? data.solutions : [])
     } finally {
       setSolutionsLoading(false)
+    }
+  }
+
+  async function updateBugStatus(bugId: string, newStatus: string) {
+    try {
+      // Use the reports endpoint for bug updates (handler validates cluster access internally)
+      const endpoint = `/api/bugs/${bugId}/reports`
+      
+      const res = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!res.ok) {
+        // Try to extract error message from response
+        let errorMessage = 'Failed to update bug status'
+        try {
+          const errorData = await res.json()
+          errorMessage = errorData?.error || errorData?.message || errorMessage
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = res.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      toast.success(`Bug status updated to ${newStatus}`)
+      
+      // Update local state
+      setBugs(prevBugs => prevBugs.map(b => 
+        b.id === bugId ? { ...b, status: newStatus } : b
+      ))
+      
+      // Update selected bug if it's the one being updated
+      if (selectedBug?.id === bugId) {
+        setSelectedBug({ ...selectedBug, status: newStatus })
+      }
+      
+      // Refresh bugs list to ensure consistency
+      await fetchBugStats()
+      
+      // Dispatch event to notify other components
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('bug:updated', { detail: { bugId, status: newStatus } }))
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update bug status')
     }
   }
 
@@ -201,6 +282,11 @@ export function SectionCards() {
         throw new Error(result.error || "Failed to submit solution")
       }
 
+      // Dispatch event to notify other components (like charts) to refresh
+      if (typeof window !== 'undefined' && result.solution) {
+        window.dispatchEvent(new CustomEvent('solution:created', { detail: { solution: result.solution, bugId: selectedBug.id } }))
+      }
+
       toast.success('Solution submitted successfully')
       setSolutionErrors({})
       await fetchSolutions(selectedBug.id)
@@ -245,7 +331,7 @@ export function SectionCards() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Bug submissions over time</DialogTitle>
+            <DialogTitle>Solution submissions over time</DialogTitle>
           </DialogHeader>
           <ChartContainer config={chartConfig} className="aspect-auto h-[260px] w-full">
             <AreaChart data={chartData}>
@@ -258,7 +344,15 @@ export function SectionCards() {
                 minTickGap={24}
               />
               <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-              <Area dataKey="count" type="monotone" stroke="var(--color-count)" fill="var(--color-count)" fillOpacity={0.2} />
+              <Area 
+                dataKey="count" 
+                type="monotone" 
+                stroke="var(--color-count)" 
+                fill="var(--color-count)" 
+                fillOpacity={0.2}
+                dot={{ fill: "var(--color-count)", r: 4 }}
+                activeDot={{ r: 6 }}
+              />
             </AreaChart>
           </ChartContainer>
           {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
@@ -363,7 +457,20 @@ export function SectionCards() {
           return (
             <Card key={bug.id} className="@container/card">
               <CardHeader className="flex flex-col px-4 gap-1">
-                <CardDescription className="capitalize text-xs">{status}</CardDescription>
+                <Badge 
+                  variant="outline" 
+                  className="capitalize text-[10px] px-1.5 py-0.5 text-white"
+                  style={
+                    status === 'open' ? { backgroundColor: '#0d9488', color: '#ffffff', borderColor: '#0d9488' }
+                    : status === 'closed' ? { backgroundColor: '#64748b', color: '#ffffff', borderColor: '#64748b' }
+                    : status === 'in_progress' ? { backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }
+                    : status === 'resolved' ? { backgroundColor: '#4f46e5', color: '#ffffff', borderColor: '#4f46e5' }
+                    : status === 'reopened' ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }
+                    : undefined
+                  }
+                >
+                  {status}
+                </Badge>
                 <CardTitle
                   className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg"
                   title={bugTitle}
@@ -431,7 +538,27 @@ export function SectionCards() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label>Status</Label>
+                    {selectedBug.created_by && selectedBug.created_by === userId ? (
+                      <Select
+                        value={(selectedBug.status || "open") as string}
+                        onValueChange={(value) => {
+                          void updateBugStatus(selectedBug.id, value)
+                        }}
+                      >
+                        <SelectTrigger className="capitalize">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Open</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="resolved">Resolved</SelectItem>
+                          <SelectItem value="reopened">Reopened</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
                     <Input value={(selectedBug.status || "open") as string} disabled className="capitalize" />
+                    )}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label>Priority</Label>
@@ -509,7 +636,7 @@ export function SectionCards() {
     <Dialog open={graphOpen} onOpenChange={setGraphOpen}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Bug submissions over time</DialogTitle>
+          <DialogTitle>Solution submissions over time</DialogTitle>
         </DialogHeader>
         <ChartContainer config={chartConfig} className="aspect-auto h-[260px] w-full">
           <AreaChart data={chartData}>

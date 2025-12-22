@@ -12,14 +12,16 @@
 import { getSingleRecord, getMultipleRecords, extractBugId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
-// Helper: Get user's cluster IDs
+// Helper: Get user's cluster IDs (where user is owner or member)
 async function getUserClusterIds(userId: string): Promise<Set<string>> {
   const userUuid = ensureValidUUID(userId)
   const clusterIds = new Set<string>()
   const { data: clusters } = await supabase.from('clusters').select('id, owner_id, members')
   if (clusters) {
     for (const cluster of clusters) {
-      if (cluster.owner_id === userUuid || (cluster.members?.includes(userUuid))) {
+      const isOwner = cluster.owner_id === userUuid
+      const isMember = cluster.members && Array.isArray(cluster.members) && cluster.members.includes(userUuid)
+      if (isOwner || isMember) {
         clusterIds.add(cluster.id)
       }
     }
@@ -27,16 +29,32 @@ async function getUserClusterIds(userId: string): Promise<Set<string>> {
   return clusterIds
 }
 
-// Helper: Filter bugs by cluster access
+// Helper: Check if user is owner or member of a cluster
+async function isClusterOwnerOrMember(userId: string, clusterId: string): Promise<boolean> {
+  const userUuid = ensureValidUUID(userId)
+  const { data: cluster } = await supabase
+    .from('clusters')
+    .select('id, owner_id, members')
+    .eq('id', clusterId)
+    .single()
+  
+  if (!cluster) return false
+  
+  const isOwner = cluster.owner_id === userUuid
+  const isMember = cluster.members && Array.isArray(cluster.members) && cluster.members.includes(userUuid)
+  
+  return isOwner || isMember
+}
+
+// Helper: Filter bugs by cluster access (only owner/member)
 function filterBugsByClusterAccess(bugs: any[], userClusterIds: Set<string>): any[] {
   return bugs.filter(bug => bug.cluster_id && userClusterIds.has(bug.cluster_id))
 }
 
-// Helper: Validate bug cluster access
+// Helper: Validate bug cluster access (only owner/member)
 async function validateBugClusterAccess(userId: string, bug: any): Promise<boolean> {
   if (!bug?.cluster_id) return false
-  const userClusterIds = await getUserClusterIds(userId)
-  return userClusterIds.has(bug.cluster_id)
+  return await isClusterOwnerOrMember(userId, bug.cluster_id)
 }
 
 // Helper: Enrich bug with cluster name

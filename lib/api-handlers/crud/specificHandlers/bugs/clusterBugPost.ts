@@ -19,18 +19,21 @@ import {
 import { createApiHandler } from "../../../handlerFactory"
 import { insertRecord } from "@/lib/shared/shared"
 
-// Helper: Check cluster access
-async function hasClusterAccess(userId: string, clusterId: string): Promise<boolean> {
+// Helper: Check if user is owner or member of a cluster
+async function isClusterOwnerOrMember(userId: string, clusterId: string): Promise<boolean> {
   const userUuid = ensureValidUUID(userId)
-  const { data: clusters } = await supabase.from('clusters').select('id, owner_id, members')
-  if (clusters) {
-    for (const cluster of clusters) {
-      if (cluster.id === clusterId && (cluster.owner_id === userUuid || cluster.members?.includes(userUuid))) {
-        return true
-      }
-    }
-  }
-  return false
+  const { data: cluster } = await supabase
+    .from('clusters')
+    .select('id, owner_id, members')
+    .eq('id', clusterId)
+    .single()
+  
+  if (!cluster) return false
+  
+  const isOwner = cluster.owner_id === userUuid
+  const isMember = cluster.members && Array.isArray(cluster.members) && cluster.members.includes(userUuid)
+  
+  return isOwner || isMember
 }
 
 /**
@@ -52,9 +55,9 @@ async function transformClusterBugData(formData: any, authResult: any) {
   }
 
   const clusterId = ensureValidUUID(formData.cluster_id)
-  const hasAccess = await hasClusterAccess(authResult.user.id, clusterId)
-  if (!hasAccess) {
-    throw new Error("You don't have access to create bugs in this cluster")
+  const isAuthorized = await isClusterOwnerOrMember(authResult.user.id, clusterId)
+  if (!isAuthorized) {
+    throw new Error("Only cluster owners and members can create bugs in this cluster")
   }
   
   return {

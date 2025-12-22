@@ -56,6 +56,10 @@ const ALLOWED_UPDATE_FIELDS = [
  */
 export const createBugPatchHandler = () => 
   createApiHandler(async (request, context, authResult) => {
+    if (!authResult?.user?.id) {
+      throw new Error("Unauthorized")
+    }
+
     const id = await extractRouteId(context)
     const body = await request.json().catch(() => ({}))
 
@@ -63,6 +67,17 @@ export const createBugPatchHandler = () =>
     const existingBug = await getSingleRecord('bugs', id)
     if (!existingBug) {
       throw new Error("Bug not found")
+    }
+
+    // Check if user is trying to close the bug
+    if (body.status === 'closed') {
+      const userUuid = ensureValidUUID(authResult.user.id)
+      const bugCreatorId = existingBug.created_by ? ensureValidUUID(existingBug.created_by) : null
+      
+      // Only the creator can close the bug
+      if (!bugCreatorId || bugCreatorId !== userUuid) {
+        throw new Error("Only the bug creator can close this bug")
+      }
     }
 
     // If bug has cluster_id, validate access (but prefer using clusterBugPatch)

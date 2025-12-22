@@ -111,11 +111,8 @@ export function ClusterBugsPage({ clusterId, userId }: ClusterBugsPageProps) {
               )}
             </div>
           </div>
+          <BugReportDialog clusterId={clusterId} />
         </div>
-      </div>
-
-      <div className="mb-4 flex items-center gap-2">
-        <BugReportDialog clusterId={clusterId} />
       </div>
 
       <ClusterBugsList clusterId={clusterId} userId={userId} />

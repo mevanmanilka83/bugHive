@@ -14,10 +14,19 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
+import { getSolutionsByCluster } from "@/app/actions/bug/BugSolution"
+import { toast } from "sonner"
 
 interface ClusterBugsListProps {
   clusterId: string
@@ -36,10 +45,11 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
   const [solutionsLoading, setSolutionsLoading] = React.useState(false)
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
   const [loading, setLoading] = React.useState(false)
+  const [clusterOwnerId, setClusterOwnerId] = React.useState<string | null>(null)
 
   const chartConfig: ChartConfig = {
     count: {
-      label: "Bugs",
+      label: "Solutions",
       color: "var(--primary)",
     },
   }
@@ -53,18 +63,36 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
       const items: any[] = data?.bugs || []
       setBugs(items)
 
-      // Build chart data
+      // Fetch cluster info to get owner_id
+      const clusterRes = await fetch(`/api/clusters/${clusterId}`)
+      if (clusterRes.ok) {
+        const clusterData = await clusterRes.json()
+        setClusterOwnerId(clusterData?.cluster?.owner_id || null)
+      }
+
+      // Fetch solutions for bugs in this cluster and build chart data
+      const solutionsResult = await getSolutionsByCluster(clusterId)
+      const solutions: any[] = solutionsResult?.solutions || []
+
+      // Build chart data from solutions and convert to cumulative
       const byDay = new Map<string, number>()
-      for (const bug of items) {
-        const createdAt = bug.created_at || bug.createdAt || bug.createdat
+      for (const solution of solutions) {
+        const createdAt = solution.created_at || solution.createdAt || solution.createdat
         const d = createdAt ? new Date(createdAt) : new Date()
         const key = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString().slice(0, 10)
         byDay.set(key, (byDay.get(key) || 0) + 1)
       }
       const sorted = Array.from(byDay.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([date, count]) => ({ date, count }))
-      setChartData(sorted)
+      
+      // Convert to cumulative (running total) - starts from flow (low) to high
+      let cumulative = 0
+      const cumulativeData = sorted.map(([date, count]) => {
+        cumulative += count
+        return { date, count: cumulative }
+      })
+      
+      setChartData(cumulativeData)
     } finally {
       setLoading(false)
     }
@@ -76,9 +104,22 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
 
   React.useEffect(() => {
     const onCreated = () => fetchBugs()
+    const onSolutionCreated = (event: Event) => {
+      fetchBugs()
+      // Refresh solutions if the solution dialog is open for the bug that got a new solution
+      const customEvent = event as CustomEvent
+      if (customEvent.detail?.bugId && selectedBug?.id === customEvent.detail.bugId) {
+        void fetchSolutions(customEvent.detail.bugId)
+      }
+    }
     window.addEventListener("bug:created", onCreated as EventListener)
-    return () => window.removeEventListener("bug:created", onCreated as EventListener)
-  }, [fetchBugs])
+    window.addEventListener("solution:created", onSolutionCreated as EventListener)
+    return () => {
+      window.removeEventListener("bug:created", onCreated as EventListener)
+      window.removeEventListener("solution:created", onSolutionCreated as EventListener)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchBugs, selectedBug?.id])
 
   async function openBugDetails(bugId: string) {
     try {
@@ -116,6 +157,54 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
       setSolutions(Array.isArray(data?.solutions) ? data.solutions : [])
     } finally {
       setSolutionsLoading(false)
+    }
+  }
+
+  async function updateBugStatus(bugId: string, newStatus: string) {
+    try {
+      // Use the reports endpoint - the handler will validate cluster access
+      const res = await fetch(`/api/bugs/${bugId}/reports`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!res.ok) {
+        // Try to extract error message from response
+        let errorMessage = 'Failed to update bug status'
+        try {
+          const errorData = await res.json()
+          errorMessage = errorData?.error || errorData?.message || errorMessage
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = res.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      toast.success(`Bug status updated to ${newStatus}`)
+      
+      // Update local state
+      setBugs(prevBugs => prevBugs.map(b => 
+        b.id === bugId ? { ...b, status: newStatus } : b
+      ))
+      
+      // Update selected bug if it's the one being updated
+      if (selectedBug?.id === bugId) {
+        setSelectedBug({ ...selectedBug, status: newStatus })
+      }
+      
+      // Refresh bugs list to ensure consistency
+      await fetchBugs()
+      
+      // Dispatch event to notify other components
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('bug:updated', { detail: { bugId, status: newStatus } }))
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update bug status')
     }
   }
 
@@ -181,7 +270,20 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
             return (
               <Card key={bug.id} className="@container/card">
                 <CardHeader className="flex flex-col px-4 gap-1">
-                  <CardDescription className="capitalize text-xs">{status}</CardDescription>
+                  <Badge 
+                    variant="outline" 
+                    className="capitalize text-[10px] px-1.5 py-0.5 text-white"
+                    style={
+                      status === 'open' ? { backgroundColor: '#0d9488', color: '#ffffff', borderColor: '#0d9488' }
+                      : status === 'closed' ? { backgroundColor: '#64748b', color: '#ffffff', borderColor: '#64748b' }
+                      : status === 'in_progress' ? { backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }
+                      : status === 'resolved' ? { backgroundColor: '#4f46e5', color: '#ffffff', borderColor: '#4f46e5' }
+                      : status === 'reopened' ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }
+                      : undefined
+                    }
+                  >
+                    {status}
+                  </Badge>
                   <CardTitle className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg" title={bugTitle}>
                     {bugTitle}
                   </CardTitle>
@@ -241,7 +343,27 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <Label>Status</Label>
+                      {selectedBug.created_by && (selectedBug.created_by === userId || clusterOwnerId === userId) ? (
+                        <Select
+                          value={(selectedBug.status || "open") as string}
+                          onValueChange={(value) => {
+                            void updateBugStatus(selectedBug.id, value)
+                          }}
+                        >
+                          <SelectTrigger className="capitalize">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="open">Open</SelectItem>
+                            <SelectItem value="closed">Closed</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="resolved">Resolved</SelectItem>
+                            <SelectItem value="reopened">Reopened</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
                       <Input value={(selectedBug.status || "open") as string} disabled className="capitalize" />
+                      )}
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label>Priority</Label>

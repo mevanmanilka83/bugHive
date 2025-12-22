@@ -16,13 +16,24 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { createBugSolution } from "@/app/actions/bug/BugSolution"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { createBugSolution, getAllSolutions } from "@/app/actions/bug/BugSolution"
 import { ChartConfig } from "@/components/ui/chart"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { toast } from "sonner"
 
-export function RecentBugs() {
+interface RecentBugsProps {
+  userId?: string
+}
+
+export function RecentBugs({ userId }: RecentBugsProps = {} as RecentBugsProps) {
   const [bugs, setBugs] = React.useState<any[]>([])
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
   const [detailsOpen, setDetailsOpen] = React.useState(false)
@@ -36,10 +47,11 @@ export function RecentBugs() {
   const [solutionErrors, setSolutionErrors] = React.useState<{ title?: string; description?: string; solution_type?: string; priority?: string; status?: string; assignee?: string; estimated_hours?: string; links?: string }>({})
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
   const [loading, setLoading] = React.useState(false)
+  const [currentUserId, setCurrentUserId] = React.useState<string | null>(userId || null)
 
   const chartConfig: ChartConfig = {
     count: {
-      label: "Bugs",
+      label: "Solutions",
       color: "var(--primary)",
     },
   }
@@ -53,18 +65,29 @@ export function RecentBugs() {
       const items: any[] = data?.bugs || []
       setBugs(items)
 
-      // Build chart data
+      // Fetch solutions and build chart data from solutions
+      const solutionsResult = await getAllSolutions()
+      const solutions: any[] = solutionsResult?.solutions || []
+
+      // Build chart data from solutions and convert to cumulative
       const byDay = new Map<string, number>()
-      for (const bug of items) {
-        const createdAt = bug.created_at || bug.createdAt || bug.createdat
+      for (const solution of solutions) {
+        const createdAt = solution.created_at || solution.createdAt || solution.createdat
         const d = createdAt ? new Date(createdAt) : new Date()
         const key = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString().slice(0, 10)
         byDay.set(key, (byDay.get(key) || 0) + 1)
       }
       const sorted = Array.from(byDay.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([date, count]) => ({ date, count }))
-      setChartData(sorted)
+      
+      // Convert to cumulative (running total) - starts from flow (low) to high
+      let cumulative = 0
+      const cumulativeData = sorted.map(([date, count]) => {
+        cumulative += count
+        return { date, count: cumulative }
+      })
+      
+      setChartData(cumulativeData)
     } finally {
       setLoading(false)
     }
@@ -75,9 +98,32 @@ export function RecentBugs() {
   }, [])
 
   React.useEffect(() => {
+    // Fetch current user ID if not provided
+    if (!currentUserId && !userId) {
+      fetch('/api/users/me')
+        .then(res => res.json())
+        .then(data => {
+          if (data?.user?.id) {
+            setCurrentUserId(data.user.id)
+          }
+        })
+        .catch(() => {
+          // Silently fail
+        })
+    } else if (userId) {
+      setCurrentUserId(userId)
+    }
+  }, [userId, currentUserId])
+
+  React.useEffect(() => {
     const onCreated = () => fetchBugs()
+    const onSolutionCreated = () => fetchBugs()
     window.addEventListener("bug:created", onCreated as EventListener)
-    return () => window.removeEventListener("bug:created", onCreated as EventListener)
+    window.addEventListener("solution:created", onSolutionCreated as EventListener)
+    return () => {
+      window.removeEventListener("bug:created", onCreated as EventListener)
+      window.removeEventListener("solution:created", onSolutionCreated as EventListener)
+    }
   }, [])
 
 
@@ -117,6 +163,56 @@ export function RecentBugs() {
       setSolutions(Array.isArray(data?.solutions) ? data.solutions : [])
     } finally {
       setSolutionsLoading(false)
+    }
+  }
+
+  async function updateBugStatus(bugId: string, newStatus: string) {
+    try {
+      // Use the reports endpoint for bug updates (handler validates cluster access internally)
+      const endpoint = `/api/bugs/${bugId}/reports`
+      
+      const res = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!res.ok) {
+        // Try to extract error message from response
+        let errorMessage = 'Failed to update bug status'
+        try {
+          const errorData = await res.json()
+          errorMessage = errorData?.error || errorData?.message || errorMessage
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = res.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      toast.success(`Bug status updated to ${newStatus}`)
+      
+      // Update local state
+      setBugs(prevBugs => prevBugs.map(b => 
+        b.id === bugId ? { ...b, status: newStatus } : b
+      ))
+      
+      // Update selected bug if it's the one being updated
+      if (selectedBug?.id === bugId) {
+        setSelectedBug({ ...selectedBug, status: newStatus })
+      }
+      
+      // Refresh bugs list to ensure consistency
+      await fetchBugs()
+      
+      // Dispatch event to notify other components
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('bug:updated', { detail: { bugId, status: newStatus } }))
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update bug status')
     }
   }
 
@@ -162,6 +258,11 @@ export function RecentBugs() {
         throw new Error(result.error || "Failed to submit solution")
       }
 
+      // Dispatch event to notify other components (like charts) to refresh
+      if (typeof window !== 'undefined' && result.solution) {
+        window.dispatchEvent(new CustomEvent('solution:created', { detail: { solution: result.solution, bugId: selectedBug.id } }))
+      }
+
       toast.success('Solution submitted successfully')
       setSolutionErrors({})
       await fetchSolutions(selectedBug.id)
@@ -196,7 +297,20 @@ export function RecentBugs() {
             <Card key={bug.id} className="@container/card">
               <CardHeader className="flex flex-col px-4 gap-1">
                 <div className="flex items-center justify-between gap-2">
-                <CardDescription className="capitalize text-xs">{status}</CardDescription>
+                  <Badge 
+                    variant="outline" 
+                    className="capitalize text-[10px] px-1.5 py-0.5 text-white"
+                    style={
+                      status === 'open' ? { backgroundColor: '#0d9488', color: '#ffffff', borderColor: '#0d9488' }
+                      : status === 'closed' ? { backgroundColor: '#64748b', color: '#ffffff', borderColor: '#64748b' }
+                      : status === 'in_progress' ? { backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }
+                      : status === 'resolved' ? { backgroundColor: '#4f46e5', color: '#ffffff', borderColor: '#4f46e5' }
+                      : status === 'reopened' ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }
+                      : undefined
+                    }
+                  >
+                    {status}
+                  </Badge>
                   {bug.cluster_name && (
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
                       {bug.cluster_name}
@@ -249,7 +363,27 @@ export function RecentBugs() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
                       <Label>Status</Label>
+                      {selectedBug.created_by && (selectedBug.created_by === (currentUserId || userId)) ? (
+                        <Select
+                          value={(selectedBug.status || "open") as string}
+                          onValueChange={(value) => {
+                            void updateBugStatus(selectedBug.id, value)
+                          }}
+                        >
+                          <SelectTrigger className="capitalize">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="open">Open</SelectItem>
+                            <SelectItem value="closed">Closed</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="resolved">Resolved</SelectItem>
+                            <SelectItem value="reopened">Reopened</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
                       <Input value={(selectedBug.status || "open") as string} disabled className="capitalize" />
+                      )}
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label>Priority</Label>

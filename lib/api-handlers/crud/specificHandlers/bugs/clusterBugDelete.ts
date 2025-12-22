@@ -9,26 +9,26 @@
 import { getSingleRecord, extractRouteId, deleteRecord, supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
-// Helper: Get user's cluster IDs
-async function getUserClusterIds(userId: string): Promise<Set<string>> {
+// Helper: Check if user is owner or member of a cluster
+async function isClusterOwnerOrMember(userId: string, clusterId: string): Promise<boolean> {
   const userUuid = ensureValidUUID(userId)
-  const clusterIds = new Set<string>()
-  const { data: clusters } = await supabase.from('clusters').select('id, owner_id, members')
-  if (clusters) {
-    for (const cluster of clusters) {
-      if (cluster.owner_id === userUuid || (cluster.members?.includes(userUuid))) {
-        clusterIds.add(cluster.id)
-      }
-    }
-  }
-  return clusterIds
-}
-
-// Helper: Validate bug cluster access
-async function validateBugClusterAccess(userId: string, bug: any): Promise<boolean> {
-  if (!bug?.cluster_id) return false
-  const userClusterIds = await getUserClusterIds(userId)
-  return userClusterIds.has(bug.cluster_id)
+  const { data: cluster } = await supabase
+    .from('clusters')
+    .select('id, owner_id, members')
+    .eq('id', clusterId)
+    .single()
+  
+  if (!cluster) return false
+  
+  // Check if user is owner
+  const isOwner = cluster.owner_id === userUuid
+  
+  // Check if user is member
+  const isMember = cluster.members && 
+                   Array.isArray(cluster.members) && 
+                   cluster.members.includes(userUuid)
+  
+  return isOwner || isMember
 }
 
 /**
@@ -59,10 +59,10 @@ export const createClusterBugDeleteHandler = () =>
       throw new Error("This handler is for cluster bugs only")
     }
 
-    // Validate cluster access for the bug
-    const hasAccess = await validateBugClusterAccess(authResult.user.id, existingBug)
-    if (!hasAccess) {
-      throw new Error("You don't have access to delete this cluster bug")
+    // Validate that user is owner or member of the cluster
+    const isAuthorized = await isClusterOwnerOrMember(authResult.user.id, existingBug.cluster_id)
+    if (!isAuthorized) {
+      throw new Error("Only cluster owners and members can delete cluster bugs")
     }
 
     await deleteRecord('bugs', id, 'id')
