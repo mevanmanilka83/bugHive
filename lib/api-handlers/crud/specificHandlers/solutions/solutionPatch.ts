@@ -5,7 +5,7 @@
  * - PATCH /api/bugs/[id]/solutions
  * - Only allows updates to specified fields
  */
-import { extractBugId, updateRecord, addTimestamps } from "@/lib/core/core"
+import { extractBugId, updateRecord, addTimestamps } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

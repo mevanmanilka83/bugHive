@@ -10,7 +10,7 @@
  * Use API routes when you need HTTP endpoints for external clients or form submissions
  */
 import { NextRequest } from "next/server"
-import { errorResponse, successResponse, isValidEmail, isValidPassword, validateRequiredFields } from "@/lib/core/core"
+import { errorResponse, successResponse, isValidEmail, isValidPassword, validateRequiredFields } from "@/lib/shared/shared"
 import { saveUserToSupabase } from "@/app/actions/User"
 
 export const runtime = 'nodejs'

@@ -13,7 +13,7 @@
  * - Additional filter support for ownership validation
  * - Automatic timestamp updates
  */
-import { extractRouteId, updateRecord, addTimestamps } from "@/lib/core/core"
+import { extractRouteId, updateRecord, addTimestamps } from "@/lib/shared/shared"
 import { createApiHandler } from "../../handlerFactory"
 
 /**

@@ -15,7 +15,7 @@
  * - /app/actions/User.ts: Server action for writing user data (saveUserToSupabase)
  * - /api/auth/signup: API route for user registration (uses saveUserToSupabase)
  */
-import { getSingleRecord, checkAuth, supabase } from "@/lib/shared/core"
+import { getSingleRecord, checkAuth, supabase } from "@/lib/shared/shared"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

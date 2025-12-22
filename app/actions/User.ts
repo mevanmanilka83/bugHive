@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
-import { generateUUIDFromEmailSync } from "@/lib/shared/core"
+import { generateUUIDFromEmailSync } from "@/lib/shared/shared"
 
 /**
  * User Management Server Actions

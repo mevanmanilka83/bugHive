@@ -5,7 +5,7 @@
  * - Single bug: GET /api/bugs/[id]
  * - Multiple bugs: GET /api/bugs?created_by=xxx&cluster_id=yyy&limit=100
  */
-import { getSingleRecord, getMultipleRecords, extractBugId, parseQueryFilters } from "@/lib/core/core"
+import { getSingleRecord, getMultipleRecords, extractBugId, parseQueryFilters } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 import { enrichBugWithCluster, enrichBugsWithClusters } from "./bugUtils"
 

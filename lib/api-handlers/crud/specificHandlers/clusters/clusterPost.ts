@@ -4,7 +4,7 @@
  * Handles creating new clusters:
  * - POST /api/clusters
  */
-import { ensureValidUUID, addTimestamps, insertRecord } from "@/lib/core/core"
+import { ensureValidUUID, addTimestamps, insertRecord } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

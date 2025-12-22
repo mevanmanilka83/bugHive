@@ -5,7 +5,7 @@
  * - Cluster name enrichment
  * - Bug data transformation utilities
  */
-import { getSingleRecord } from "@/lib/shared/core"
+import { getSingleRecord } from "@/lib/shared/shared"
 
 /**
  * Enriches a single bug with cluster name if it belongs to a cluster

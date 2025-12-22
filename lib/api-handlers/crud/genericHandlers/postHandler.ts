@@ -20,9 +20,9 @@ import {
   addTimestamps,
   ensureValidUUID,
   processFormDataWithUploads
-} from "@/lib/core/core"
+} from "@/lib/shared/shared"
 import { createApiHandler } from "../../handlerFactory"
-import { insertRecord } from "@/lib/core/core"
+import { insertRecord } from "@/lib/shared/shared"
 
 /**
  * Creates a POST handler for creating new records

@@ -1,7 +1,7 @@
 "use server"
 
 import { auth } from "@/auth"
-import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/shared/core"
+import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/shared/shared"
 import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
 import { type SolutionPayload } from "@/lib/schemas/types/bugSolution"
 

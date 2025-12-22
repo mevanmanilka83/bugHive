@@ -17,7 +17,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { createBugSolution } from "@/app/actions/BugSolution"
+import { createBugSolution } from "@/app/actions/bug/BugSolution"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"

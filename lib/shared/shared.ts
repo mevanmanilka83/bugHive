@@ -1,11 +1,11 @@
 /**
- * Core Module
+ * Shared Module
  * 
- * Centralized exports for all core functionality.
+ * Centralized exports for all shared functionality.
  * 
  * Structure:
  * - config/: External service clients (Supabase, PostgreSQL, S3)
- * - utils/: Utility functions (UUID, responses, data processing)
+ * - utils.ts: Utility functions (UUID, responses, data processing)
  * - database/: Database operations (CRUD with fallback)
  * - s3Uploads.ts: S3 file upload operations
  * - formParser.ts: Form data parsing
@@ -31,7 +31,7 @@ export {
   extractUsernameFromEmail,
   extractBugId,
   extractRouteId
-} from "./utils/utils"
+} from "./utils"
 
 // Database exports
 export {
@@ -54,4 +54,4 @@ export {
 export { parseFormData } from "./formParser"
 
 // Auth exports
-export { checkAuth } from "../shared/auth"
+export { checkAuth } from "./auth"

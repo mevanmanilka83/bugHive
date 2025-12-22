@@ -12,7 +12,7 @@
  * - Additional filter support for security validation
  * - Prevents unauthorized deletions
  */
-import { extractRouteId, deleteRecord } from "@/lib/core/core"
+import { extractRouteId, deleteRecord } from "@/lib/shared/shared"
 import { createApiHandler } from "../../handlerFactory"
 
 /**

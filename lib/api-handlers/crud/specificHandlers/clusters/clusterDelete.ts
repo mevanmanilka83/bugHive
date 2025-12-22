@@ -5,7 +5,7 @@
  * - DELETE /api/clusters/[id]
  * - Validates ownership before deletion
  */
-import { deleteRecord, ensureValidUUID, getSingleRecord } from "@/lib/core/core"
+import { deleteRecord, ensureValidUUID, getSingleRecord } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

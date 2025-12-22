@@ -5,7 +5,7 @@
  * - POST /api/bugs/[id]/solutions
  * - Supports file uploads for solution attachments
  */
-import { extractBugId, parseArrayField } from "@/lib/core/core"
+import { extractBugId, parseArrayField } from "@/lib/shared/shared"
 import { createPostHandler } from "../../genericHandlers/postHandler"
 
 /**

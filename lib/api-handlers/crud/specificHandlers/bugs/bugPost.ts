@@ -6,7 +6,7 @@
  * - Supports file uploads for attachments
  * - Transforms form data into bug record format
  */
-import { parseArrayField } from "@/lib/core/core"
+import { parseArrayField } from "@/lib/shared/shared"
 import { createPostHandler } from "../../genericHandlers/postHandler"
 
 /**

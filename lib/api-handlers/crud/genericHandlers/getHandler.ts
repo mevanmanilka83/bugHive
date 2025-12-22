@@ -7,7 +7,7 @@
  * - Single record: GET /api/resource/[id]
  * - Multiple records: GET /api/resource?created_by=xxx&cluster_id=yyy&limit=100
  */
-import { extractRouteId, getSingleRecord, getMultipleRecords, parseQueryFilters } from "@/lib/core/core"
+import { extractRouteId, getSingleRecord, getMultipleRecords, parseQueryFilters } from "@/lib/shared/shared"
 import { createApiHandler } from "../../handlerFactory"
 
 /**

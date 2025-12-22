@@ -1,7 +1,7 @@
 "use server"
 
 import { auth } from "@/auth"
-import { supabase, ensureValidUUID, generateUUIDFromEmailSync } from "@/lib/shared/core"
+import { supabase, ensureValidUUID, generateUUIDFromEmailSync } from "@/lib/shared/shared"
 
 export async function inviteUserToCluster(
   clusterId: string, 

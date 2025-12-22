@@ -5,7 +5,7 @@
  * - DELETE /api/bugs/[id]/solutions
  * - Validates solution belongs to bug
  */
-import { extractBugId, deleteRecord } from "@/lib/core/core"
+import { extractBugId, deleteRecord } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**
