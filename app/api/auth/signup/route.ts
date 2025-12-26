@@ -12,7 +12,7 @@
 import { NextRequest } from "next/server"
 import { errorResponse, successResponse, validateWithSchema } from "@/lib"
 import { saveUserToSupabase } from "@/app/actions/user"
-import { getSignupValidationSchema } from "@/lib/schemas/zod/signup"
+import { getSignupValidationSchema } from "@/lib"
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

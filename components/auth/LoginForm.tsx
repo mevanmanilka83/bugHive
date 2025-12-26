@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib"
+import { cn } from "@/lib/utils-client"
 import { Button } from "@/components/ui/button"
 import {
   Card,

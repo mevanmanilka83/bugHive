@@ -51,7 +51,7 @@ export async function saveUserToSupabase(
       updated_at: new Date().toISOString(),
     }
 
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseServiceKey = env.supabaseServiceKey
 
     try {
       // If we don't have service role key, try using the function instead

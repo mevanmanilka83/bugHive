@@ -7,14 +7,14 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
-import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib"
-import { getLoginValidationSchema } from "@/lib/schemas/zod/login"
+import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail, env } from "@/lib"
+import { getLoginValidationSchema } from "@/lib"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: env.githubClientId!,
+      clientSecret: env.githubClientSecret!,
     }),
     Credentials({
       name: "credentials",
@@ -113,6 +113,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: env.nodeEnv === "development",
 })
 

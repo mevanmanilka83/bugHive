@@ -1,6 +1,6 @@
 import { checkAuth, ensureValidUUID, generateUUIDFromEmailSync, extractUsernameFromEmail, supabase, validateWithSchema } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
-import { getInviteUserValidationSchema } from "@/lib/schemas/zod/inviteUser"
+import { getInviteUserValidationSchema } from "@/lib"
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

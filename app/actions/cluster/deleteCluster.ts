@@ -11,7 +11,7 @@ import {
   validateWithSchema,
   type ActionResponse
 } from "@/lib"
-import { getDeleteClusterValidationSchema } from "@/lib/schemas/zod/deleteCluster"
+import { getDeleteClusterValidationSchema } from "@/lib"
 
 export async function deleteCluster(clusterId: string): Promise<ActionResponse<{ message?: string }>> {
   try {

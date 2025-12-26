@@ -11,7 +11,7 @@ import {
   validateWithSchema,
   type ActionResponse
 } from "@/lib"
-import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
+import { getBugReportSchema } from "@/lib"
 
 export async function createBugReport(formData: FormData): Promise<ActionResponse<{ bug?: any }>> {
   try {

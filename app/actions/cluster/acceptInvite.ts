@@ -12,7 +12,7 @@ import {
   validateWithSchema,
   type ActionResponse
 } from "@/lib"
-import { getAcceptInviteValidationSchema } from "@/lib/schemas/zod/acceptInvite"
+import { getAcceptInviteValidationSchema } from "@/lib"
 
 export async function acceptClusterInvite(clusterId: string): Promise<ActionResponse<{ message?: string }>> {
   try {

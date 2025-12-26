@@ -1,6 +1,6 @@
 "use client"
 
-import { type BugDialogErrors } from "@/lib/schemas/types/bugReport"
+import { type BugDialogErrors } from "@/lib"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"

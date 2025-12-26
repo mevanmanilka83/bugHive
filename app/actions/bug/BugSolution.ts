@@ -12,7 +12,7 @@ import {
   validateWithSchema,
   type ActionResponse
 } from "@/lib"
-import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
+import { getBugSolutionSchema } from "@/lib"
 
 export async function createBugSolution(formData: FormData, bugId: string): Promise<ActionResponse<{ solution?: any }>> {
   try {

@@ -10,7 +10,7 @@ import {
   validateWithSchema,
   type ActionResponse
 } from "@/lib"
-import { getClusterSchema } from "@/lib/schemas/zod/createCluster"
+import { getClusterSchema } from "@/lib"
 
 export async function createCluster(
   prevState: any,

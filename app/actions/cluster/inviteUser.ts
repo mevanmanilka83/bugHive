@@ -14,7 +14,7 @@ import {
   validateWithSchema,
   type ActionResponse
 } from "@/lib"
-import { getInviteUserValidationSchema } from "@/lib/schemas/zod/inviteUser"
+import { getInviteUserValidationSchema } from "@/lib"
 
 export async function inviteUserToCluster(
   clusterId: string, 

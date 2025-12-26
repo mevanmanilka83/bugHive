@@ -4,7 +4,7 @@ import * as React from "react"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { type SolutionDialogErrors } from "@/lib/schemas/types/bugSolution"
+import { type SolutionDialogErrors } from "@/lib"
 
 interface SolutionStep2TypeProps {
   solutionType: string

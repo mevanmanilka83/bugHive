@@ -7,7 +7,7 @@
  * - Returns public URLs for uploaded files
  */
 import { PutObjectCommand } from "@aws-sdk/client-s3"
-import { getS3Client, generateUUID, parseFormData } from "@/lib"
+import { getS3Client, generateUUID, parseFormData, env } from "@/lib"
 
 /**
  * Determines the correct S3 folder path for bug attachments
@@ -110,14 +110,14 @@ export async function handleFileUploads(formData: any, folder: string = 'bugs'):
       const contentType = file.type || 'application/octet-stream'
 
       const command = new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET!,
+        Bucket: env.awsS3Bucket!,
         Key: fileName,
         Body: fileBuffer,
         ContentType: contentType,
       })
 
       await client.send(command)
-      const url = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`
+      const url = `https://${env.awsS3Bucket}.s3.${env.awsRegion}.amazonaws.com/${fileName}`
       return url
     })
 
