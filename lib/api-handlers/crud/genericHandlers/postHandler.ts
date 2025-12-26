@@ -15,14 +15,23 @@
  * - Automatic timestamp and created_by field addition (uses authenticated user from handlerFactory)
  */
 import { 
-  validateRequiredFields,
   addTimestamps,
   ensureValidUUID
 } from "@/lib/utils"
-import { parseFormData } from "@/lib/shared/formParser"
-import { processFormDataWithUploads } from "@/lib/shared/s3Uploads"
-import { insertRecord } from "@/lib/shared/database/database"
+import { parseFormData } from "@/lib/formParser"
+import { processFormDataWithUploads } from "@/lib/s3Uploads"
+import { insertRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../handlerFactory"
+
+/**
+ * Validates that required fields are present in form data
+ */
+function validateRequiredFields(formData: any, requiredFields: string[]) {
+  const missingFields = requiredFields.filter(field => !formData[field])
+  if (missingFields.length > 0) {
+    throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
+  }
+}
 
 /**
  * Creates a POST handler for creating new records

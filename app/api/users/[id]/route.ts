@@ -16,8 +16,8 @@
  * - /api/auth/signup: API route for user registration (uses saveUserToSupabase)
  */
 import { checkAuth } from "@/lib/auth/helpers"
-import { getSingleRecord } from "@/lib/shared/database/database"
-import { supabase } from "@/lib/shared/config/config"
+import { getSingleRecord } from "@/lib/database/database"
+import { supabase } from "@/lib/config"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

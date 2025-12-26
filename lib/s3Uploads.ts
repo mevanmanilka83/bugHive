@@ -7,8 +7,8 @@
  * - Returns public URLs for uploaded files
  */
 import { PutObjectCommand } from "@aws-sdk/client-s3"
-import { getS3Client } from "./config/s3Config"
-import { generateUUID } from "../utils"
+import { getS3Client } from "./config"
+import { generateUUID } from "./utils"
 import { parseFormData } from "./formParser"
 
 /**

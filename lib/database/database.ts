@@ -1,19 +1,21 @@
 /**
  * Database Operations Layer
  * 
- * Provides database access functions with Supabase and PostgreSQL fallback.
+ * ⚠️ SINGLE SOURCE OF TRUTH FOR DATABASE OPERATIONS ⚠️
  * 
- * This is the DATA ACCESS LAYER - it handles database operations only.
- * HTTP/API concerns are handled in lib/api-handlers.
+ * Provides database access functions with Supabase and PostgreSQL fallback.
  * 
  * Structure:
  * - combined/: Operations using both Supabase and PostgreSQL with fallback
  * - supabase/: Supabase-specific implementations
  * - postgres/: PostgreSQL-specific implementations
  * 
- * Separation of Concerns:
- * - lib/core/database: Database operations (data access)
- * - lib/api-handlers: HTTP handlers (API routes, authentication, request/response)
+ * Usage:
+ * ```ts
+ * import { getSingleRecord, insertRecord, query } from "@/lib/database"
+ * ```
+ * 
+ * DO NOT import from lib/database/* subdirectories directly.
  */
 
 // Combined operations (Supabase + PostgreSQL with fallback)

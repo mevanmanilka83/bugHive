@@ -5,7 +5,7 @@
  * - POST /api/clusters
  */
 import { ensureValidUUID, addTimestamps, extractUsernameFromEmail } from "@/lib/utils"
-import { insertRecord } from "@/lib/shared/database/database"
+import { insertRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

@@ -14,7 +14,7 @@
  * - Automatic timestamp updates
  */
 import { extractRouteId, addTimestamps } from "@/lib/utils"
-import { updateRecord } from "@/lib/shared/database/database"
+import { updateRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../handlerFactory"
 
 /**

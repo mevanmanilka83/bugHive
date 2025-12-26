@@ -1,7 +1,7 @@
 import { checkAuth } from "@/lib/auth/helpers"
 import { ensureValidUUID, addTimestamps, extractUsernameFromEmail } from "@/lib/utils"
-import { supabase } from "@/lib/shared/config/config"
-import { insertRecord } from "@/lib/shared/database/database"
+import { supabase } from "@/lib/config"
+import { insertRecord } from "@/lib/database/database"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

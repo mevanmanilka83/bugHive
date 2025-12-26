@@ -10,8 +10,8 @@
  * - Validates cluster access before returning bugs
  */
 import { extractRouteId, parseQueryFilters, ensureValidUUID } from "@/lib/utils"
-import { getSingleRecord, getMultipleRecords } from "@/lib/shared/database/database"
-import { supabase } from "@/lib/shared/config/config"
+import { getSingleRecord, getMultipleRecords } from "@/lib/database/database"
+import { supabase } from "@/lib/config"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Get user's cluster IDs (where user is owner or member)

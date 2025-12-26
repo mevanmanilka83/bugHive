@@ -3,7 +3,7 @@
  * 
  * Supabase implementation for inserting a new record.
  */
-import { supabase } from "../../config/config"
+import { supabase } from "@/lib/config"
 
 /**
  * Inserts a new record using Supabase

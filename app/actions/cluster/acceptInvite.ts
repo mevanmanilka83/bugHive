@@ -1,11 +1,11 @@
 "use server"
 
 import { ensureValidUUID } from "@/lib/utils"
-import { supabase } from "@/lib/shared/config/config"
+import { supabase } from "@/lib/config"
 import { requireAuth, getUsernameFromSession, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
-import { getClusterById } from "@/app/actions/shared/cluster"
-import { validateWithSchema } from "@/app/actions/shared/validation"
+import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
+import { getClusterById } from "@/lib/database-helpers"
+import { validateWithSchema } from "@/lib/validation"
 import { getAcceptInviteValidationSchema } from "@/lib/schemas/zod/acceptInvite"
 
 export async function acceptClusterInvite(clusterId: string): Promise<ActionResponse<{ message?: string }>> {

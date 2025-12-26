@@ -3,7 +3,7 @@
  * 
  * Supabase implementation for deleting a record.
  */
-import { supabase } from "../../config/config"
+import { supabase } from "@/lib/config"
 
 /**
  * Deletes a record using Supabase

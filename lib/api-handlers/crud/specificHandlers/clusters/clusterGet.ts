@@ -5,7 +5,7 @@
  * - Single cluster: GET /api/clusters/[id]
  * - Multiple clusters: GET /api/clusters
  */
-import { getSingleRecord, getMultipleRecords } from "@/lib/shared/database/database"
+import { getSingleRecord, getMultipleRecords } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

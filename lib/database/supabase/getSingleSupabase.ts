@@ -3,7 +3,7 @@
  * 
  * Supabase implementation for fetching a single record by ID.
  */
-import { supabase } from "../../config/config"
+import { supabase } from "@/lib/config"
 
 /**
  * Fetches a single record by ID using Supabase

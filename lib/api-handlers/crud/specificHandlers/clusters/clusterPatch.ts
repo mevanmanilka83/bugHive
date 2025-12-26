@@ -7,7 +7,7 @@
  * - Validates ownership
  */
 import { addTimestamps, ensureValidUUID } from "@/lib/utils"
-import { updateRecord, getSingleRecord } from "@/lib/shared/database/database"
+import { updateRecord, getSingleRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

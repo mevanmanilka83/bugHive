@@ -13,7 +13,7 @@
  */
 import { NextRequest, NextResponse } from "next/server"
 import { checkAuth } from "@/lib/auth/helpers"
-import { errorResponse, successResponse } from "@/lib/utils"
+import { errorResponse, successResponse } from "@/lib/errors"
 
 /**
  * Creates a generic API route handler with authentication and error handling

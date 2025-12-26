@@ -3,7 +3,7 @@
  * 
  * Executes raw SQL queries using PostgreSQL connection pool.
  */
-import { pool } from "../../config/config"
+import { pool } from "@/lib/config"
 
 /**
  * Executes a raw SQL query using PostgreSQL connection pool

@@ -1,11 +1,11 @@
 "use server"
 
 import { ensureValidUUID, parseArrayField } from "@/lib/utils"
-import { supabase } from "@/lib/shared/config/config"
-import { handleFileUploads } from "@/lib/shared/s3Uploads"
+import { supabase } from "@/lib/config"
+import { handleFileUploads } from "@/lib/s3Uploads"
 import { requireAuth, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
-import { validateWithSchema } from "@/app/actions/shared/validation"
+import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
+import { validateWithSchema } from "@/lib/validation"
 import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
 
 export async function createBugReport(formData: FormData): Promise<ActionResponse<{ bug?: any }>> {

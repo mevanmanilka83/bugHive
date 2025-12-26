@@ -5,7 +5,7 @@
  * - GET /api/bugs/[id]/solutions
  */
 import { extractRouteId } from "@/lib/utils"
-import { getMultipleRecords } from "@/lib/shared/database/database"
+import { getMultipleRecords } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

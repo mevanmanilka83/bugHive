@@ -1,11 +1,11 @@
 "use server"
 
 import { ensureValidUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/utils"
-import { supabase } from "@/lib/shared/config/config"
+import { supabase } from "@/lib/config"
 import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
-import { getClusterById, verifyClusterOwnership } from "@/app/actions/shared/cluster"
-import { validateWithSchema } from "@/app/actions/shared/validation"
+import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
+import { getClusterById, verifyClusterOwnership } from "@/lib/database-helpers"
+import { validateWithSchema } from "@/lib/validation"
 import { getInviteUserValidationSchema } from "@/lib/schemas/zod/inviteUser"
 
 export async function inviteUserToCluster(

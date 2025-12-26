@@ -1,21 +1,25 @@
 /**
- * Utility Functions
+ * Core Utility Functions
  * 
- * Single source of truth for all utility functions used throughout the application.
+ * Single source of truth for common utility functions.
  * 
  * Includes:
  * - cn(): Tailwind CSS class merging
  * - UUID generation and validation
- * - HTTP response helpers (API routes)
- * - Data processing utilities
- * - Route parameter extraction
- * - Form data parsing
+ * - Data processing (timestamps, arrays, query filters)
  * - Email/username extraction
+ * - Route parameter extraction
+ * 
+ * For specialized utilities, see:
+ * - @/lib/errors: Error handling (errorResponse, successResponse, createErrorResponse)
+ * - @/lib/validation: Data validation (validateWithSchema)
+ * - @/lib/database-helpers: Database utilities
+ * - @/lib/shared/formParser: Form data parsing
+ * - @/lib/shared/s3Uploads: File upload handling
  */
 
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { NextResponse } from "next/server"
 
 // ============================================================================
 // TAILWIND UTILITIES
@@ -86,39 +90,6 @@ export function ensureValidUUID(userId: string | undefined): string {
 }
 
 // ============================================================================
-// HTTP RESPONSE HELPERS (API ROUTES)
-// ============================================================================
-
-/**
- * API Route Error Handler
- * 
- * Creates an HTTP error response for API routes (app/api/.../route.ts files).
- * Returns a NextResponse object suitable for HTTP endpoints.
- * 
- * When to use API Route Error Handlers:
- * - In API routes (app/api/.../route.ts files)
- * - When handling HTTP requests/responses
- * - When using createApiHandler from @/lib/api-handlers/handlerFactory
- * 
- * When NOT to use (use server action error handlers instead):
- * - In server actions (app/actions/.../*.ts files marked with "use server")
- * - Use createErrorResponse() from @/app/actions/shared/errors instead
- */
-export function errorResponse(message: string, status: number = 500) {
-  return NextResponse.json({ error: message }, { status })
-}
-
-/**
- * API Route Success Handler
- * 
- * Creates an HTTP success response for API routes (app/api/.../route.ts files).
- * Returns a NextResponse object suitable for HTTP endpoints.
- */
-export function successResponse(data: any, status: number = 200) {
-  return NextResponse.json(data, { status })
-}
-
-// ============================================================================
 // DATA PROCESSING UTILITIES
 // ============================================================================
 
@@ -150,19 +121,6 @@ export function parseArrayField(value: string | null): string[] | null {
   }
   
   return null
-}
-
-/**
- * @deprecated Use zod schemas from app/actions/{module}/zod/ with validateWithSchema
- * 
- * Validates that all required fields are present and non-empty
- */
-export function validateRequiredFields(data: Record<string, any>, requiredFields: string[]): void {
-  const missingFields = requiredFields.filter(field => !data[field] || data[field].toString().trim().length === 0)
-  
-  if (missingFields.length > 0) {
-    throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
-  }
 }
 
 /**
@@ -199,21 +157,6 @@ export function extractUsernameFromEmail(email: string | null | undefined, fallb
   return parts[0] || fallback
 }
 
-/**
- * @deprecated Use zod schemas from @/lib/schemas/zod for email validation
- */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
-
-/**
- * @deprecated Use zod schemas from @/lib/schemas/zod for password validation
- */
-export function isValidPassword(password: string, minLength: number = 6): boolean {
-  return Boolean(password && password.length >= minLength)
-}
-
 // ============================================================================
 // ROUTE PARAMETER UTILITIES
 // ============================================================================
@@ -225,5 +168,3 @@ export async function extractRouteId(context: { params: Promise<{ id: string }> 
   const { id } = await context.params
   return id
 }
-
-

@@ -8,8 +8,8 @@
  * - Validates access when moving bugs between clusters
  */
 import { extractRouteId, addTimestamps, ensureValidUUID } from "@/lib/utils"
-import { getSingleRecord, updateRecord } from "@/lib/shared/database/database"
-import { supabase } from "@/lib/shared/config/config"
+import { getSingleRecord, updateRecord } from "@/lib/database/database"
+import { supabase } from "@/lib/config"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Check if user is owner or member of a cluster

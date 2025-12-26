@@ -6,7 +6,7 @@
  * - Validates solution belongs to bug
  */
 import { extractRouteId } from "@/lib/utils"
-import { deleteRecord } from "@/lib/shared/database/database"
+import { deleteRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

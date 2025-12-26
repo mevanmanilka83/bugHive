@@ -9,8 +9,8 @@
  * Note: For cluster-specific bugs, use clusterBugPatch handler
  */
 import { extractRouteId, addTimestamps, ensureValidUUID } from "@/lib/utils"
-import { getSingleRecord, updateRecord } from "@/lib/shared/database/database"
-import { supabase } from "@/lib/shared/config/config"
+import { getSingleRecord, updateRecord } from "@/lib/database/database"
+import { supabase } from "@/lib/config"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Get user's cluster IDs

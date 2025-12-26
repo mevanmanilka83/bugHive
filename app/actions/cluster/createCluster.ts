@@ -1,10 +1,10 @@
 "use server"
 
 import { ensureValidUUID } from "@/lib/utils"
-import { supabase } from "@/lib/shared/config/config"
+import { supabase } from "@/lib/config"
 import { requireAuth, getUsernameFromSession, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
-import { validateWithSchema } from "@/app/actions/shared/validation"
+import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
+import { validateWithSchema } from "@/lib/validation"
 import { getClusterSchema } from "@/lib/schemas/zod/createCluster"
 
 export async function createCluster(

@@ -7,12 +7,12 @@
  * - Creates notifications for cluster members when solution is created
  */
 import { extractRouteId, parseArrayField, ensureValidUUID, addTimestamps, extractUsernameFromEmail } from "@/lib/utils"
-import { supabase } from "@/lib/shared/config/config"
-import { processFormDataWithUploads } from "@/lib/shared/s3Uploads"
-import { insertRecord } from "@/lib/shared/database/database"
+import { supabase } from "@/lib/config"
+import { processFormDataWithUploads } from "@/lib/s3Uploads"
+import { insertRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
-import { validateWithSchema } from "@/app/actions/shared/validation"
+import { validateWithSchema } from "@/lib/validation"
 
 /**
  * Creates POST handler for solutions

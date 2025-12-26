@@ -6,7 +6,7 @@
  * - Validates ownership before deletion
  */
 import { ensureValidUUID } from "@/lib/utils"
-import { deleteRecord, getSingleRecord } from "@/lib/shared/database/database"
+import { deleteRecord, getSingleRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

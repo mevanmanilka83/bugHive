@@ -12,13 +12,13 @@ import {
   ensureValidUUID,
   addTimestamps
 } from "@/lib/utils"
-import { parseFormData } from "@/lib/shared/formParser"
-import { processFormDataWithUploads } from "@/lib/shared/s3Uploads"
-import { supabase } from "@/lib/shared/config/config"
-import { insertRecord } from "@/lib/shared/database/database"
+import { parseFormData } from "@/lib/formParser"
+import { processFormDataWithUploads } from "@/lib/s3Uploads"
+import { supabase } from "@/lib/config"
+import { insertRecord } from "@/lib/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
-import { validateWithSchema } from "@/app/actions/shared/validation"
+import { validateWithSchema } from "@/lib/validation"
 
 // Helper: Check if user is owner or member of a cluster
 async function isClusterOwnerOrMember(userId: string, clusterId: string): Promise<boolean> {
