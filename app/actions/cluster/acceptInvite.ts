@@ -1,27 +1,38 @@
 "use server"
 
-import { auth } from "@/auth"
 import { supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { requireAuth, getUsernameFromSession, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
+import { createErrorResponse, handleSupabaseError } from "../shared/errors"
+import { getClusterById } from "../shared/cluster"
+import { validateWithSchema } from "../shared/validation"
+import { getAcceptInviteValidationSchema } from "./zod/acceptInvite"
 
-export async function acceptClusterInvite(clusterId: string) {
+export async function acceptClusterInvite(clusterId: string): Promise<ActionResponse<{ message?: string }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    // Check authentication
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return authResult
+    }
+    const { session } = authResult
+
+    // Validate clusterId
+    const validation = validateWithSchema(getAcceptInviteValidationSchema(), { clusterId })
+    if (!validation.success) {
+      return validation
+    }
+
+    const userId = await getAuthenticatedUserId()
+    if (!userId) {
       return { success: false, error: "Unauthorized" }
     }
 
-    const userId = ensureValidUUID(session.user.id)
-
     // Get cluster
-    const { data: cluster, error: clusterError } = await supabase
-      .from('clusters')
-      .select('*')
-      .eq('id', clusterId)
-      .single()
-
-    if (clusterError || !cluster) {
-      return { success: false, error: "Cluster not found" }
+    const clusterResult = await getClusterById(clusterId)
+    if (!clusterResult.success) {
+      return clusterResult
     }
+    const cluster = clusterResult.cluster
 
     // Check if user has a pending invite
     if (!cluster.invites || !cluster.invites.includes(userId)) {
@@ -29,15 +40,14 @@ export async function acceptClusterInvite(clusterId: string) {
     }
 
     // Always ensure user record exists and is up-to-date in Supabase
-    const userEmail = session.user.email || ''
-    const username = session.user.name || (userEmail ? userEmail.split('@')[0] : 'User')
+    const username = getUsernameFromSession(session)
     
     // Upsert user record with current session data
     await supabase
       .from('users')
       .upsert({
         id: userId,
-        email: userEmail || null,
+        email: session.user.email || null,
         name: session.user.name || username,
         image: session.user.image || null,
         email_verified: null,
@@ -61,10 +71,7 @@ export async function acceptClusterInvite(clusterId: string) {
       .eq('id', clusterId)
 
     if (updateError) {
-      return { 
-        success: false, 
-        error: updateError.message || 'Failed to accept invitation'
-      }
+      return handleSupabaseError(updateError, 'Failed to accept invitation')
     }
 
     // Mark notification as read
@@ -80,10 +87,7 @@ export async function acceptClusterInvite(clusterId: string) {
       message: "Invitation accepted successfully" 
     }
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error" 
-    }
+    return createErrorResponse(error)
   }
 }
 

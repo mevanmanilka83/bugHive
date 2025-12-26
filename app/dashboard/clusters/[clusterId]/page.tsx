@@ -1,5 +1,4 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
+import { requireAuthForPage } from "@/lib/auth/helpers"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/SiteHeader"
 import {
@@ -13,14 +12,9 @@ export default async function ClusterDetailPage({
 }: {
   params: Promise<{ clusterId: string }>
 }) {
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect("/auth/signin")
-  }
-
+  const session = await requireAuthForPage()
   const user = session.user
-  const userId = user.id!
+  const userId = user.id
   const { clusterId } = await params
 
   return (

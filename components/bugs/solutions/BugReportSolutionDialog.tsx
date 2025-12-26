@@ -129,8 +129,8 @@ export function SolutionDialog({
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {}
-        error.issues.forEach((err: any) => {
-          if (err.path && err.path[0]) {
+        error.issues?.forEach((err: any) => {
+          if (err.path && Array.isArray(err.path) && err.path.length > 0) {
             newErrors[err.path[0] as string] = err.message
           }
         })
@@ -148,8 +148,8 @@ export function SolutionDialog({
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {}
-        error.issues.forEach((err: any) => {
-          if (err.path && err.path[0]) {
+        error.issues?.forEach((err: any) => {
+          if (err.path && Array.isArray(err.path) && err.path.length > 0) {
             newErrors[err.path[0] as string] = err.message
           }
         })
@@ -181,6 +181,12 @@ export function SolutionDialog({
   const handleSubmitWrapper = async () => {
     if (!bugData?.id) {
       toast.error("Missing bug id")
+      return
+    }
+
+    // Check if bug is closed or resolved
+    if (isBugClosedOrResolved) {
+      toast.error("Cannot submit solutions to closed or resolved bugs")
       return
     }
 
@@ -218,8 +224,8 @@ export function SolutionDialog({
       fd.set("status", formData.status)
       if (formData.assignee) fd.set("assignee", formData.assignee)
       if (formData.estimated_hours) fd.set("estimated_hours", formData.estimated_hours)
-      const linksArray = formData.links ? formData.links.split(',').map(s => s.trim()).filter(Boolean) : []
-      if (linksArray.length) fd.set("links", JSON.stringify(linksArray))
+      // Send links as comma-separated string for validation (validation expects string, not JSON array)
+      if (formData.links?.trim()) fd.set("links", formData.links.trim())
       attachments.forEach((att, idx) => {
         fd.append(`attachment_${idx}`, att.file)
       })
@@ -320,8 +326,28 @@ export function SolutionDialog({
   const canNextFromStep1 = React.useMemo(() => validateStep(1), [formData.title, formData.description, errors])
   const canNextFromStep2 = React.useMemo(() => validateStep(2), [formData.solution_type, formData.priority, formData.status, errors])
 
+  // Check if bug is closed or resolved
+  const isBugClosedOrResolved = React.useMemo(() => {
+    const status = bugData?.status?.toLowerCase()
+    return status === 'closed' || status === 'resolved'
+  }, [bugData?.status])
+
+  // Prevent dialog from opening if bug is closed or resolved
+  React.useEffect(() => {
+    if (open && isBugClosedOrResolved) {
+      toast.error("Cannot add solutions to closed or resolved bugs")
+      onOpenChange(false)
+    }
+  }, [open, isBugClosedOrResolved, onOpenChange])
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !isBugClosedOrResolved} onOpenChange={(newOpen) => {
+      if (isBugClosedOrResolved && newOpen) {
+        toast.error("Cannot add solutions to closed or resolved bugs")
+        return
+      }
+      onOpenChange(newOpen)
+    }}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -355,6 +381,13 @@ export function SolutionDialog({
                     {bugData.description}
                   </p>
                 )}
+                {isBugClosedOrResolved && (
+                  <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded-md">
+                    <p className="text-sm text-destructive font-medium">
+                      This bug is {bugData.status}. Solutions cannot be added to closed or resolved bugs.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -376,10 +409,10 @@ export function SolutionDialog({
               title={formData.title}
               description={formData.description}
               errors={errors}
-              onChangeTitle={(value) => handleInputChange("title", value)}
-              onChangeDescription={(value) => handleInputChange("description", value)}
-              canNext={canNextFromStep1}
-              onNext={() => { if (validateStepWithErrors(1)) setStep(2) }}
+              onChangeTitle={(value) => !isBugClosedOrResolved && handleInputChange("title", value)}
+              onChangeDescription={(value) => !isBugClosedOrResolved && handleInputChange("description", value)}
+              canNext={canNextFromStep1 && !isBugClosedOrResolved}
+              onNext={() => { if (!isBugClosedOrResolved && validateStepWithErrors(1)) setStep(2) }}
               onCancel={() => onOpenChange(false)}
             />
           )}
@@ -391,11 +424,11 @@ export function SolutionDialog({
               priority={formData.priority}
               status={formData.status}
               errors={errors}
-              onChangeSolutionType={(value) => handleInputChange("solution_type", value)}
-              onChangePriority={(value) => handleInputChange("priority", value)}
-              onChangeStatus={(value) => handleInputChange("status", value)}
-              canNext={canNextFromStep2}
-              onNext={() => { if (validateStepWithErrors(2)) setStep(3) }}
+              onChangeSolutionType={(value) => !isBugClosedOrResolved && handleInputChange("solution_type", value)}
+              onChangePriority={(value) => !isBugClosedOrResolved && handleInputChange("priority", value)}
+              onChangeStatus={(value) => !isBugClosedOrResolved && handleInputChange("status", value)}
+              canNext={canNextFromStep2 && !isBugClosedOrResolved}
+              onNext={() => { if (!isBugClosedOrResolved && validateStepWithErrors(2)) setStep(3) }}
               onBack={() => setStep(1)}
               onCancel={() => onOpenChange(false)}
             />
@@ -409,13 +442,13 @@ export function SolutionDialog({
               links={formData.links}
               attachments={attachments}
               errors={errors}
-              onChangeAssignee={(value) => handleInputChange("assignee", value)}
-              onChangeEstimatedHours={(value) => handleInputChange("estimated_hours", value)}
-              onChangeLinks={(value) => handleInputChange("links", value)}
-              onUpload={handleFileUpload}
-              onRemoveAttachment={removeAttachment}
+              onChangeAssignee={(value) => !isBugClosedOrResolved && handleInputChange("assignee", value)}
+              onChangeEstimatedHours={(value) => !isBugClosedOrResolved && handleInputChange("estimated_hours", value)}
+              onChangeLinks={(value) => !isBugClosedOrResolved && handleInputChange("links", value)}
+              onUpload={isBugClosedOrResolved ? () => {} : handleFileUpload}
+              onRemoveAttachment={isBugClosedOrResolved ? () => {} : removeAttachment}
               formatFileSize={formatFileSize}
-              onNext={() => setStep(4)}
+              onNext={() => !isBugClosedOrResolved && setStep(4)}
               onBack={() => setStep(2)}
               onCancel={() => onOpenChange(false)}
             />
@@ -433,8 +466,8 @@ export function SolutionDialog({
               estimatedHours={formData.estimated_hours}
               links={formData.links}
               attachmentsCount={attachments.length}
-              isSubmitting={isSubmitting || submitting}
-              onSubmit={handleSubmitWrapper}
+              isSubmitting={isSubmitting || submitting || isBugClosedOrResolved}
+              onSubmit={isBugClosedOrResolved ? () => {} : handleSubmitWrapper}
               onBack={() => setStep(3)}
               onCancel={() => onOpenChange(false)}
             />

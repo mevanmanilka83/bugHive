@@ -336,13 +336,25 @@ export function RecentBugs({ userId }: RecentBugsProps = {} as RecentBugsProps) 
                   <button type="button" aria-label="View graph" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" onClick={() => setGraphOpen(true)}>
                     <IconChartArea className="size-3.5" />
                   </button>
-                  <button type="button" aria-label="View solutions" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" onClick={() => { 
-                    setSelectedBug(bug)
-                    setSolutionOpen(true)
-                    void fetchSolutions(bug.id) 
-                  }}>
-                    <IconBulb className="size-3.5" />
-                  </button>
+                  {(status === 'closed' || status === 'resolved') ? (
+                    <button 
+                      type="button" 
+                      aria-label="View solutions (disabled - bug is closed or resolved)" 
+                      className="rounded-md p-1 border border-transparent text-muted-foreground opacity-50 cursor-not-allowed" 
+                      disabled
+                      title="Cannot add solutions to closed or resolved bugs"
+                    >
+                      <IconBulb className="size-3.5" />
+                    </button>
+                  ) : (
+                    <button type="button" aria-label="View solutions" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" onClick={() => { 
+                      setSelectedBug(bug)
+                      setSolutionOpen(true)
+                      void fetchSolutions(bug.id) 
+                    }}>
+                      <IconBulb className="size-3.5" />
+                    </button>
+                  )}
                   <button type="button" aria-label="Open details" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border">
                     <IconExternalLink className="size-3.5" />
                   </button>
@@ -482,11 +494,11 @@ export function RecentBugs({ userId }: RecentBugsProps = {} as RecentBugsProps) 
                                 rel="noreferrer"
                               >
                                 {filename}
-                              </a>
+                          </a>
                             )
                           })
-                        ) : (
-                          <Input value="—" disabled />
+                      ) : (
+                        <Input value="—" disabled />
                         )
                       })()}
                     </div>

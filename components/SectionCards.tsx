@@ -505,18 +505,30 @@ export function SectionCards({ userId }: SectionCardsProps) {
                   >
                     <IconChartArea className="size-3.5" />
                   </button>
-                  <button
-                    type="button"
-                    aria-label="Add solution"
-                    className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                    onClick={() => {
-                      setSelectedBug(bug)
-                      setSolutionOpen(true)
-                      void fetchSolutions(bug.id)
-                    }}
-                  >
-                    <IconBulb className="size-3.5" />
-                  </button>
+                  {(status === 'closed' || status === 'resolved') ? (
+                    <button
+                      type="button"
+                      aria-label="Add solution (disabled - bug is closed or resolved)"
+                      className="rounded-md p-1 border border-transparent text-muted-foreground opacity-50 cursor-not-allowed"
+                      disabled
+                      title="Cannot add solutions to closed or resolved bugs"
+                    >
+                      <IconBulb className="size-3.5" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label="Add solution"
+                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                      onClick={() => {
+                        setSelectedBug(bug)
+                        setSolutionOpen(true)
+                        void fetchSolutions(bug.id)
+                      }}
+                    >
+                      <IconBulb className="size-3.5" />
+                    </button>
+                  )}
                   <button type="button" aria-label="Open details" className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border">
                     <IconExternalLink className="size-3.5" />
                   </button>
@@ -649,19 +661,19 @@ export function SectionCards({ userId }: SectionCardsProps) {
                             ? att.split('/').pop() || att 
                             : (att.name || att.filename || url?.split('/').pop() || url)
                           return (
-                            <a
-                              key={idx}
+                        <a
+                          key={idx}
                               className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
                               href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                               {filename}
-                            </a>
+                        </a>
                           )
                         })
-                      ) : (
-                        <Input value="—" disabled />
+                    ) : (
+                      <Input value="—" disabled />
                       )
                     })()}
                   </div>

@@ -1,46 +1,49 @@
 "use server"
 
-import { auth } from "@/auth"
 import { supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { requireAuth, getUsernameFromSession, type ActionResponse } from "@/lib/auth/helpers"
+import { createErrorResponse, handleSupabaseError } from "../shared/errors"
+import { validateWithSchema } from "../shared/validation"
+import { getCreateClusterValidationSchema } from "./zod/createCluster"
 
 export async function createCluster(
   prevState: any,
   formData: FormData
-): Promise<{ success: boolean; error?: string; cluster?: any }> {
+): Promise<ActionResponse<{ cluster?: any }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+    // Check authentication
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return authResult
     }
+    const { session } = authResult // session is guaranteed to be AuthenticatedSession here
 
     if (!formData) {
       return { success: false, error: "Form data is required" }
     }
 
-    const name = (formData.get('name') as string) || ''
-    const description = (formData.get('description') as string) || ''
+    // Extract and validate form data
+    const rawData = {
+      name: (formData.get('name') as string) || '',
+      description: (formData.get('description') as string) || '',
+    }
 
-    // Validate
-    if (!name.trim()) {
-      return { success: false, error: "Cluster name is required" }
+    const validation = validateWithSchema(getCreateClusterValidationSchema(), rawData)
+    if (!validation.success) {
+      return validation
     }
-    if (name.trim().length < 3) {
-      return { success: false, error: "Cluster name must be at least 3 characters" }
-    }
-    if (name.trim().length > 100) {
-      return { success: false, error: "Cluster name must be less than 100 characters" }
-    }
+    const { name, description } = validation.data
 
     // Get owner username
-    const ownerEmail = session.user.email || ''
-    const ownerUsername = session.user.name || (ownerEmail ? ownerEmail.split('@')[0] : 'User')
+    const ownerUsername = getUsernameFromSession(session)
+    const userId = ensureValidUUID(session.user.id)
 
     const clusterData = {
-      name: name.trim(),
-      description: description.trim() || null,
-      owner_id: ensureValidUUID(session.user.id),
+      name,
+      description: description || null,
+      owner_id: userId,
       owner_username: ownerUsername,
-      members: [ensureValidUUID(session.user.id)], // Owner is automatically a member
+      members: [userId], // Owner is automatically a member
       members_usernames: [ownerUsername], // Owner is automatically a member
       invites: [],
     }
@@ -52,10 +55,7 @@ export async function createCluster(
       .single()
 
     if (error) {
-      return { 
-        success: false, 
-        error: error.message || 'Failed to create cluster'
-      }
+      return handleSupabaseError(error, 'Failed to create cluster')
     }
 
     return { 
@@ -63,10 +63,7 @@ export async function createCluster(
       cluster: data 
     }
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error" 
-    }
+    return createErrorResponse(error)
   }
 }
 

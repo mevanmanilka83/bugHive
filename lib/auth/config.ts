@@ -1,3 +1,9 @@
+/**
+ * NextAuth Configuration
+ * 
+ * Centralized authentication configuration for the application.
+ * This is the single source of truth for all auth settings.
+ */
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
@@ -36,47 +42,47 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-        async jwt({ token, user, account }) {
-          // Always ensure we have a deterministic UUID based on email
-          // This fixes the issue where old sessions had random UUIDs
-          if (user) {
-            // On initial login, use user's email to generate UUID
-            let userId: string
-            let userEmail: string | undefined = user.email || undefined
-            let userName: string | undefined = user.name || undefined
-            let userImage: string | undefined = user.image || undefined
+    async jwt({ token, user, account }) {
+      // Always ensure we have a deterministic UUID based on email
+      // This fixes the issue where old sessions had random UUIDs
+      if (user) {
+        // On initial login, use user's email to generate UUID
+        let userId: string
+        let userEmail: string | undefined = user.email || undefined
+        let userName: string | undefined = user.name || undefined
+        let userImage: string | undefined = user.image || undefined
 
-            if (user.email) {
-              userId = generateUUIDFromEmailSync(user.email)
-              token.id = userId
-              token.email = user.email
-            } else if (user.id) {
-              userId = user.id
-              token.id = userId
-            } else {
-              userId = generateUUID()
-              token.id = userId
-            }
+        if (user.email) {
+          userId = generateUUIDFromEmailSync(user.email)
+          token.id = userId
+          token.email = user.email
+        } else if (user.id) {
+          userId = user.id
+          token.id = userId
+        } else {
+          userId = generateUUID()
+          token.id = userId
+        }
 
-            // Store user data in token to save in session callback (which runs in Node.js runtime)
-            if (userEmail) {
-              token.userDataToSave = {
-                email: userEmail,
-                name: userName || userEmail.split('@')[0],
-                image: userImage,
-                email_verified: account?.provider === 'github' ? new Date().toISOString() : null,
-              }
-            }
-          } else if (token.email && !token.id) {
-            // On token refresh, if we have email but no id, regenerate from email
-            token.id = generateUUIDFromEmailSync(token.email as string)
-          } else if (token.email && token.id) {
-            // On token refresh, always regenerate ID from email to ensure consistency
-            // This migrates old random UUIDs to deterministic ones
-            token.id = generateUUIDFromEmailSync(token.email as string)
+        // Store user data in token to save in session callback (which runs in Node.js runtime)
+        if (userEmail) {
+          token.userDataToSave = {
+            email: userEmail,
+            name: userName || userEmail.split('@')[0],
+            image: userImage,
+            email_verified: account?.provider === 'github' ? new Date().toISOString() : null,
           }
-          return token
-        },
+        }
+      } else if (token.email && !token.id) {
+        // On token refresh, if we have email but no id, regenerate from email
+        token.id = generateUUIDFromEmailSync(token.email as string)
+      } else if (token.email && token.id) {
+        // On token refresh, always regenerate ID from email to ensure consistency
+        // This migrates old random UUIDs to deterministic ones
+        token.id = generateUUIDFromEmailSync(token.email as string)
+      }
+      return token
+    },
     async session({ session, token }) {
       if (token) {
         // Always use deterministic UUID from email if available
@@ -101,3 +107,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   debug: process.env.NODE_ENV === "development",
 })
+

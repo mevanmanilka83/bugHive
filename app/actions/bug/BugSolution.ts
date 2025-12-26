@@ -1,46 +1,41 @@
 "use server"
 
-import { auth } from "@/auth"
 import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/shared/shared"
-import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
-import { type SolutionPayload } from "@/lib/schemas/types/bugSolution"
+import { requireAuth, type ActionResponse } from "@/lib/auth/helpers"
+import { createErrorResponse, handleSupabaseError } from "../shared/errors"
+import { validateWithSchema } from "../shared/validation"
+import { getBugSolutionValidationSchema } from "./zod/bugSolution"
 
-export async function createBugSolution(formData: FormData, bugId: string) {
+export async function createBugSolution(formData: FormData, bugId: string): Promise<ActionResponse<{ solution?: any }>> {
   try {
     // Check authentication
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return authResult
     }
+    const { session } = authResult // session is guaranteed to be AuthenticatedSession here
 
     // Extract form data
-    const title = (formData.get('title') as string) || ''
-    const description = (formData.get('description') as string) || ''
-    const solution_type = (formData.get('solution_type') as string) || ''
-    const priority = (formData.get('priority') as string) || 'medium'
-    const status = (formData.get('status') as string) || 'draft'
-    const assignee = formData.get('assignee') as string | null
-    const estimated_hours = formData.get('estimated_hours') as string | null
     const links = formData.get('links') as string | null
-    
-    // Early validation to prevent storing error messages as data
-    if (!title.trim()) {
-      return { success: false, error: "Title is required" }
-    }
-    if (!description.trim()) {
-      return { success: false, error: "Description is required" }
-    }
-    if (!solution_type) {
-      return { success: false, error: "Solution type is required" }
+
+    // Prepare data for validation (links should be a string for validation)
+    const validationData = {
+      title: (formData.get('title') as string) || '',
+      description: (formData.get('description') as string) || '',
+      solution_type: (formData.get('solution_type') as string) || '',
+      priority: (formData.get('priority') as string) || 'medium',
+      status: (formData.get('status') as string) || 'draft',
+      assignee: formData.get('assignee') as string | null || undefined,
+      estimated_hours: formData.get('estimated_hours') as string | null || undefined,
+      links: links || undefined, // Pass as string for validation
+      attachments: [], // Will be validated separately
     }
 
-    // Additional safety check to prevent error messages from being stored as data
-    if (title.includes("Missing required fields") || description.includes("Missing required fields")) {
-      return { success: false, error: "Invalid form data detected" }
+    // Validate using Zod schema
+    const validation = validateWithSchema(getBugSolutionValidationSchema(), validationData)
+    if (!validation.success) {
+      return validation
     }
-    
-    // Parse links using centralized utility
-    const parsedLinks = parseArrayField(links)
 
     // Handle attachments using centralized utility
     const formDataObj: any = {}
@@ -49,49 +44,23 @@ export async function createBugSolution(formData: FormData, bugId: string) {
     }
     const attachment_urls = await handleFileUploads(formDataObj, 'solutions')
 
-    // Additional validation for field lengths
-    if (title.trim().length < 3) {
-      return { success: false, error: "Title must be at least 3 characters" }
-    }
-    if (description.trim().length < 3) {
-      return { success: false, error: "Description must be at least 3 characters" }
-    }
-    if (title.trim().length > 100) {
-      return { success: false, error: "Title must be less than 100 characters" }
-    }
-    if (description.trim().length > 2000) {
-      return { success: false, error: "Description must be less than 2000 characters" }
-    }
-
-    // Validate optional fields
-    if (assignee && assignee.length > 100) {
-      return { success: false, error: "Assignee must be less than 100 characters" }
-    }
-    if (estimated_hours) {
-      const hours = parseFloat(estimated_hours)
-      if (isNaN(hours) || hours < 0 || hours > 1000) {
-        return { success: false, error: "Estimated hours must be a valid number between 0 and 1000" }
-      }
-    }
-    if (parsedLinks && parsedLinks.length > 5) {
-      return { success: false, error: "Maximum 5 links allowed" }
-    }
+    // Parse links from validated string to array for database
+    const parsedLinks = validation.data.links ? parseArrayField(validation.data.links) : null
 
     // Insert into database using Supabase
-    try {
-      const solutionData = {
-        bug_id: bugId,
-        title: title.trim(),
-        description: description.trim(),
-        solution_type,
-        priority,
-        status,
-        assignee,
-        estimated_hours: estimated_hours ? parseFloat(estimated_hours) : null,
-        links: parsedLinks?.length ? parsedLinks : null,
-        attachment_urls: attachment_urls.length ? attachment_urls : null,
-        created_by: ensureValidUUID(session.user.id),
-      }
+    const solutionData = {
+      bug_id: bugId,
+      title: validation.data.title.trim(),
+      description: validation.data.description.trim(),
+      solution_type: validation.data.solution_type,
+      priority: validation.data.priority,
+      status: validation.data.status,
+      assignee: validation.data.assignee || null,
+      estimated_hours: validation.data.estimated_hours ? parseFloat(validation.data.estimated_hours) : null,
+      links: parsedLinks && parsedLinks.length > 0 ? parsedLinks : null,
+      attachment_urls: attachment_urls.length ? attachment_urls : null,
+      created_by: ensureValidUUID(session.user.id),
+    }
 
       const { data, error } = await supabase
         .from('bug_solution_details')
@@ -100,11 +69,7 @@ export async function createBugSolution(formData: FormData, bugId: string) {
         .single()
 
       if (error) {
-        return { 
-          success: false, 
-          error: error.message || 'Failed to save solution',
-          details: error.code || 'UNKNOWN_ERROR'
-        }
+        return handleSupabaseError(error, 'Failed to save solution')
       }
 
       // Create notifications for cluster members if bug belongs to a cluster
@@ -158,29 +123,19 @@ export async function createBugSolution(formData: FormData, bugId: string) {
         success: true, 
         solution: data 
       }
-    } catch (sqlErr: any) {
-      return { 
-        success: false, 
-        error: sqlErr?.message || 'Failed to save solution',
-        details: sqlErr?.code || 'UNKNOWN_ERROR'
-      }
-    }
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error" 
-    }
+    return createErrorResponse(error)
   }
 }
 
 /**
  * Fetch all solutions for charting purposes
  */
-export async function getAllSolutions() {
+export async function getAllSolutions(): Promise<ActionResponse<{ solutions: any[] }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized", solutions: [] }
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return { ...authResult, solutions: [] }
     }
 
     const { data, error } = await supabase
@@ -190,8 +145,7 @@ export async function getAllSolutions() {
 
     if (error) {
       return { 
-        success: false, 
-        error: error.message || 'Failed to fetch solutions',
+        ...handleSupabaseError(error, 'Failed to fetch solutions'),
         solutions: []
       }
     }
@@ -202,8 +156,7 @@ export async function getAllSolutions() {
     }
   } catch (error) {
     return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error",
+      ...createErrorResponse(error),
       solutions: []
     }
   }
@@ -212,11 +165,11 @@ export async function getAllSolutions() {
 /**
  * Fetch solutions for bugs in a specific cluster
  */
-export async function getSolutionsByCluster(clusterId: string) {
+export async function getSolutionsByCluster(clusterId: string): Promise<ActionResponse<{ solutions: any[] }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized", solutions: [] }
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return { ...authResult, solutions: [] }
     }
 
     // First get all bugs in this cluster
@@ -227,8 +180,7 @@ export async function getSolutionsByCluster(clusterId: string) {
 
     if (bugsError) {
       return { 
-        success: false, 
-        error: bugsError.message || 'Failed to fetch cluster bugs',
+        ...handleSupabaseError(bugsError, 'Failed to fetch cluster bugs'),
         solutions: []
       }
     }
@@ -248,8 +200,7 @@ export async function getSolutionsByCluster(clusterId: string) {
 
     if (error) {
       return { 
-        success: false, 
-        error: error.message || 'Failed to fetch solutions',
+        ...handleSupabaseError(error, 'Failed to fetch solutions'),
         solutions: []
       }
     }
@@ -260,8 +211,7 @@ export async function getSolutionsByCluster(clusterId: string) {
     }
   } catch (error) {
     return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error",
+      ...createErrorResponse(error),
       solutions: []
     }
   }
@@ -270,11 +220,11 @@ export async function getSolutionsByCluster(clusterId: string) {
 /**
  * Fetch solutions for bugs created by a specific user
  */
-export async function getSolutionsByUser(userId: string) {
+export async function getSolutionsByUser(userId: string): Promise<ActionResponse<{ solutions: any[] }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized", solutions: [] }
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return { ...authResult, solutions: [] }
     }
 
     // First get all bugs created by this user
@@ -285,8 +235,7 @@ export async function getSolutionsByUser(userId: string) {
 
     if (bugsError) {
       return { 
-        success: false, 
-        error: bugsError.message || 'Failed to fetch user bugs',
+        ...handleSupabaseError(bugsError, 'Failed to fetch user bugs'),
         solutions: []
       }
     }
@@ -306,8 +255,7 @@ export async function getSolutionsByUser(userId: string) {
 
     if (error) {
       return { 
-        success: false, 
-        error: error.message || 'Failed to fetch solutions',
+        ...handleSupabaseError(error, 'Failed to fetch solutions'),
         solutions: []
       }
     }
@@ -318,8 +266,7 @@ export async function getSolutionsByUser(userId: string) {
     }
   } catch (error) {
     return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error",
+      ...createErrorResponse(error),
       solutions: []
     }
   }

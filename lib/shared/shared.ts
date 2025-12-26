@@ -9,7 +9,9 @@
  * - database/: Database operations (CRUD with fallback)
  * - s3Uploads.ts: S3 file upload operations
  * - formParser.ts: Form data parsing
- * - apiAuth.ts: API route authentication helpers
+ * 
+ * Note: Authentication helpers are in @/lib/auth/helpers
+ * Import auth functions directly from @/lib/auth/helpers
  */
 
 // Configuration exports
@@ -53,5 +55,5 @@ export {
 // Form exports
 export { parseFormData } from "./formParser"
 
-// Auth exports
-export { checkAuth } from "./apiAuth"
+// Auth exports removed - import directly from @/lib/auth/helpers
+// This keeps auth code centralized in the auth module

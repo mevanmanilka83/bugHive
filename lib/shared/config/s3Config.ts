@@ -38,11 +38,11 @@ export function getS3Client(): S3Client {
     validateS3Config()
     _s3Client = new S3Client({
       region: process.env.AWS_REGION!,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    })
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+})
   }
   return _s3Client
 }

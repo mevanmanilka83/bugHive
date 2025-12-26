@@ -78,7 +78,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       title,
       description,
       priority: priority as "low" | "medium" | "high" | "critical",
-      visibility: visibility as "private" | "public",
+      visibility: clusterId ? undefined : (visibility as "private" | "public"),
       environment: environment || undefined,
       expected_behavior: expectedBehavior,
       actual_behavior: actualBehavior,
@@ -94,7 +94,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     const payload = getPayload()
     const stepFields: Record<number, (keyof BugPayload)[]> = {
       1: ['title', 'description'], // Required fields
-      2: ['priority', 'visibility'], // Required fields
+      2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
       3: [], // Optional fields - no validation needed
       4: [], // Optional fields - no validation needed
       5: [] // Review step
@@ -120,7 +120,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     const payload = getPayload()
     const stepFields: Record<number, (keyof BugPayload)[]> = {
       1: ['title', 'description'], // Required fields
-      2: ['priority', 'visibility'], // Required fields
+      2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
       3: [], // Optional fields - no validation needed
       4: [], // Optional fields - no validation needed
       5: [] // Review step
@@ -289,7 +289,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       if (payload.tags?.length) formData.append('tags', JSON.stringify(payload.tags))
       if (payload.sources?.length) formData.append('sources', JSON.stringify(payload.sources))
       if (payload.priority) formData.append('priority', payload.priority)
-      if (payload.visibility) formData.append('visibility', payload.visibility)
+      if (payload.visibility && !clusterId) formData.append('visibility', payload.visibility)
       if (payload.environment) formData.append('environment', payload.environment)
       if (payload.expected_behavior) formData.append('expected_behavior', payload.expected_behavior)
       if (payload.actual_behavior) formData.append('actual_behavior', payload.actual_behavior)
@@ -385,6 +385,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             onNext={() => { if (validateStepWithErrors(2)) setStep(3) }}
             onBack={() => setStep(1)}
             onCancel={() => setOpen(false)}
+            hideVisibility={!!clusterId}
           />
         )}
 
@@ -436,6 +437,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             onBack={() => setStep(4)}
             onCancel={() => setOpen(false)}
             onSubmit={handleSubmit}
+            hideVisibility={!!clusterId}
           />
         )}
       </DialogContent>

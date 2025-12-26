@@ -1,5 +1,4 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
+import { requireAuthForPage } from "@/lib/auth/helpers"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/SiteHeader"
 import {
@@ -9,14 +8,9 @@ import {
 import { ClustersList } from "@/components/clusters/ClustersList"
 
 export default async function ClustersPage() {
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect("/auth/signin")
-  }
-
+  const session = await requireAuthForPage()
   const user = session.user
-  const userId = user.id!
+  const userId = user.id
 
   return (
     <SidebarProvider

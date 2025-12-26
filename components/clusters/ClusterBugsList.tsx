@@ -308,18 +308,30 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
                     >
                       <IconChartArea className="size-3.5" />
                     </button>
-                    <button 
-                      type="button" 
-                      aria-label="View solutions" 
-                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                      onClick={() => { 
-                        setSelectedBug(bug)
-                        setSolutionOpen(true)
-                        void fetchSolutions(bug.id) 
-                      }}
-                    >
-                      <IconBulb className="size-3.5" />
-                    </button>
+                    {(status === 'closed' || status === 'resolved') ? (
+                      <button 
+                        type="button" 
+                        aria-label="View solutions (disabled - bug is closed or resolved)" 
+                        className="rounded-md p-1 border border-transparent text-muted-foreground opacity-50 cursor-not-allowed" 
+                        disabled
+                        title="Cannot add solutions to closed or resolved bugs"
+                      >
+                        <IconBulb className="size-3.5" />
+                      </button>
+                    ) : (
+                      <button 
+                        type="button" 
+                        aria-label="View solutions" 
+                        className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
+                        onClick={() => { 
+                          setSelectedBug(bug)
+                          setSolutionOpen(true)
+                          void fetchSolutions(bug.id) 
+                        }}
+                      >
+                        <IconBulb className="size-3.5" />
+                      </button>
+                    )}
                   </div>
                 </CardFooter>
               </Card>
@@ -457,11 +469,11 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
                                 rel="noreferrer"
                               >
                                 {filename}
-                              </a>
+                          </a>
                             )
                           })
-                        ) : (
-                          <Input value="—" disabled />
+                      ) : (
+                        <Input value="—" disabled />
                         )
                       })()}
                     </div>

@@ -1,8 +1,13 @@
 import { z } from "zod"
-import { getAttachmentSchema, PRIORITY_ENUM, STRING_VALIDATIONS } from "./shared"
+import { getAttachmentSchema, PRIORITY_ENUM, STRING_VALIDATIONS } from "@/lib/schemas/zod/shared"
 
-// Build the schema at runtime to avoid SSR issues with File in Node
-export function getBugReportSchema() {
+/**
+ * Bug Report Validation Schema
+ * 
+ * Validates bug report data for server actions.
+ * Visibility is required only when cluster_id is not present.
+ */
+export function getBugReportValidationSchema() {
   return z.object({
     title: z.string()
       .min(STRING_VALIDATIONS.title.min, STRING_VALIDATIONS.title.minMessage)

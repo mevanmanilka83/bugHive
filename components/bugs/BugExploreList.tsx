@@ -94,6 +94,11 @@ export function BugExploreList({ userId }: BugExploreListProps) {
   })
   const [availableTags, setAvailableTags] = React.useState<string[]>([])
   const [availableAssignees, setAvailableAssignees] = React.useState<string[]>([])
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const chartConfig: ChartConfig = {
     count: {
@@ -665,7 +670,7 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                 </div>
               </DrawerContent>
             </Drawer>
-          ) : (
+          ) : mounted ? (
             <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -703,6 +708,26 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                 <FilterContent />
               </PopoverContent>
             </Popover>
+          ) : (
+            <Button variant="outline" className="gap-2" disabled>
+              <IconFilter className="size-4" />
+              Filters
+              {hasActiveFilters() && (
+                <Badge variant="secondary" className="ml-1">
+                  {[
+                    filters.status.length,
+                    filters.priority.length,
+                    filters.tags.length,
+                    filters.browser ? 1 : 0,
+                    filters.os ? 1 : 0,
+                    filters.device ? 1 : 0,
+                    filters.dateCreatedFrom || filters.dateCreatedTo ? 1 : 0,
+                    filters.dateModifiedFrom || filters.dateModifiedTo ? 1 : 0,
+                    filters.assignee ? 1 : 0,
+                  ].reduce((a, b) => a + b, 0)}
+                </Badge>
+              )}
+            </Button>
           )}
         </div>
 
@@ -922,18 +947,30 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                       >
                         <IconChartArea className="size-3.5" />
                       </button>
-                      <button 
-                        type="button" 
-                        aria-label="View solutions" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                        onClick={() => { 
-                          setSelectedBug(bug)
-                          setSolutionOpen(true)
-                          void fetchSolutions(bug.id) 
-                        }}
-                      >
-                        <IconBulb className="size-3.5" />
-                      </button>
+                      {(status === 'closed' || status === 'resolved') ? (
+                        <button 
+                          type="button" 
+                          aria-label="View solutions (disabled - bug is closed or resolved)" 
+                          className="rounded-md p-1 border border-transparent text-muted-foreground opacity-50 cursor-not-allowed" 
+                          disabled
+                          title="Cannot add solutions to closed or resolved bugs"
+                        >
+                          <IconBulb className="size-3.5" />
+                        </button>
+                      ) : (
+                        <button 
+                          type="button" 
+                          aria-label="View solutions" 
+                          className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
+                          onClick={() => { 
+                            setSelectedBug(bug)
+                            setSolutionOpen(true)
+                            void fetchSolutions(bug.id) 
+                          }}
+                        >
+                          <IconBulb className="size-3.5" />
+                        </button>
+                      )}
                       <button 
                         type="button" 
                         aria-label="Open details" 
@@ -1078,11 +1115,11 @@ export function BugExploreList({ userId }: BugExploreListProps) {
                                 rel="noreferrer"
                               >
                                 {filename}
-                              </a>
+                          </a>
                             )
                           })
-                        ) : (
-                          <Input value="—" disabled />
+                      ) : (
+                        <Input value="—" disabled />
                         )
                       })()}
                     </div>

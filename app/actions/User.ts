@@ -1,16 +1,7 @@
 "use server"
 
-import { auth } from "@/auth"
 import { createClient } from "@supabase/supabase-js"
 import { generateUUIDFromEmailSync } from "@/lib/shared/shared"
-
-/**
- * Get current user ID from session
- */
-export async function getCurrentUserId() {
-  const session = await auth()
-  return session?.user?.id || null
-}
 
 /**
  * User Management Server Actions
@@ -33,7 +24,7 @@ export async function getCurrentUserId() {
  * - /api/users: API routes for fetching user data (GET requests)
  * 
  * Key Features:
- * - Generates deterministic UUIDs from email addresses (same logic as auth.ts)
+ * - Generates deterministic UUIDs from email addresses (same logic as @/lib/auth/config)
  * - Handles Supabase RLS policies and service role key fallbacks
  * - Single source of truth for user data persistence
  */

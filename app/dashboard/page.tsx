@@ -1,5 +1,4 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
+import { requireAuthForPage } from "@/lib/auth/helpers"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ChartAreaInteractive } from "@/components/ChartAreaInteractive"
 import { DataTable } from "@/components/DataTable"
@@ -14,16 +13,12 @@ import { saveUserToSupabase } from "@/app/actions/User"
 import data from "./data.json"
 
 export default async function DashboardPage() {
-  const session = await auth()
-
-  if (!session) {
-    redirect("/auth/signin")
-  }
+  const session = await requireAuthForPage()
 
   // Save user data to Supabase if not already saved
   // This runs in Node.js runtime, so Supabase works here
   // Use Promise to avoid blocking page render
-  const userEmail = session.user?.email
+  const userEmail = session.user.email
   if (userEmail) {
     const user = session.user
     // Don't await - let it run in background to avoid blocking page load
@@ -52,7 +47,7 @@ export default async function DashboardPage() {
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              <SectionCards userId={session.user?.id || ''} />
+              <SectionCards userId={session.user.id} />
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>

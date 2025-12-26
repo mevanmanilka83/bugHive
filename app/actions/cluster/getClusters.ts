@@ -1,16 +1,21 @@
 "use server"
 
-import { auth } from "@/auth"
-import { supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { supabase } from "@/lib/shared/shared"
+import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
+import { createErrorResponse, handleSupabaseError } from "../shared/errors"
 
-export async function getClusters() {
+export async function getClusters(): Promise<ActionResponse<{ clusters: any[] }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized", clusters: [] }
+    // Check authentication
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return { ...authResult, clusters: [] }
     }
 
-    const userId = ensureValidUUID(session.user.id)
+    const userId = await getAuthenticatedUserId()
+    if (!userId) {
+      return { success: false, error: "Unauthorized", clusters: [] }
+    }
 
     // Get all clusters and filter where user is owner or member
     const { data: allClusters, error } = await supabase
@@ -19,8 +24,7 @@ export async function getClusters() {
     
     if (error) {
       return { 
-        success: false, 
-        error: error.message || 'Failed to fetch clusters',
+        ...handleSupabaseError(error, 'Failed to fetch clusters'),
         clusters: []
       }
     }
@@ -40,8 +44,7 @@ export async function getClusters() {
     }
   } catch (error) {
     return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error",
+      ...createErrorResponse(error),
       clusters: []
     }
   }

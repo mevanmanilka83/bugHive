@@ -1,43 +1,62 @@
 "use server"
 
-import { auth } from "@/auth"
 import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/shared/shared"
-import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
-import { type BugPayload } from "@/lib/schemas/types/bugReport"
+import { requireAuth, type ActionResponse } from "@/lib/auth/helpers"
+import { createErrorResponse, handleSupabaseError } from "../shared/errors"
+import { validateWithSchema } from "../shared/validation"
+import { getBugReportValidationSchema } from "./zod/bugReport"
 
-export async function createBugReport(formData: FormData) {
+export async function createBugReport(formData: FormData): Promise<ActionResponse<{ bug?: any }>> {
   try {
     // Check authentication
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return authResult
     }
+    const { session } = authResult
 
     // Extract form data
-    const title = (formData.get('title') as string) || ''
-    const description = (formData.get('description') as string) || ''
-    const priority = (formData.get('priority') as string) || 'medium'
-    const visibility = (formData.get('visibility') as string) || 'public'
-    const environment = formData.get('environment') as string | null
-    const expected_behavior = formData.get('expected_behavior') as string | null
-    const actual_behavior = formData.get('actual_behavior') as string | null
-    const steps_to_reproduce = formData.get('steps_to_reproduce') as string | null
     const cluster_id = formData.get('cluster_id') as string | null
+    // Visibility is only required for non-cluster bugs
+    const visibility = cluster_id ? null : ((formData.get('visibility') as string) || 'public')
     
     // Parse tags and sources using centralized utility
     const tags = parseArrayField(formData.get('tags') as string | null)
     const sources = parseArrayField(formData.get('sources') as string | null)
 
+    // Prepare data for validation (excluding attachments which are handled separately)
+    const validationData = {
+      title: (formData.get('title') as string) || '',
+      description: (formData.get('description') as string) || '',
+      priority: (formData.get('priority') as string) || 'medium',
+      visibility: visibility || undefined,
+      environment: formData.get('environment') as string | null || undefined,
+      expected_behavior: formData.get('expected_behavior') as string | null || undefined,
+      actual_behavior: formData.get('actual_behavior') as string | null || undefined,
+      steps_to_reproduce: formData.get('steps_to_reproduce') as string | null || undefined,
+      tags,
+      sources,
+      attachments: [], // Will be validated separately
+      cluster_id: cluster_id || undefined,
+    }
+
+    // Validate using Zod schema
+    const validation = validateWithSchema(getBugReportValidationSchema(), validationData)
+    if (!validation.success) {
+      return validation
+    }
+
     // Handle attachments using centralized utility
-    // Extract files from FormData and create object with metadata for folder determination
     const formDataObj: any = {
-      visibility,
       cluster_id: cluster_id || null
+    }
+    // Only include visibility if it's not a cluster bug
+    if (!cluster_id && visibility) {
+      formDataObj.visibility = visibility
     }
     
     // Copy all FormData entries, preserving File objects
     for (const [key, value] of formData.entries()) {
-      // Preserve File objects as-is, convert other values to strings
       if (value instanceof File) {
         formDataObj[key] = value
       } else {
@@ -47,97 +66,46 @@ export async function createBugReport(formData: FormData) {
     
     const attachment_urls = await handleFileUploads(formDataObj, 'bugs')
 
-    // Basic validation for required fields
-    if (!title.trim()) {
-      return { success: false, error: "Title is required" }
-    }
-    if (!description.trim()) {
-      return { success: false, error: "Description is required" }
-    }
-    if (title.trim().length < 3) {
-      return { success: false, error: "Title must be at least 3 characters" }
-    }
-    if (description.trim().length < 5) {
-      return { success: false, error: "Description must be at least 5 characters" }
-    }
-    if (title.trim().length > 100) {
-      return { success: false, error: "Title must be less than 100 characters" }
-    }
-    if (description.trim().length > 2000) {
-      return { success: false, error: "Description must be less than 2000 characters" }
-    }
-
-    // Validate optional fields
-    if (environment && environment.length > 200) {
-      return { success: false, error: "Environment description must be less than 200 characters" }
-    }
-    if (expected_behavior && expected_behavior.length > 1000) {
-      return { success: false, error: "Expected behavior must be less than 1000 characters" }
-    }
-    if (actual_behavior && actual_behavior.length > 1000) {
-      return { success: false, error: "Actual behavior must be less than 1000 characters" }
-    }
-    if (steps_to_reproduce && steps_to_reproduce.length > 2000) {
-      return { success: false, error: "Steps to reproduce must be less than 2000 characters" }
-    }
-    if (tags && tags.length > 10) {
-      return { success: false, error: "Maximum 10 tags allowed" }
-    }
-    if (sources && sources.length > 5) {
-      return { success: false, error: "Maximum 5 sources allowed" }
-    }
-
     // Insert into database using Supabase
-    try {
-      const bugData: any = {
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        visibility,
-        environment,
-        expected_behavior,
-        actual_behavior,
-        steps_to_reproduce,
-        tags,
-        sources,
-        attachments: attachment_urls.length ? attachment_urls : null,
-        created_by: ensureValidUUID(session.user.id),
-      }
+    const bugData: any = {
+      title: validation.data.title.trim(),
+      description: validation.data.description.trim(),
+      priority: validation.data.priority,
+      environment: validation.data.environment || null,
+      expected_behavior: validation.data.expected_behavior || null,
+      actual_behavior: validation.data.actual_behavior || null,
+      steps_to_reproduce: validation.data.steps_to_reproduce || null,
+      tags: validation.data.tags || null,
+      sources: validation.data.sources || null,
+      attachments: attachment_urls.length ? attachment_urls : null,
+      created_by: ensureValidUUID(session.user.id),
+    }
+    
+    // Only set visibility for non-cluster bugs
+    if (!cluster_id && validation.data.visibility) {
+      bugData.visibility = validation.data.visibility
+    }
 
-      // Add cluster_id if provided
-      if (cluster_id) {
-        bugData.cluster_id = ensureValidUUID(cluster_id)
-      }
+    // Add cluster_id if provided
+    if (cluster_id) {
+      bugData.cluster_id = ensureValidUUID(cluster_id)
+    }
 
-      const { data, error } = await supabase
-        .from('bugs')
-        .insert(bugData)
-        .select()
-        .single()
+    const { data, error } = await supabase
+      .from('bugs')
+      .insert(bugData)
+      .select()
+      .single()
 
-      if (error) {
-        return { 
-          success: false, 
-          error: error.message || 'Failed to save bug report',
-          details: error.code || 'UNKNOWN_ERROR'
-        }
-      }
+    if (error) {
+      return handleSupabaseError(error, 'Failed to save bug report')
+    }
 
-      return { 
-        success: true, 
-        bug: data 
-      }
-    } catch (sqlErr: any) {
-      return { 
-        success: false, 
-        error: sqlErr?.message || 'Failed to save bug report',
-        details: sqlErr?.code || 'UNKNOWN_ERROR'
-      }
+    return { 
+      success: true, 
+      bug: data 
     }
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error" 
-    }
+    return createErrorResponse(error)
   }
 }

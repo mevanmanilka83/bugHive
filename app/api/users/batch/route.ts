@@ -9,7 +9,8 @@
  * - Used by components that need to fetch multiple user profiles efficiently
  * - Reduces number of HTTP requests when displaying user lists
  */
-import { checkAuth, supabase } from "@/lib/shared/shared"
+import { checkAuth } from "@/lib/auth/helpers"
+import { supabase } from "@/lib/shared/shared"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

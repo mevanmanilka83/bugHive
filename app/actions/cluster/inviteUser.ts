@@ -1,36 +1,50 @@
 "use server"
 
-import { auth } from "@/auth"
 import { supabase, ensureValidUUID, generateUUIDFromEmailSync } from "@/lib/shared/shared"
+import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
+import { createErrorResponse, handleSupabaseError } from "../shared/errors"
+import { getClusterById } from "../shared/cluster"
+import { verifyClusterOwnership } from "../shared/cluster"
+import { validateWithSchema } from "../shared/validation"
+import { getInviteUserValidationSchema } from "./zod/inviteUser"
 
 export async function inviteUserToCluster(
   clusterId: string, 
   inviteeEmail?: string, 
   inviteeUsername?: string
-) {
+): Promise<ActionResponse<{ message?: string }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    // Check authentication
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return authResult
+    }
+    const { session } = authResult
+
+    // Validate input
+    const validation = validateWithSchema(getInviteUserValidationSchema(), {
+      clusterId,
+      inviteeEmail,
+      inviteeUsername
+    })
+    if (!validation.success) {
+      return validation
+    }
+
+    const userId = await getAuthenticatedUserId()
+    if (!userId) {
       return { success: false, error: "Unauthorized" }
     }
 
-    if (!inviteeEmail && !inviteeUsername) {
-      return { success: false, error: "Email or username is required" }
-    }
-
     // Get cluster to verify ownership
-    const { data: cluster, error: clusterError } = await supabase
-      .from('clusters')
-      .select('*')
-      .eq('id', clusterId)
-      .single()
-
-    if (clusterError || !cluster) {
-      return { success: false, error: "Cluster not found" }
+    const clusterResult = await getClusterById(clusterId)
+    if (!clusterResult.success) {
+      return clusterResult
     }
+    const cluster = clusterResult.cluster
 
     // Check if user is the owner
-    if (cluster.owner_id !== ensureValidUUID(session.user.id)) {
+    if (!verifyClusterOwnership(cluster, userId)) {
       return { success: false, error: "Only cluster owners can invite members" }
     }
 
@@ -50,10 +64,7 @@ export async function inviteUserToCluster(
         .rpc('lookup_user_by_username', { p_username: trimmedUsername })
 
       if (userError) {
-        return { 
-          success: false, 
-          error: `Error looking up user: ${userError.message}` 
-        }
+        return handleSupabaseError(userError, `Error looking up user: ${userError.message}`)
       }
 
       if (!userData || userData.length === 0 || !userData[0]) {
@@ -66,10 +77,9 @@ export async function inviteUserToCluster(
       finalEmail = userData[0].email
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!finalEmail || !emailRegex.test(finalEmail)) {
-      return { success: false, error: "Invalid email address" }
+    // Email validation is handled by Zod schema, but double-check here
+    if (!finalEmail) {
+      return { success: false, error: "Email is required" }
     }
 
     const inviteeUserId = generateUUIDFromEmailSync(finalEmail)
@@ -118,10 +128,7 @@ export async function inviteUserToCluster(
       .eq('id', clusterId)
 
     if (updateError) {
-      return { 
-        success: false, 
-        error: updateError.message || 'Failed to send invitation'
-      }
+      return handleSupabaseError(updateError, 'Failed to send invitation')
     }
 
     // Create notification for the invitee
@@ -143,10 +150,7 @@ export async function inviteUserToCluster(
       message: "Invitation sent successfully" 
     }
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error" 
-    }
+    return createErrorResponse(error)
   }
 }
 

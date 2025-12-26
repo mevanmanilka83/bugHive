@@ -19,6 +19,7 @@ type Props = {
   onBack: () => void
   onCancel: () => void
   onSubmit: () => void
+  hideVisibility?: boolean
 }
 
 export function BugReportStep5Review({
@@ -37,6 +38,7 @@ export function BugReportStep5Review({
   onBack,
   onCancel,
   onSubmit,
+  hideVisibility = false,
 }: Props) {
   return (
     <div className="flex flex-col gap-4">
@@ -63,21 +65,23 @@ export function BugReportStep5Review({
           <div className="rounded-lg border p-4">
             <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
               <IconAlertTriangle className="size-4" />
-              Priority & Visibility
+              {hideVisibility ? 'Priority' : 'Priority & Visibility'}
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className={hideVisibility ? "grid grid-cols-1 gap-3" : "grid grid-cols-2 gap-3"}>
               <div>
                 <div className="font-medium text-sm">Priority</div>
                 <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded capitalize">{priority}</div>
               </div>
-              <div>
-                <div className="font-medium text-sm">Visibility</div>
-                <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded capitalize flex items-center gap-1">
-                  {visibility === 'private' && <IconLock className="size-3" />}
-                  {visibility === 'public' && <IconEye className="size-3" />}
-                  {visibility}
+              {!hideVisibility && (
+                <div>
+                  <div className="font-medium text-sm">Visibility</div>
+                  <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded capitalize flex items-center gap-1">
+                    {visibility === 'private' && <IconLock className="size-3" />}
+                    {visibility === 'public' && <IconEye className="size-3" />}
+                    {visibility}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

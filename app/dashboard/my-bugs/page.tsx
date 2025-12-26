@@ -1,5 +1,4 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
+import { requireAuthForPage } from "@/lib/auth/helpers"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/SiteHeader"
 import {
@@ -9,15 +8,9 @@ import {
 import { MyBugsList } from "@/components/bugs/MyBugsList"
 
 export default async function MyBugsPage() {
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect("/auth/signin")
-  }
-
-  // TypeScript narrowing: at this point we know session.user exists
+  const session = await requireAuthForPage()
   const user = session.user
-  const userId = user.id!
+  const userId = user.id
 
   return (
     <SidebarProvider

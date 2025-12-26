@@ -1,30 +1,40 @@
 "use server"
 
-import { auth } from "@/auth"
-import { supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { supabase } from "@/lib/shared/shared"
+import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
+import { createErrorResponse, handleSupabaseError } from "../shared/errors"
+import { getClusterById } from "../shared/cluster"
+import { verifyClusterOwnership } from "../shared/cluster"
+import { validateWithSchema } from "../shared/validation"
+import { getDeleteClusterValidationSchema } from "./zod/deleteCluster"
 
-export async function deleteCluster(clusterId: string) {
+export async function deleteCluster(clusterId: string): Promise<ActionResponse<{ message?: string }>> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
+    // Check authentication
+    const authResult = await requireAuth()
+    if (!authResult.success) {
+      return authResult
+    }
+
+    // Validate clusterId
+    const validation = validateWithSchema(getDeleteClusterValidationSchema(), { clusterId })
+    if (!validation.success) {
+      return validation
+    }
+
+    const userId = await getAuthenticatedUserId()
+    if (!userId) {
       return { success: false, error: "Unauthorized" }
     }
 
-    const userId = ensureValidUUID(session.user.id)
-
     // Get cluster to verify ownership
-    const { data: cluster, error: clusterError } = await supabase
-      .from('clusters')
-      .select('*')
-      .eq('id', clusterId)
-      .single()
-
-    if (clusterError || !cluster) {
-      return { success: false, error: "Cluster not found" }
+    const clusterResult = await getClusterById(clusterId)
+    if (!clusterResult.success) {
+      return clusterResult
     }
 
     // Verify ownership
-    if (cluster.owner_id !== userId) {
+    if (!verifyClusterOwnership(clusterResult.cluster, userId)) {
       return { success: false, error: "Only cluster owners can delete clusters" }
     }
 
@@ -35,10 +45,7 @@ export async function deleteCluster(clusterId: string) {
       .eq('id', clusterId)
 
     if (deleteError) {
-      return { 
-        success: false, 
-        error: deleteError.message || 'Failed to delete cluster'
-      }
+      return handleSupabaseError(deleteError, 'Failed to delete cluster')
     }
 
     return { 
@@ -46,10 +53,7 @@ export async function deleteCluster(clusterId: string) {
       message: "Cluster deleted successfully" 
     }
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Internal server error" 
-    }
+    return createErrorResponse(error)
   }
 }
 

@@ -12,7 +12,8 @@
  * - Reduces boilerplate in individual route handlers
  */
 import { NextRequest, NextResponse } from "next/server"
-import { checkAuth, errorResponse, successResponse } from "@/lib/shared/shared"
+import { checkAuth } from "@/lib/auth/helpers"
+import { errorResponse, successResponse } from "@/lib/shared/shared"
 
 /**
  * Creates a generic API route handler with authentication and error handling
