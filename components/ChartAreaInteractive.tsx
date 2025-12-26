@@ -143,12 +143,34 @@ const chartConfig = {
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
+  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
+    setMounted(true)
     if (isMobile) {
       setTimeRange("7d")
     }
   }, [isMobile])
+
+  // Prevent hydration mismatch by using consistent initial state
+  if (!mounted) {
+    return (
+      <Card className="@container/card">
+        <CardHeader>
+          <CardTitle>Total Visitors</CardTitle>
+          <CardDescription>
+            <span className="hidden @[540px]/card:block">
+              Total for the last 3 months
+            </span>
+            <span className="@[540px]/card:hidden">Last 3 months</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+          <div className="aspect-auto h-[250px] w-full animate-pulse rounded bg-muted" />
+        </CardContent>
+      </Card>
+    )
+  }
 
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date)
