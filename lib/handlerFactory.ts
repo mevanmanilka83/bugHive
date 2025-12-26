@@ -12,23 +12,19 @@
  * - Reduces boilerplate in individual route handlers
  */
 import { NextRequest, NextResponse } from "next/server"
+import { checkAuth } from "./auth/helpers"
+import { errorResponse, successResponse } from "./errors"
 import { 
-  checkAuth, 
-  errorResponse, 
-  successResponse,
   getSingleRecord,
   getMultipleRecords,
   insertRecord,
   updateRecord,
-  deleteRecord,
-  parseFormData,
-  parseArrayField,
-  addTimestamps,
-  ensureValidUUID,
-  processFormDataWithUploads,
-  extractRouteId,
-  supabase
-} from "@/lib"
+  deleteRecord
+} from "./database"
+import { parseFormData } from "./formParser"
+import { processFormDataWithUploads } from "./s3Uploads"
+import { parseArrayField, addTimestamps, ensureValidUUID, extractRouteId } from "./utils"
+import { supabase } from "./config"
 
 /**
  * Creates a generic API route handler with authentication and error handling

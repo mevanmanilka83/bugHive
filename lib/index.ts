@@ -7,14 +7,13 @@
  * 
  * Directory structure:
  * - lib/config.ts        → Database, Storage, Auth configuration
- * - lib/database.ts      → All CRUD operations (getSingleRecord, insertRecord, etc.)
+ * - lib/database.ts      → All CRUD operations and cluster helpers
  * - lib/utils.ts         → Server utilities (re-exports client-safe from utils-client.ts)
  * - lib/utils-client.ts  → Client-safe utilities (cn, generateUUID, etc.)
  * - lib/errors.ts        → Error handling (errorResponse, successResponse, etc.)
  * - lib/validation.ts    → Schema validation
  * - lib/auth/            → Authentication config and helpers
  * - lib/schemas/         → Zod schemas and TypeScript types
- * - lib/clusterHelpers.ts → Cluster access validation
  * - lib/handlerFactory.ts → API route handler wrappers
  * - lib/formParser.ts    → Form data parsing
  * - lib/s3Uploads.ts     → File upload handling
@@ -86,17 +85,28 @@ export type {
 } from "./schemas/types"
 
 // ============================================================================
-// DATABASE HELPERS
+// DATABASE OPERATIONS
 // ============================================================================
 
-export { getClusterById, verifyClusterOwnership, getUserClusterIds, isClusterOwnerOrMember, canUserViewBug } from "./clusterHelpers"
+export {
+  getSingleRecord,
+  getMultipleRecords,
+  insertRecord,
+  updateRecord,
+  deleteRecord,
+  getClusterById,
+  verifyClusterOwnership,
+  getUserClusterIds,
+  isClusterOwnerOrMember,
+  canUserViewBug
+} from "./database"
 
 // ============================================================================
 // CONFIGURATION (Database, Storage, Auth)
 // ============================================================================
 
+export { env } from "./env"
 export {
-  env,
   supabase,
   getS3Client,
   handlers,
@@ -124,18 +134,6 @@ export {
 // ============================================================================
 
 export { createApiHandler, createBugHandler, createSolutionHandler } from "./handlerFactory"
-
-// ============================================================================
-// DATABASE OPERATIONS
-// ============================================================================
-
-export {
-  getSingleRecord,
-  getMultipleRecords,
-  insertRecord,
-  updateRecord,
-  deleteRecord
-} from "./database"
 
 // ============================================================================
 // FILE HANDLING

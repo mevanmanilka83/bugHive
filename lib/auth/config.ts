@@ -7,8 +7,9 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
-import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail, env } from "@/lib"
-import { getLoginValidationSchema } from "@/lib"
+import { env } from "../env"
+import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "../utils"
+import { getLoginValidationSchema } from "../schemas/zod"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [

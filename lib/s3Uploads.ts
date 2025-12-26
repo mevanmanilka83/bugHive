@@ -7,7 +7,10 @@
  * - Returns public URLs for uploaded files
  */
 import { PutObjectCommand } from "@aws-sdk/client-s3"
-import { getS3Client, generateUUID, parseFormData, env } from "@/lib"
+import { getS3Client } from "./config"
+import { generateUUID } from "./utils-client"
+import { parseFormData } from "./formParser"
+import { env } from "./env"
 
 /**
  * Determines the correct S3 folder path for bug attachments
