@@ -1,8 +1,13 @@
 "use server"
 
-import { supabase } from "@/lib/config"
-import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
+import {
+  supabase,
+  requireAuth,
+  getAuthenticatedUserId,
+  createErrorResponse,
+  handleSupabaseError,
+  type ActionResponse
+} from "@/lib"
 
 export async function getClusters(): Promise<ActionResponse<{ clusters: any[] }>> {
   try {

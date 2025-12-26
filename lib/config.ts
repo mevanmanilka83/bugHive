@@ -9,7 +9,6 @@
  * 
  * Database & Storage:
  * - supabase: Supabase client for database operations
- * - pool: PostgreSQL connection pool for direct SQL queries
  * - s3Client, getS3Client: AWS S3 client for file storage
  * 
  * Authentication:
@@ -23,7 +22,6 @@
  */
 
 import { createClient } from "@supabase/supabase-js"
-import { Pool } from 'pg'
 import { S3Client } from "@aws-sdk/client-s3"
 
 // ============================================================================
@@ -38,14 +36,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     autoRefreshToken: false,
     persistSession: false
   }
-})
-
-// ============================================================================
-// POSTGRESQL CONFIGURATION
-// ============================================================================
-
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
 })
 
 // ============================================================================

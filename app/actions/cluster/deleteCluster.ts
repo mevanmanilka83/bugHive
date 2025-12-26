@@ -1,10 +1,16 @@
 "use server"
 
-import { supabase } from "@/lib/config"
-import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
-import { getClusterById, verifyClusterOwnership } from "@/lib/database-helpers"
-import { validateWithSchema } from "@/lib/validation"
+import {
+  supabase,
+  requireAuth,
+  getAuthenticatedUserId,
+  createErrorResponse,
+  handleSupabaseError,
+  getClusterById,
+  verifyClusterOwnership,
+  validateWithSchema,
+  type ActionResponse
+} from "@/lib"
 import { getDeleteClusterValidationSchema } from "@/lib/schemas/zod/deleteCluster"
 
 export async function deleteCluster(clusterId: string): Promise<ActionResponse<{ message?: string }>> {

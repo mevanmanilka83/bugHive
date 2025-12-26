@@ -35,7 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useIsMobile } from "@/hooks/useMobile"
 import {
   Sheet,
   SheetContent,

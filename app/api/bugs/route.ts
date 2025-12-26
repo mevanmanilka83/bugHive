@@ -1,4 +1,4 @@
-import { createBugHandler } from "@/lib/api-handlers/apiHandlers"
+import { createBugHandler } from "@/lib"
 
 const bugHandler = createBugHandler()
 

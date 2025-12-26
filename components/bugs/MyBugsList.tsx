@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
-import { getSolutionsByUser } from "@/app/actions/bug/BugSolution"
+import { getSolutionsByUser } from "@/app/actions/bug/bugSolution"
 
 interface MyBugsListProps {
   userId: string

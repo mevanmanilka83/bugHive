@@ -1,4 +1,4 @@
-import { checkAuth } from "@/lib/auth/helpers"
+import { checkAuth } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

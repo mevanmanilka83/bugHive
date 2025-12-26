@@ -48,7 +48,7 @@ export { validateWithSchema } from "./validation"
 // DATABASE HELPERS
 // ============================================================================
 
-export { getClusterById, verifyClusterOwnership } from "./database-helpers"
+export { getClusterById, verifyClusterOwnership, getUserClusterIds, isClusterOwnerOrMember, canUserViewBug } from "./clusterHelpers"
 
 // ============================================================================
 // CONFIGURATION (Database, Storage, Auth)
@@ -56,7 +56,6 @@ export { getClusterById, verifyClusterOwnership } from "./database-helpers"
 
 export {
   supabase,
-  pool,
   s3Client,
   getS3Client,
   handlers,
@@ -83,30 +82,20 @@ export {
 // API HANDLERS
 // ============================================================================
 
-export {
-  createApiHandler,
-  createGetHandler,
-  createPostHandler,
-  createPatchHandler,
-  createDeleteHandler,
-  createBugHandler,
-  createClusterHandler,
-  createSolutionHandler
-} from "./api-handlers/apiHandlers"
+export { createApiHandler, createBugHandler, createSolutionHandler } from "./handlerFactory"
 
 // ============================================================================
 // DATABASE OPERATIONS
 // ============================================================================
 
+// Re-export database operations
 export {
   getSingleRecord,
   getMultipleRecords,
   insertRecord,
   updateRecord,
-  deleteRecord,
-  executeWithFallback,
-  query
-} from "./database/database"
+  deleteRecord
+} from "./database"
 
 // ============================================================================
 // FILE HANDLING

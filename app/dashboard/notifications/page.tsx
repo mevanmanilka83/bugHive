@@ -1,5 +1,5 @@
-import { requireAuthForPage } from "@/lib/auth/helpers"
-import { AppSidebar } from "@/components/app-sidebar"
+import { requireAuthForPage } from "@/lib"
+import { AppSidebar } from "@/components/appSidebar"
 import { SiteHeader } from "@/components/SiteHeader"
 import {
   SidebarInset,

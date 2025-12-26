@@ -1,16 +1,13 @@
-import { requireAuthForPage } from "@/lib/auth/helpers"
-import { AppSidebar } from "@/components/app-sidebar"
+import { requireAuthForPage } from "@/lib"
+import { AppSidebar } from "@/components/appSidebar"
 import { ChartAreaInteractive } from "@/components/ChartAreaInteractive"
-import { DataTable } from "@/components/DataTable"
 import { SectionCards } from "@/components/SectionCards"
 import { SiteHeader } from "@/components/SiteHeader"
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { saveUserToSupabase } from "@/app/actions/User"
-
-import data from "./data.json"
+import { saveUserToSupabase } from "@/app/actions/user"
 
 export default async function DashboardPage() {
   const session = await requireAuthForPage()
@@ -51,7 +48,6 @@ export default async function DashboardPage() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-              <DataTable data={data} />
             </div>
           </div>
         </div>

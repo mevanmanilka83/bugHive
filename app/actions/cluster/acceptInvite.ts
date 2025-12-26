@@ -1,11 +1,17 @@
 "use server"
 
-import { ensureValidUUID } from "@/lib/utils"
-import { supabase } from "@/lib/config"
-import { requireAuth, getUsernameFromSession, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
-import { getClusterById } from "@/lib/database-helpers"
-import { validateWithSchema } from "@/lib/validation"
+import {
+  ensureValidUUID,
+  supabase,
+  requireAuth,
+  getUsernameFromSession,
+  getAuthenticatedUserId,
+  createErrorResponse,
+  handleSupabaseError,
+  getClusterById,
+  validateWithSchema,
+  type ActionResponse
+} from "@/lib"
 import { getAcceptInviteValidationSchema } from "@/lib/schemas/zod/acceptInvite"
 
 export async function acceptClusterInvite(clusterId: string): Promise<ActionResponse<{ message?: string }>> {

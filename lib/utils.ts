@@ -164,7 +164,18 @@ export function extractUsernameFromEmail(email: string | null | undefined, fallb
 /**
  * Extracts route ID from Next.js route context
  */
-export async function extractRouteId(context: { params: Promise<{ id: string }> }): Promise<string> {
-  const { id } = await context.params
-  return id
+/**
+ * Extract route ID from Next.js 15 App Router context params
+ * Handles both string and Promise-based params
+ */
+export async function extractRouteId(context: any): Promise<string> {
+  const params = context?.params
+  if (!params) throw new Error("Missing route params")
+  
+  // Handle Promise-based params (Next.js 15+)
+  const resolvedParams = typeof params.then === 'function' ? await params : params
+  const id = resolvedParams.id || resolvedParams.bugId || resolvedParams.clusterId
+  
+  if (!id) throw new Error("Missing ID in route params")
+  return typeof id === 'string' ? id : await id
 }

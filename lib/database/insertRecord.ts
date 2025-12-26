@@ -1,14 +1,14 @@
 /**
- * Insert Record - Supabase
+ * Insert Record
  * 
- * Supabase implementation for inserting a new record.
+ * Inserts a new record into the database.
  */
-import { supabase } from "@/lib/config"
+import { supabase } from "@/lib"
 
 /**
- * Inserts a new record using Supabase
+ * Inserts a new record into the database
  */
-export async function insertRecordSupabase(
+export async function insertRecord(
   table: string,
   data: Record<string, any>
 ): Promise<any> {

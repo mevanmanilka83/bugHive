@@ -12,12 +12,10 @@
  * 
  * Architecture:
  * - This module: API routes for reading user data (GET requests)
- * - /app/actions/User.ts: Server action for writing user data (saveUserToSupabase)
+ * - /app/actions/user.ts: Server action for writing user data (saveUserToSupabase)
  * - /api/auth/signup: API route for user registration (uses saveUserToSupabase)
  */
-import { checkAuth } from "@/lib/auth/helpers"
-import { getSingleRecord } from "@/lib/database/database"
-import { supabase } from "@/lib/config"
+import { checkAuth, getSingleRecord, supabase } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

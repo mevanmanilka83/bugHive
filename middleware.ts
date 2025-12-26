@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib"
 import { NextResponse } from "next/server"
 
 // Route patterns

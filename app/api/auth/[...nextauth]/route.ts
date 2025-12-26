@@ -7,7 +7,7 @@
  * This is the standard NextAuth route handler that delegates to the auth configuration
  * defined in @/lib/auth/config. It handles OAuth callbacks, session management, and authentication flows.
  */
-import { handlers } from "@/lib/auth/config"
+import { handlers } from "@/lib"
 
 export const runtime = 'nodejs'
 export const { GET, POST } = handlers

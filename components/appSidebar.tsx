@@ -2,21 +2,15 @@
 
 import * as React from "react"
 import {
-  IconCamera,
   IconDashboard,
-  IconDatabase,
   IconBell,
   IconFileDescription,
-  IconFileWord,
-  IconListDetails,
-  IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react"
 import { GalleryVerticalEnd } from "lucide-react"
 
-import { NavDocuments } from "@/components/NavDocuments"
 import { NavMain } from "@/components/NavMain"
 import { NavSecondary } from "@/components/NavSecondary"
 import { NavUser } from "@/components/NavUser"
@@ -120,24 +114,6 @@ export function AppSidebar({
     },
   ]
 
-  const documents = [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ]
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -159,7 +135,6 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavDocuments items={documents} />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

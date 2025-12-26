@@ -1,14 +1,14 @@
 /**
- * Get Single Record - Supabase
+ * Get Single Record
  * 
- * Supabase implementation for fetching a single record by ID.
+ * Fetches a single record by ID from the database.
  */
-import { supabase } from "@/lib/config"
+import { supabase } from "@/lib"
 
 /**
- * Fetches a single record by ID using Supabase
+ * Fetches a single record by ID
  */
-export async function getSingleRecordSupabase(
+export async function getSingleRecord(
   table: string,
   id: string,
   idField: string = 'id'

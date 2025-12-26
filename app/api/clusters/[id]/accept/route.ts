@@ -1,6 +1,4 @@
-import { checkAuth } from "@/lib/auth/helpers"
-import { ensureValidUUID, extractUsernameFromEmail } from "@/lib/utils"
-import { supabase } from "@/lib/config"
+import { checkAuth, ensureValidUUID, extractUsernameFromEmail, supabase } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

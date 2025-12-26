@@ -1,11 +1,16 @@
 "use server"
 
-import { ensureValidUUID, parseArrayField } from "@/lib/utils"
-import { supabase } from "@/lib/config"
-import { handleFileUploads } from "@/lib/s3Uploads"
-import { requireAuth, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "@/lib/errors"
-import { validateWithSchema } from "@/lib/validation"
+import {
+  ensureValidUUID,
+  parseArrayField,
+  supabase,
+  handleFileUploads,
+  requireAuth,
+  createErrorResponse,
+  handleSupabaseError,
+  validateWithSchema,
+  type ActionResponse
+} from "@/lib"
 import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
 
 export async function createBugReport(formData: FormData): Promise<ActionResponse<{ bug?: any }>> {
