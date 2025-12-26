@@ -1,7 +1,8 @@
 import { checkAuth } from "@/lib/auth/helpers"
-import { supabase, ensureValidUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/shared/shared"
+import { ensureValidUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/utils"
+import { supabase } from "@/lib/shared/config/config"
 import { NextRequest, NextResponse } from "next/server"
-import { getInviteUserValidationSchema } from "@/app/actions/cluster/zod/inviteUser"
+import { getInviteUserValidationSchema } from "@/lib/schemas/zod/inviteUser"
 import { validateWithSchema } from "@/app/actions/shared/validation"
 
 export const runtime = 'nodejs'

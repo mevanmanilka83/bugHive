@@ -5,7 +5,8 @@
  * - PATCH /api/bugs/[id]/solutions
  * - Only allows updates to specified fields
  */
-import { extractRouteId, updateRecord, addTimestamps } from "@/lib/shared/shared"
+import { extractRouteId, addTimestamps } from "@/lib/utils"
+import { updateRecord } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

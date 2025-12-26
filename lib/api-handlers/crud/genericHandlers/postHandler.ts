@@ -15,13 +15,13 @@
  * - Automatic timestamp and created_by field addition (uses authenticated user from handlerFactory)
  */
 import { 
-  parseFormData,
   validateRequiredFields,
   addTimestamps,
-  ensureValidUUID,
-  processFormDataWithUploads,
-  insertRecord
-} from "@/lib/shared/shared"
+  ensureValidUUID
+} from "@/lib/utils"
+import { parseFormData } from "@/lib/shared/formParser"
+import { processFormDataWithUploads } from "@/lib/shared/s3Uploads"
+import { insertRecord } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../handlerFactory"
 
 /**

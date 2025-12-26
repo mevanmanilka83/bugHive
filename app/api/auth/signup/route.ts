@@ -10,9 +10,9 @@
  * Use API routes when you need HTTP endpoints for external clients or form submissions
  */
 import { NextRequest } from "next/server"
-import { errorResponse, successResponse } from "@/lib/shared/shared"
+import { errorResponse, successResponse } from "@/lib/utils"
 import { saveUserToSupabase } from "@/app/actions/User"
-import { getSignupValidationSchema } from "@/app/actions/auth/zod/signup"
+import { getSignupValidationSchema } from "@/lib/schemas/zod/signup"
 import { validateWithSchema } from "@/app/actions/shared/validation"
 
 export const runtime = 'nodejs'

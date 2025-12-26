@@ -1,5 +1,6 @@
 import { checkAuth } from "@/lib/auth/helpers"
-import { getSingleRecord, updateRecord, deleteRecord, addTimestamps, ensureValidUUID } from "@/lib/shared/shared"
+import { addTimestamps, ensureValidUUID } from "@/lib/utils"
+import { getSingleRecord, updateRecord, deleteRecord } from "@/lib/shared/database/database"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

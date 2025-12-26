@@ -6,7 +6,8 @@
  * - Only allows updates to specified fields
  * - Validates ownership
  */
-import { updateRecord, addTimestamps, ensureValidUUID, getSingleRecord } from "@/lib/shared/shared"
+import { addTimestamps, ensureValidUUID } from "@/lib/utils"
+import { updateRecord, getSingleRecord } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

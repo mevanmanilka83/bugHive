@@ -6,9 +6,12 @@
  * - Supports file uploads for solution attachments
  * - Creates notifications for cluster members when solution is created
  */
-import { extractRouteId, parseArrayField, supabase, ensureValidUUID, processFormDataWithUploads, addTimestamps, insertRecord, extractUsernameFromEmail } from "@/lib/shared/shared"
+import { extractRouteId, parseArrayField, ensureValidUUID, addTimestamps, extractUsernameFromEmail } from "@/lib/utils"
+import { supabase } from "@/lib/shared/config/config"
+import { processFormDataWithUploads } from "@/lib/shared/s3Uploads"
+import { insertRecord } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../../handlerFactory"
-import { getBugSolutionSchema } from "@/app/actions/bug/zod/bugSolution"
+import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
 import { validateWithSchema } from "@/app/actions/shared/validation"
 
 /**

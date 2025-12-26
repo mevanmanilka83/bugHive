@@ -12,7 +12,8 @@
  * - Additional filter support for security validation
  * - Prevents unauthorized deletions
  */
-import { extractRouteId, deleteRecord } from "@/lib/shared/shared"
+import { extractRouteId } from "@/lib/utils"
+import { deleteRecord } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../handlerFactory"
 
 /**

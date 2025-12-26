@@ -1,10 +1,12 @@
 "use server"
 
-import { supabase, ensureValidUUID, handleFileUploads, parseArrayField, extractUsernameFromEmail } from "@/lib/shared/shared"
+import { ensureValidUUID, parseArrayField, extractUsernameFromEmail } from "@/lib/utils"
+import { supabase } from "@/lib/shared/config/config"
+import { handleFileUploads } from "@/lib/shared/s3Uploads"
 import { requireAuth, type ActionResponse } from "@/lib/auth/helpers"
 import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
 import { validateWithSchema } from "@/app/actions/shared/validation"
-import { getBugSolutionSchema } from "./zod/bugSolution"
+import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
 
 export async function createBugSolution(formData: FormData, bugId: string): Promise<ActionResponse<{ solution?: any }>> {
   try {

@@ -242,7 +242,7 @@ export function SectionCards({ userId }: SectionCardsProps) {
     if (!selectedBug?.id) return
 
     // Validate form data using Zod schema
-    const { getBugSolutionSchema } = await import("@/app/actions/bug/zod/bugSolution")
+    const { getBugSolutionSchema } = await import("@/lib/schemas/zod/bugSolution")
     const { z } = await import("zod")
     
     const schema = getBugSolutionSchema()

@@ -4,7 +4,8 @@
  * Handles fetching solutions for a specific bug:
  * - GET /api/bugs/[id]/solutions
  */
-import { getMultipleRecords, extractRouteId } from "@/lib/shared/shared"
+import { extractRouteId } from "@/lib/utils"
+import { getMultipleRecords } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

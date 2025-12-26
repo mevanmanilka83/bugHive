@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/shared/shared"
+import { supabase } from "@/lib/shared/config/config"
 import { type ActionResponse } from "@/lib/auth/helpers"
 
 /**

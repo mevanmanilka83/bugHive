@@ -8,7 +8,7 @@
  * 
  * Note: For cluster-specific bugs, use clusterBugPost handler
  */
-import { parseArrayField } from "@/lib/shared/shared"
+import { parseArrayField } from "@/lib/utils"
 import { createPostHandler } from "../../genericHandlers/postHandler"
 
 /**

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { getBugSolutionSchema } from "@/app/actions/bug/zod/bugSolution"
+import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
 
 export type SolutionPayload = z.infer<ReturnType<typeof getBugSolutionSchema>>
 

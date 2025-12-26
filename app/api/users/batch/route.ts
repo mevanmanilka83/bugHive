@@ -10,7 +10,7 @@
  * - Reduces number of HTTP requests when displaying user lists
  */
 import { checkAuth } from "@/lib/auth/helpers"
-import { supabase } from "@/lib/shared/shared"
+import { supabase } from "@/lib/shared/config/config"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

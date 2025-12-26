@@ -9,7 +9,9 @@
  * - Only returns bugs that belong to clusters the user is a member/owner of
  * - Validates cluster access before returning bugs
  */
-import { getSingleRecord, getMultipleRecords, extractRouteId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { extractRouteId, parseQueryFilters, ensureValidUUID } from "@/lib/utils"
+import { getSingleRecord, getMultipleRecords } from "@/lib/shared/database/database"
+import { supabase } from "@/lib/shared/config/config"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Get user's cluster IDs (where user is owner or member)

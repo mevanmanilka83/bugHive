@@ -1,5 +1,6 @@
 import { checkAuth } from "@/lib/auth/helpers"
-import { supabase, ensureValidUUID, generateUUIDFromEmailSync } from "@/lib/shared/shared"
+import { ensureValidUUID, generateUUIDFromEmailSync } from "@/lib/utils"
+import { supabase } from "@/lib/shared/config/config"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'

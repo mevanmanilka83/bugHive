@@ -7,7 +7,9 @@
  * 
  * Note: For cluster-specific bugs, use clusterBugDelete handler
  */
-import { getSingleRecord, extractRouteId, deleteRecord, supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { extractRouteId, ensureValidUUID } from "@/lib/utils"
+import { getSingleRecord, deleteRecord } from "@/lib/shared/database/database"
+import { supabase } from "@/lib/shared/config/config"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Get user's cluster IDs

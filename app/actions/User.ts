@@ -1,6 +1,7 @@
 "use server"
 
-import { supabase, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/shared/shared"
+import { generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/utils"
+import { supabase } from "@/lib/shared/config/config"
 
 /**
  * User Management Server Actions

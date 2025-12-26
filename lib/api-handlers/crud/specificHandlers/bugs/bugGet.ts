@@ -11,7 +11,9 @@
  * - Bugs without cluster_id are visible to all users (global bugs)
  * - Bugs with cluster_id are filtered by user's cluster membership
  */
-import { getSingleRecord, getMultipleRecords, extractRouteId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { extractRouteId, parseQueryFilters, ensureValidUUID } from "@/lib/utils"
+import { getSingleRecord, getMultipleRecords } from "@/lib/shared/database/database"
+import { supabase } from "@/lib/shared/config/config"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Get user's cluster IDs

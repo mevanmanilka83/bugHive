@@ -1,6 +1,6 @@
 "use server"
 
-import { supabase } from "@/lib/shared/shared"
+import { supabase } from "@/lib/shared/config/config"
 import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
 import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
 

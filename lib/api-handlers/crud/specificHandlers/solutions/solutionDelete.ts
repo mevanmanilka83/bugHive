@@ -5,7 +5,8 @@
  * - DELETE /api/bugs/[id]/solutions
  * - Validates solution belongs to bug
  */
-import { extractRouteId, deleteRecord } from "@/lib/shared/shared"
+import { extractRouteId } from "@/lib/utils"
+import { deleteRecord } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**

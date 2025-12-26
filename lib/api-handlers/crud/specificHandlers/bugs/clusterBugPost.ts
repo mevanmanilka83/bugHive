@@ -10,14 +10,14 @@
 import { 
   parseArrayField, 
   ensureValidUUID,
-  parseFormData,
-  addTimestamps,
-  processFormDataWithUploads,
-  supabase,
-  insertRecord
-} from "@/lib/shared/shared"
+  addTimestamps
+} from "@/lib/utils"
+import { parseFormData } from "@/lib/shared/formParser"
+import { processFormDataWithUploads } from "@/lib/shared/s3Uploads"
+import { supabase } from "@/lib/shared/config/config"
+import { insertRecord } from "@/lib/shared/database/database"
 import { createApiHandler } from "../../../handlerFactory"
-import { getBugReportSchema } from "@/app/actions/bug/zod/bugReport"
+import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
 import { validateWithSchema } from "@/app/actions/shared/validation"
 
 // Helper: Check if user is owner or member of a cluster
