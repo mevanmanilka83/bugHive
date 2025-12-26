@@ -1,6 +1,8 @@
 import { checkAuth } from "@/lib/auth/helpers"
-import { supabase, ensureValidUUID, generateUUIDFromEmailSync, isValidEmail, extractUsernameFromEmail } from "@/lib/shared/shared"
+import { supabase, ensureValidUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/shared/shared"
 import { NextRequest, NextResponse } from "next/server"
+import { getInviteUserValidationSchema } from "@/app/actions/cluster/zod/inviteUser"
+import { validateWithSchema } from "@/app/actions/shared/validation"
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,11 +20,18 @@ export async function POST(
 
   try {
     const body = await request.json()
-    const { email, username } = body
 
-    if (!email && !username) {
-      return NextResponse.json({ error: "Email or username is required" }, { status: 400 })
+    // Validate with zod schema (clusterId comes from route params)
+    const validation = validateWithSchema(
+      getInviteUserValidationSchema(),
+      { ...body, clusterId }
+    )
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
+
+    const { inviteeEmail, inviteeUsername } = validation.data
 
     // Get cluster to verify ownership
     const { data: cluster, error: clusterError } = await supabase
@@ -41,19 +50,13 @@ export async function POST(
     }
 
     // Determine the email to use for invitation
-    let finalEmail = email?.trim().toLowerCase()
+    let finalEmail = inviteeEmail
 
     // If email is not provided but username is, look up user by username
-    if (!finalEmail && username) {
-      const trimmedUsername = username.trim()
-      
-      if (!trimmedUsername) {
-        return NextResponse.json({ error: "Username cannot be empty" }, { status: 400 })
-      }
-
+    if (!finalEmail && inviteeUsername) {
       // Use function to lookup user by username (bypasses RLS)
       const { data: userData, error: userError } = await supabase
-        .rpc('lookup_user_by_username', { p_username: trimmedUsername })
+        .rpc('lookup_user_by_username', { p_username: inviteeUsername })
 
       if (userError) {
         return NextResponse.json({ 
@@ -63,17 +66,15 @@ export async function POST(
 
       if (!userData || userData.length === 0 || !userData[0]) {
         return NextResponse.json({ 
-          error: `User not found with username "${trimmedUsername}". Please check the username or use email address instead.` 
+          error: `User not found with username "${inviteeUsername}". Please check the username or use email address instead.` 
         }, { status: 404 })
       }
 
       finalEmail = userData[0].email
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!finalEmail || !emailRegex.test(finalEmail)) {
-      return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
+    if (!finalEmail) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 })
     }
 
     const inviteeUserId = generateUUIDFromEmailSync(finalEmail)
@@ -97,7 +98,7 @@ export async function POST(
 
     if (!existingUser) {
       // User doesn't exist, create a basic user record
-      const username = finalEmail.split('@')[0]
+      const username = extractUsernameFromEmail(finalEmail)
       await supabase
         .from('users')
         .upsert({

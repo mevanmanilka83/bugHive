@@ -67,18 +67,47 @@ export function ensureValidUUID(userId: string | undefined): string {
 }
 
 // ============================================================================
-// HTTP RESPONSE HELPERS
+// HTTP RESPONSE HELPERS (API ROUTES)
 // ============================================================================
 
 /**
- * Creates an error response
+ * API Route Error Handler
+ * 
+ * Creates an HTTP error response for API routes (app/api/.../route.ts files).
+ * Returns a NextResponse object suitable for HTTP endpoints.
+ * 
+ * When to use API Route Error Handlers:
+ * - In API routes (app/api/.../route.ts files)
+ * - When handling HTTP requests/responses
+ * - When using createApiHandler from @/lib/api-handlers/handlerFactory
+ * 
+ * When NOT to use (use server action error handlers instead):
+ * - In server actions (app/actions/.../*.ts files marked with "use server")
+ * - When calling server actions directly
+ * - Use createErrorResponse() from @/app/actions/shared/errors instead
+ * 
+ * @param message - Error message to return
+ * @param status - HTTP status code (default: 500)
+ * @returns NextResponse object with error JSON
  */
 export function errorResponse(message: string, status: number = 500) {
   return NextResponse.json({ error: message }, { status })
 }
 
 /**
- * Creates a success response
+ * API Route Success Handler
+ * 
+ * Creates an HTTP success response for API routes (app/api/.../route.ts files).
+ * Returns a NextResponse object suitable for HTTP endpoints.
+ * 
+ * When to use API Route Success Handlers:
+ * - In API routes (app/api/.../route.ts files)
+ * - When handling HTTP requests/responses
+ * - When using createApiHandler from @/lib/api-handlers/handlerFactory
+ * 
+ * @param data - Data to return in response body
+ * @param status - HTTP status code (default: 200)
+ * @returns NextResponse object with data JSON
  */
 export function successResponse(data: any, status: number = 200) {
   return NextResponse.json(data, { status })
@@ -119,6 +148,11 @@ export function parseArrayField(value: string | null): string[] | null {
 }
 
 /**
+ * @deprecated Use zod schemas from app/actions/{module}/zod/ with validateWithSchema from @/app/actions/shared/validation
+ * 
+ * This function is kept for backward compatibility in generic handlers only.
+ * All specific handlers should use zod validation schemas.
+ * 
  * Validates that all required fields are present and non-empty
  */
 export function validateRequiredFields(data: Record<string, any>, requiredFields: string[]): void {
@@ -154,17 +188,6 @@ export function parseQueryFilters(searchParams: URLSearchParams | null): {
 }
 
 /**
- * Validates email format
- * 
- * @param email - Email address to validate
- * @returns true if email format is valid, false otherwise
- */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
-
-/**
  * Extracts username from email address
  * 
  * @param email - Email address
@@ -178,11 +201,17 @@ export function extractUsernameFromEmail(email: string | null | undefined, fallb
 }
 
 /**
- * Validates password strength
- * 
- * @param password - Password to validate
- * @param minLength - Minimum password length (default: 6)
- * @returns true if password meets requirements, false otherwise
+ * @deprecated Use zod schemas from @/app/actions/auth/zod for email/password validation
+ * These functions are kept for backward compatibility but should be replaced with zod validation.
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+/**
+ * @deprecated Use zod schemas from @/app/actions/auth/zod for email/password validation
+ * These functions are kept for backward compatibility but should be replaced with zod validation.
  */
 export function isValidPassword(password: string, minLength: number = 6): boolean {
   return Boolean(password && password.length >= minLength)
@@ -191,21 +220,6 @@ export function isValidPassword(password: string, minLength: number = 6): boolea
 // ============================================================================
 // ROUTE PARAMETER UTILITIES
 // ============================================================================
-
-/**
- * Extracts ID from route parameters
- * 
- * Generic utility for extracting ID from Next.js route context.
- * Despite the name "extractBugId", this is a generic function used
- * for all resource types (bugs, clusters, solutions, etc.)
- * 
- * @param context - Next.js route context with params
- * @returns The ID string from route parameters
- */
-export async function extractBugId(context: { params: Promise<{ id: string }> }): Promise<string> {
-  const { id } = await context.params
-  return id
-}
 
 /**
  * Extracts route ID from Next.js route context (generic version)

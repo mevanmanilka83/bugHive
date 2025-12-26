@@ -224,23 +224,30 @@ export function RecentBugs({ userId }: RecentBugsProps = {} as RecentBugsProps) 
   async function submitSolution(formData: any) {
     if (!selectedBug?.id) return
 
-    // Validate form data
-    const errors: any = {}
-    if (!formData.title?.trim()) errors.title = "Title is required"
-    if (!formData.description?.trim()) errors.description = "Description is required"
-    if (!formData.solution_type) errors.solution_type = "Solution type is required"
+    // Validate form data using Zod schema
+    const { getBugSolutionSchema } = await import("@/app/actions/bug/zod/bugSolution")
+    const { z } = await import("zod")
     
-    // Validate links if provided
-    if (formData.links) {
-      const links = formData.links.split(',').map((s: string) => s.trim()).filter(Boolean)
-      const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i
-      if (links.length && !links.every((l: string) => urlRegex.test(l))) {
-        errors.links = "All links must be valid URLs starting with http(s)://"
+    const schema = getBugSolutionSchema()
+    
+    try {
+      schema.parse(formData)
+      setSolutionErrors({})
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {}
+        error.issues.forEach((err) => {
+          if (err.path && err.path.length > 0) {
+            const fieldPath = err.path[0] as string
+            errors[fieldPath] = err.message
+          }
+        })
+        setSolutionErrors(errors)
+        return
       }
+      setSolutionErrors({})
+      return
     }
-
-    setSolutionErrors(errors)
-    if (Object.keys(errors).length > 0) return
 
     try {
       setIsSubmittingSolution(true)

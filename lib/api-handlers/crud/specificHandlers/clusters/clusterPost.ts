@@ -4,7 +4,7 @@
  * Handles creating new clusters:
  * - POST /api/clusters
  */
-import { ensureValidUUID, addTimestamps, insertRecord } from "@/lib/shared/shared"
+import { ensureValidUUID, addTimestamps, insertRecord, extractUsernameFromEmail } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**
@@ -29,7 +29,7 @@ export const createClusterPostHandler = () =>
 
     // Get owner username
     const ownerEmail = user.email || ''
-    const ownerUsername = user.name || (ownerEmail ? ownerEmail.split('@')[0] : 'User')
+    const ownerUsername = user.name || extractUsernameFromEmail(ownerEmail)
 
     const clusterData = addTimestamps({
       name,

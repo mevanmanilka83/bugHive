@@ -75,7 +75,7 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
             const memberData = memberIds.map((memberId: string, index: number) => {
               const user = userMap.get(memberId)
               // Use stored username from members_usernames array, or fallback to user.name or email
-              const storedUsername = memberUsernames[index] || user?.name || user?.email?.split('@')[0] || null
+              const storedUsername = memberUsernames[index] || user?.name || (user?.email ? user.email.split('@')[0] : null) || null
               
               return {
                 id: memberId,
@@ -154,7 +154,7 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
             <div className="space-y-3">
               {members.map((member) => {
                 // Show only username/name
-                const displayName = member.name || member.email?.split('@')[0] || "Pending User"
+                const displayName = member.name || (member.email ? member.email.split('@')[0] : null) || "Pending User"
                 
                 // Generate initials from name or email username
                 let initials = 'U'

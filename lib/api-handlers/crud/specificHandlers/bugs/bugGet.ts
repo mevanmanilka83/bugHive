@@ -11,7 +11,7 @@
  * - Bugs without cluster_id are visible to all users (global bugs)
  * - Bugs with cluster_id are filtered by user's cluster membership
  */
-import { getSingleRecord, getMultipleRecords, extractBugId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { getSingleRecord, getMultipleRecords, extractRouteId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Get user's cluster IDs
@@ -71,7 +71,7 @@ export const createBugGetHandler = () =>
   createApiHandler(async (request, context, authResult) => {
     if (context?.params) {
       // Single bug fetch - include cluster name and check access
-      const id = await extractBugId(context)
+      const id = await extractRouteId(context)
       const bug = await getSingleRecord('bugs', id)
       
       if (!bug) {

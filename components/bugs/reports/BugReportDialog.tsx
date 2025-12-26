@@ -4,7 +4,7 @@ import * as React from "react"
 import { IconReport } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { z } from "zod"
-import { getBugReportSchema } from "@/lib/schemas/zod/bugReport"
+import { getBugReportSchema } from "@/app/actions/bug/zod/bugReport"
 import { type BugPayload, type BugDialogErrors, type BugFormData } from "@/lib/schemas/types/bugReport"
 import { createBugReport } from "@/app/actions/bug/BugReport"
 import { Button } from "@/components/ui/button"
@@ -90,8 +90,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     }
   }
 
-  function validateStep(stepNumber: number): boolean {
-    const payload = getPayload()
+  // Step field definitions for validation
     const stepFields: Record<number, (keyof BugPayload)[]> = {
       1: ['title', 'description'], // Required fields
       2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
@@ -100,12 +99,16 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       5: [] // Review step
     }
 
+  function validateStep(stepNumber: number): boolean {
+    const payload = getPayload()
     const fieldsToValidate = stepFields[stepNumber] || []
-    const stepPayload = Object.fromEntries(
-      fieldsToValidate.map(field => [field, payload[field]])
-    )
-
+    
+    if (fieldsToValidate.length === 0) return true
+    
     try {
+      const stepPayload = Object.fromEntries(
+        fieldsToValidate.map(field => [field, payload[field]])
+      )
       const partialSchema = bugReportSchema.pick(
         Object.fromEntries(fieldsToValidate.map(field => [field, true])) as any
       )
@@ -118,28 +121,24 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
   function validateStepWithErrors(stepNumber: number): boolean {
     const payload = getPayload()
-    const stepFields: Record<number, (keyof BugPayload)[]> = {
-      1: ['title', 'description'], // Required fields
-      2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
-      3: [], // Optional fields - no validation needed
-      4: [], // Optional fields - no validation needed
-      5: [] // Review step
-    }
-
     const fieldsToValidate = stepFields[stepNumber] || []
-    const stepPayload = Object.fromEntries(
-      fieldsToValidate.map(field => [field, payload[field]])
-    )
-
+    
+    if (fieldsToValidate.length === 0) return true
+    
     try {
+      const stepPayload = Object.fromEntries(
+        fieldsToValidate.map(field => [field, payload[field]])
+      )
       const partialSchema = bugReportSchema.pick(
         Object.fromEntries(fieldsToValidate.map(field => [field, true])) as any
       )
       partialSchema.parse(stepPayload)
+      
+      // Clear errors for validated fields
       setErrors(prev => {
         const newErrors = { ...prev }
         fieldsToValidate.forEach(field => {
-          delete newErrors[field]
+          delete newErrors[field as string]
         })
         return newErrors
       })
@@ -147,9 +146,10 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {}
-        error.issues.forEach((err: any) => {
-          if (err.path && err.path[0]) {
-            newErrors[err.path[0] as string] = err.message
+        error.issues.forEach((err) => {
+          if (err.path && err.path.length > 0) {
+            const fieldPath = err.path[0] as string
+            newErrors[fieldPath] = err.message
           }
         })
         setErrors(prev => ({ ...prev, ...newErrors }))
@@ -160,6 +160,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
   function validateAll(): boolean {
     const payload = getPayload()
+    
     try {
       bugReportSchema.parse(payload)
       setErrors({})
@@ -167,9 +168,10 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {}
-        error.issues.forEach((err: any) => {
-          if (err.path && err.path[0]) {
-            newErrors[err.path[0] as string] = err.message
+        error.issues.forEach((err) => {
+          if (err.path && err.path.length > 0) {
+            const fieldPath = err.path[0] as string
+            newErrors[fieldPath] = err.message
           }
         })
         setErrors(newErrors)

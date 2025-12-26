@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { createBugHandler } from "@/lib/api-handlers"
+import { createBugHandler } from "@/lib/api-handlers/apiHandlers"
 
 const bugHandler = createBugHandler()
 

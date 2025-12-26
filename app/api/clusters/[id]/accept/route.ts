@@ -35,7 +35,6 @@ export async function POST(
   // Always ensure user record exists and is up-to-date in Supabase
   const userEmail = user.email || ''
   const username = user.name || extractUsernameFromEmail(userEmail)
-  const username = user.name || (userEmail ? userEmail.split('@')[0] : 'User')
   
   // Upsert user record with current session data
   const { error: userUpsertError } = await supabase

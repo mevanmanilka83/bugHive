@@ -3,9 +3,13 @@ import { z } from "zod"
 /**
  * Cluster Creation Validation Schema
  * 
- * Validates cluster creation data for server actions.
+ * Single source of truth for cluster validation.
+ * Used by both server actions and client components.
+ * 
+ * Naming Convention: Primary export uses shorter name (getClusterSchema)
+ * Alias provided for backward compatibility (getCreateClusterValidationSchema)
  */
-export function getCreateClusterValidationSchema() {
+export function getClusterSchema() {
   return z.object({
     name: z.string()
       .min(3, "Cluster name must be at least 3 characters")
@@ -18,3 +22,6 @@ export function getCreateClusterValidationSchema() {
       .nullable(),
   })
 }
+
+// Alias for backward compatibility
+export const getCreateClusterValidationSchema = getClusterSchema

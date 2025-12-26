@@ -5,7 +5,7 @@
  * - DELETE /api/bugs/[id]/solutions
  * - Validates solution belongs to bug
  */
-import { extractBugId, deleteRecord } from "@/lib/shared/shared"
+import { extractRouteId, deleteRecord } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**
@@ -18,7 +18,7 @@ import { createApiHandler } from "../../../handlerFactory"
  */
 export const createSolutionDeleteHandler = () => 
   createApiHandler(async (request, context) => {
-    const bugId = await extractBugId(context)
+    const bugId = await extractRouteId(context)
     const solutionId = request?.nextUrl?.searchParams?.get('solution_id')
     
     if (!solutionId) {

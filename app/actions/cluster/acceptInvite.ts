@@ -2,9 +2,9 @@
 
 import { supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { requireAuth, getUsernameFromSession, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "../shared/errors"
-import { getClusterById } from "../shared/cluster"
-import { validateWithSchema } from "../shared/validation"
+import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
+import { getClusterById } from "@/app/actions/shared/cluster"
+import { validateWithSchema } from "@/app/actions/shared/validation"
 import { getAcceptInviteValidationSchema } from "./zod/acceptInvite"
 
 export async function acceptClusterInvite(clusterId: string): Promise<ActionResponse<{ message?: string }>> {

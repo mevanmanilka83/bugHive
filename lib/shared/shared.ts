@@ -28,11 +28,14 @@ export {
   parseArrayField,
   validateRequiredFields,
   parseQueryFilters,
-  isValidEmail,
-  isValidPassword,
   extractUsernameFromEmail,
-  extractBugId,
   extractRouteId
+} from "./utils"
+
+// Deprecated validation functions (use zod schemas from @/app/actions/auth/zod instead)
+export {
+  isValidEmail,
+  isValidPassword
 } from "./utils"
 
 // Database exports

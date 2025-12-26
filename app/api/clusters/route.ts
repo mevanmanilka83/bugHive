@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
   // Get owner username
   const ownerEmail = user.email || ''
-  const ownerUsername = user.name || (ownerEmail ? ownerEmail.split('@')[0] : 'User')
+  const ownerUsername = user.name || extractUsernameFromEmail(ownerEmail)
 
   const clusterData = addTimestamps({
     name,

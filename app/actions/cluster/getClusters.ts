@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/shared/shared"
 import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "../shared/errors"
+import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
 
 export async function getClusters(): Promise<ActionResponse<{ clusters: any[] }>> {
   try {

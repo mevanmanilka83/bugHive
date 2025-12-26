@@ -6,8 +6,10 @@
  * - Supports file uploads for solution attachments
  * - Creates notifications for cluster members when solution is created
  */
-import { extractBugId, parseArrayField, supabase, ensureValidUUID, processFormDataWithUploads, validateRequiredFields, addTimestamps, insertRecord } from "@/lib/shared/shared"
+import { extractRouteId, parseArrayField, supabase, ensureValidUUID, processFormDataWithUploads, addTimestamps, insertRecord, extractUsernameFromEmail } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
+import { getBugSolutionSchema } from "@/app/actions/bug/zod/bugSolution"
+import { validateWithSchema } from "@/app/actions/shared/validation"
 
 /**
  * Creates POST handler for solutions
@@ -26,7 +28,7 @@ export const createSolutionPostHandler = () =>
     }
 
     // Extract bug_id from route parameters (/api/bugs/[id]/solutions)
-    const bugId = context?.params ? await extractBugId(context) : null
+    const bugId = context?.params ? await extractRouteId(context) : null
     if (!bugId) {
       throw new Error("Bug ID is required")
     }
@@ -34,8 +36,24 @@ export const createSolutionPostHandler = () =>
     // Parse form data with file uploads
     const formData = await processFormDataWithUploads(request, 'solutions')
     
-    // Validate required fields
-    validateRequiredFields(formData, ['title', 'description', 'solution_type', 'priority', 'status'])
+    // Prepare data for validation
+    const validationData = {
+      title: formData.title || '',
+      description: formData.description || '',
+      solution_type: formData.solution_type || '',
+      priority: formData.priority || 'medium',
+      status: formData.status || 'draft',
+      assignee: formData.assignee || undefined,
+      estimated_hours: formData.estimated_hours || undefined,
+      links: formData.links || undefined,
+      attachments: [], // Will be validated separately
+    }
+
+    // Validate with zod schema
+    const validation = validateWithSchema(getBugSolutionSchema(), validationData)
+    if (!validation.success) {
+      throw new Error(validation.error)
+    }
 
     const solutionData = addTimestamps({
       bug_id: bugId,
@@ -72,7 +90,7 @@ export const createSolutionPostHandler = () =>
 
         if (cluster?.members && Array.isArray(cluster.members)) {
           const solutionCreatorId = ensureValidUUID(authResult.user.id)
-          const solutionCreatorName = authResult.user.name || authResult.user.email?.split('@')[0] || 'Someone'
+          const solutionCreatorName = authResult.user.name || extractUsernameFromEmail(authResult.user.email) || 'Someone'
           const bugTitle = bug.title || 'Untitled Bug'
 
           // Create notifications for all cluster members except the solution creator

@@ -7,7 +7,8 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
-import { generateUUID, generateUUIDFromEmailSync } from "@/lib/shared/utils"
+import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/shared/utils"
+import { getLoginValidationSchema } from "@/app/actions/auth/zod/login"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -22,18 +23,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        // Validate credentials with zod schema
+        const validation = getLoginValidationSchema().safeParse({
+          email: credentials?.email,
+          password: credentials?.password,
+        })
+
+        if (!validation.success) {
           return null
         }
+
+        const { email } = validation.data
 
         // For now, accept any email/password combination
         // In production, you'd validate against your database
         // Use deterministic UUID based on email to ensure consistent user ID across sessions
-        const email = credentials.email as string
         return {
           id: generateUUIDFromEmailSync(email), // Generate consistent UUID from email (sync for Edge compatibility)
           email: email,
-          name: email.split('@')[0],
+          name: extractUsernameFromEmail(email),
         }
       }
     })
@@ -68,7 +76,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (userEmail) {
           token.userDataToSave = {
             email: userEmail,
-            name: userName || userEmail.split('@')[0],
+            name: userName || extractUsernameFromEmail(userEmail),
             image: userImage,
             email_verified: account?.provider === 'github' ? new Date().toISOString() : null,
           }

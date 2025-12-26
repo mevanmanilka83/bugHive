@@ -4,9 +4,13 @@ import { getAttachmentSchema, getLinksSchema, PRIORITY_ENUM, STRING_VALIDATIONS 
 /**
  * Bug Solution Validation Schema
  * 
- * Validates bug solution data for server actions.
+ * Single source of truth for bug solution validation.
+ * Used by both server actions and client components.
+ * 
+ * Naming Convention: Primary export uses shorter name (getBugSolutionSchema)
+ * Alias provided for backward compatibility (getBugSolutionValidationSchema)
  */
-export function getBugSolutionValidationSchema() {
+export function getBugSolutionSchema() {
   return z.object({
     title: z.string()
       .min(STRING_VALIDATIONS.title.min, STRING_VALIDATIONS.title.minMessage)
@@ -31,3 +35,6 @@ export function getBugSolutionValidationSchema() {
     attachments: getAttachmentSchema(),
   })
 }
+
+// Alias for backward compatibility
+export const getBugSolutionValidationSchema = getBugSolutionSchema

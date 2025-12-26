@@ -6,7 +6,7 @@
  */
 import { NextResponse } from "next/server"
 import { auth } from "./config"
-import { ensureValidUUID } from "@/lib/shared/shared"
+import { ensureValidUUID, extractUsernameFromEmail } from "@/lib/shared/shared"
 
 /**
  * Authenticated session type with user guaranteed to exist
@@ -111,7 +111,7 @@ export async function getAuthenticatedUserId(): Promise<string | null> {
  */
 export function getUsernameFromSession(session: AuthenticatedSession): string {
   if (!session?.user) return 'User'
-  return session.user.name || (session.user.email ? session.user.email.split('@')[0] : 'User')
+  return session.user.name || extractUsernameFromEmail(session.user.email)
 }
 
 /**

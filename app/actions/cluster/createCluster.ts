@@ -2,9 +2,9 @@
 
 import { supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { requireAuth, getUsernameFromSession, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "../shared/errors"
-import { validateWithSchema } from "../shared/validation"
-import { getCreateClusterValidationSchema } from "./zod/createCluster"
+import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
+import { validateWithSchema } from "@/app/actions/shared/validation"
+import { getClusterSchema } from "./zod/createCluster"
 
 export async function createCluster(
   prevState: any,
@@ -28,7 +28,7 @@ export async function createCluster(
       description: (formData.get('description') as string) || '',
     }
 
-    const validation = validateWithSchema(getCreateClusterValidationSchema(), rawData)
+    const validation = validateWithSchema(getClusterSchema(), rawData)
     if (!validation.success) {
       return validation
     }

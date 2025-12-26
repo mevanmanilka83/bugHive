@@ -1,7 +1,6 @@
 "use server"
 
-import { createClient } from "@supabase/supabase-js"
-import { generateUUIDFromEmailSync } from "@/lib/shared/shared"
+import { supabase, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/shared/shared"
 
 /**
  * User Management Server Actions
@@ -29,33 +28,6 @@ import { generateUUIDFromEmailSync } from "@/lib/shared/shared"
  * - Single source of truth for user data persistence
  */
 
-// Create Supabase client with service role key for server actions
-// This bypasses RLS policies
-function getSupabaseClient() {
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
-
-  if (!supabaseUrl) {
-    throw new Error('SUPABASE_URL environment variable is not set')
-  }
-
-  if (!supabaseServiceKey && !supabaseAnonKey) {
-    throw new Error('Either SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY must be set')
-  }
-
-  // Use service role key if available (bypasses RLS), otherwise fall back to anon key
-  const supabaseKey = supabaseServiceKey || supabaseAnonKey!
-
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  })
-}
-
-
 // This function runs in Node.js runtime, so we can use Supabase
 export async function saveUserToSupabase(
   email: string,
@@ -73,23 +45,13 @@ export async function saveUserToSupabase(
     const userData = {
       id: userIdFromEmail,
       email: email.toLowerCase().trim(),
-      name: name || email.split('@')[0],
+      name: name || extractUsernameFromEmail(email),
       image: image || null,
       email_verified: emailVerified || null,
       updated_at: new Date().toISOString(),
     }
 
-    let supabase
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    try {
-      supabase = getSupabaseClient()
-    } catch (clientError) {
-      const errorMsg = clientError instanceof Error ? clientError.message : String(clientError)
-      return { 
-        success: false, 
-        error: `Failed to initialize Supabase client: ${errorMsg}`
-      }
-    }
 
     try {
       // If we don't have service role key, try using the function instead

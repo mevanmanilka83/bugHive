@@ -9,7 +9,7 @@
  * - Only returns bugs that belong to clusters the user is a member/owner of
  * - Validates cluster access before returning bugs
  */
-import { getSingleRecord, getMultipleRecords, extractBugId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
+import { getSingleRecord, getMultipleRecords, extractRouteId, parseQueryFilters, supabase, ensureValidUUID } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 // Helper: Get user's cluster IDs (where user is owner or member)
@@ -92,7 +92,7 @@ export const createClusterBugGetHandler = () =>
 
     if (context?.params) {
       // Single cluster bug fetch - validate access
-      const id = await extractBugId(context)
+      const id = await extractRouteId(context)
       const bug = await getSingleRecord('bugs', id)
       
       if (!bug) {

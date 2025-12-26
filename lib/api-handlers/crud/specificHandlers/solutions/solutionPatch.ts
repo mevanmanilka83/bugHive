@@ -5,7 +5,7 @@
  * - PATCH /api/bugs/[id]/solutions
  * - Only allows updates to specified fields
  */
-import { extractBugId, updateRecord, addTimestamps } from "@/lib/shared/shared"
+import { extractRouteId, updateRecord, addTimestamps } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
 
 /**
@@ -31,7 +31,7 @@ const ALLOWED_UPDATE_FIELDS = [
  */
 export const createSolutionPatchHandler = () => 
   createApiHandler(async (request, context) => {
-    const bugId = await extractBugId(context)
+    const bugId = await extractRouteId(context)
     const body = await request.json().catch(() => ({}))
     
     const solutionId = body.solution_id || request?.nextUrl?.searchParams?.get('solution_id')

@@ -2,10 +2,9 @@
 
 import { supabase } from "@/lib/shared/shared"
 import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "../shared/errors"
-import { getClusterById } from "../shared/cluster"
-import { verifyClusterOwnership } from "../shared/cluster"
-import { validateWithSchema } from "../shared/validation"
+import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
+import { getClusterById, verifyClusterOwnership } from "@/app/actions/shared/cluster"
+import { validateWithSchema } from "@/app/actions/shared/validation"
 import { getDeleteClusterValidationSchema } from "./zod/deleteCluster"
 
 export async function deleteCluster(clusterId: string): Promise<ActionResponse<{ message?: string }>> {

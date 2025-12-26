@@ -11,13 +11,14 @@ import {
   parseArrayField, 
   ensureValidUUID,
   parseFormData,
-  validateRequiredFields,
   addTimestamps,
   processFormDataWithUploads,
-  supabase
+  supabase,
+  insertRecord
 } from "@/lib/shared/shared"
 import { createApiHandler } from "../../../handlerFactory"
-import { insertRecord } from "@/lib/shared/shared"
+import { getBugReportSchema } from "@/app/actions/bug/zod/bugReport"
+import { validateWithSchema } from "@/app/actions/shared/validation"
 
 // Helper: Check if user is owner or member of a cluster
 async function isClusterOwnerOrMember(userId: string, clusterId: string): Promise<boolean> {
@@ -95,8 +96,27 @@ export const createClusterBugPostHandler = () =>
     // Parse form data (with file uploads)
     const formData = await processFormDataWithUploads(request, 'bugs')
     
-    // Validate required fields
-    validateRequiredFields(formData, ['title', 'description', 'cluster_id'])
+    // Prepare data for validation
+    const validationData = {
+      title: formData.title || '',
+      description: formData.description || '',
+      priority: formData.priority || 'medium',
+      visibility: formData.visibility || 'public',
+      environment: formData.environment || undefined,
+      expected_behavior: formData.expected_behavior || undefined,
+      actual_behavior: formData.actual_behavior || undefined,
+      steps_to_reproduce: formData.steps_to_reproduce || undefined,
+      tags: parseArrayField(formData.tags) || undefined,
+      sources: parseArrayField(formData.sources) || undefined,
+      attachments: [], // Will be validated separately
+      cluster_id: formData.cluster_id || undefined,
+    }
+
+    // Validate with zod schema
+    const validation = validateWithSchema(getBugReportSchema(), validationData)
+    if (!validation.success) {
+      throw new Error(validation.error)
+    }
 
     // Transform data
     const transformedData = await transformClusterBugData(formData, authResult)

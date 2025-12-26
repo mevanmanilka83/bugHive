@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { createBugSolution } from "@/app/actions/bug/BugSolution"
 import { toast } from "sonner"
 import { IconBulb } from "@tabler/icons-react"
-import { getBugSolutionSchema } from "@/lib/schemas/zod/bugSolution"
+import { getBugSolutionSchema } from "@/app/actions/bug/zod/bugSolution"
 import { type SolutionPayload, type SolutionDialogErrors, type SolutionFormData } from "@/lib/schemas/types/bugSolution"
 import SolutionStep1Basic from "./SolutionStep1Basic"
 import SolutionStep2Type from "./SolutionStep2Type"
@@ -81,8 +81,7 @@ export function SolutionDialog({
     }
   }
 
-  function validateStep(stepNumber: number): boolean {
-    const payload = getPayload()
+  // Step field definitions for validation
     const stepFields: Record<number, (keyof SolutionPayload)[]> = {
       1: ['title', 'description'], // Required fields
       2: ['solution_type', 'priority', 'status'], // Required fields
@@ -90,12 +89,16 @@ export function SolutionDialog({
       4: [] // Review step
     }
 
+  function validateStep(stepNumber: number): boolean {
+    const payload = getPayload()
     const fieldsToValidate = stepFields[stepNumber] || []
-    const stepPayload = Object.fromEntries(
-      fieldsToValidate.map(field => [field, payload[field]])
-    )
-
+    
+    if (fieldsToValidate.length === 0) return true
+    
     try {
+      const stepPayload = Object.fromEntries(
+        fieldsToValidate.map(field => [field, payload[field]])
+      )
       const partialSchema = solutionSchema.pick(
         Object.fromEntries(fieldsToValidate.map(field => [field, true])) as any
       )
@@ -108,53 +111,31 @@ export function SolutionDialog({
 
   function validateStepWithErrors(stepNumber: number): boolean {
     const payload = getPayload()
-    const stepFields: Record<number, (keyof SolutionPayload)[]> = {
-      1: ['title', 'description'], // Required fields
-      2: ['solution_type', 'priority', 'status'], // Required fields
-      3: [], // Optional fields - no validation needed
-      4: [] // Review step
-    }
-
     const fieldsToValidate = stepFields[stepNumber] || []
-    const stepPayload = Object.fromEntries(
-      fieldsToValidate.map(field => [field, payload[field]])
-    )
-
+    
+    if (fieldsToValidate.length === 0) return true
+    
     try {
+      const stepPayload = Object.fromEntries(
+        fieldsToValidate.map(field => [field, payload[field]])
+      )
       const partialSchema = solutionSchema.pick(
         Object.fromEntries(fieldsToValidate.map(field => [field, true])) as any
       )
       partialSchema.parse(stepPayload)
       return true
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {}
-        error.issues?.forEach((err: any) => {
-          if (err.path && Array.isArray(err.path) && err.path.length > 0) {
-            newErrors[err.path[0] as string] = err.message
-          }
-        })
-        // Update errors state if needed
-      }
       return false
     }
   }
 
   function validateAll(): boolean {
     const payload = getPayload()
+    
     try {
       solutionSchema.parse(payload)
       return true
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {}
-        error.issues?.forEach((err: any) => {
-          if (err.path && Array.isArray(err.path) && err.path.length > 0) {
-            newErrors[err.path[0] as string] = err.message
-          }
-        })
-        // Update errors state if needed
-      }
       return false
     }
   }

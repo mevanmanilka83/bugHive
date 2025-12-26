@@ -10,8 +10,10 @@
  * Use API routes when you need HTTP endpoints for external clients or form submissions
  */
 import { NextRequest } from "next/server"
-import { errorResponse, successResponse, isValidEmail, isValidPassword, validateRequiredFields } from "@/lib/shared/shared"
+import { errorResponse, successResponse } from "@/lib/shared/shared"
 import { saveUserToSupabase } from "@/app/actions/User"
+import { getSignupValidationSchema } from "@/app/actions/auth/zod/signup"
+import { validateWithSchema } from "@/app/actions/shared/validation"
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,24 +21,14 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name } = body
 
-    // Validate required fields
-    try {
-      validateRequiredFields(body, ['email', 'password', 'name'])
-    } catch (error) {
-      return errorResponse(error instanceof Error ? error.message : "Missing required fields", 400)
+    // Validate with zod schema
+    const validation = validateWithSchema(getSignupValidationSchema(), body)
+    if (!validation.success) {
+      return errorResponse(validation.error, 400)
     }
 
-    // Validate email format
-    if (!isValidEmail(email)) {
-      return errorResponse("Invalid email format", 400)
-    }
-
-    // Validate password strength
-    if (!isValidPassword(password)) {
-      return errorResponse("Password must be at least 6 characters", 400)
-    }
+    const { email, password, name } = validation.data
 
     // Save user to Supabase database
     // Note: Password is not stored here - authentication is handled by NextAuth

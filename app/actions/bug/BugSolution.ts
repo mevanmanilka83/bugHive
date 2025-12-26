@@ -1,10 +1,10 @@
 "use server"
 
-import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/shared/shared"
+import { supabase, ensureValidUUID, handleFileUploads, parseArrayField, extractUsernameFromEmail } from "@/lib/shared/shared"
 import { requireAuth, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "../shared/errors"
-import { validateWithSchema } from "../shared/validation"
-import { getBugSolutionValidationSchema } from "./zod/bugSolution"
+import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
+import { validateWithSchema } from "@/app/actions/shared/validation"
+import { getBugSolutionSchema } from "./zod/bugSolution"
 
 export async function createBugSolution(formData: FormData, bugId: string): Promise<ActionResponse<{ solution?: any }>> {
   try {
@@ -32,7 +32,7 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
     }
 
     // Validate using Zod schema
-    const validation = validateWithSchema(getBugSolutionValidationSchema(), validationData)
+    const validation = validateWithSchema(getBugSolutionSchema(), validationData)
     if (!validation.success) {
       return validation
     }
@@ -91,7 +91,7 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
 
           if (cluster?.members && Array.isArray(cluster.members)) {
             const solutionCreatorId = ensureValidUUID(session.user.id)
-            const solutionCreatorName = session.user.name || session.user.email?.split('@')[0] || 'Someone'
+            const solutionCreatorName = session.user.name || extractUsernameFromEmail(session.user.email) || 'Someone'
             const bugTitle = bug.title || 'Untitled Bug'
 
             // Create notifications for all cluster members except the solution creator

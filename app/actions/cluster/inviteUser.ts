@@ -1,11 +1,10 @@
 "use server"
 
-import { supabase, ensureValidUUID, generateUUIDFromEmailSync } from "@/lib/shared/shared"
+import { supabase, ensureValidUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "@/lib/shared/shared"
 import { requireAuth, getAuthenticatedUserId, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "../shared/errors"
-import { getClusterById } from "../shared/cluster"
-import { verifyClusterOwnership } from "../shared/cluster"
-import { validateWithSchema } from "../shared/validation"
+import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
+import { getClusterById, verifyClusterOwnership } from "@/app/actions/shared/cluster"
+import { validateWithSchema } from "@/app/actions/shared/validation"
 import { getInviteUserValidationSchema } from "./zod/inviteUser"
 
 export async function inviteUserToCluster(
@@ -103,7 +102,7 @@ export async function inviteUserToCluster(
 
     if (!existingUser) {
       // User doesn't exist, create a basic user record
-      const username = finalEmail.split('@')[0]
+      const username = extractUsernameFromEmail(finalEmail)
       await supabase
         .from('users')
         .upsert({

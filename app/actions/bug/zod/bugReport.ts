@@ -4,10 +4,14 @@ import { getAttachmentSchema, PRIORITY_ENUM, STRING_VALIDATIONS } from "@/lib/sc
 /**
  * Bug Report Validation Schema
  * 
- * Validates bug report data for server actions.
+ * Single source of truth for bug report validation.
+ * Used by both server actions and client components.
  * Visibility is required only when cluster_id is not present.
+ * 
+ * Naming Convention: Primary export uses shorter name (getBugReportSchema)
+ * Alias provided for backward compatibility (getBugReportValidationSchema)
  */
-export function getBugReportValidationSchema() {
+export function getBugReportSchema() {
   return z.object({
     title: z.string()
       .min(STRING_VALIDATIONS.title.min, STRING_VALIDATIONS.title.minMessage)
@@ -53,3 +57,6 @@ export function getBugReportValidationSchema() {
     }
   )
 }
+
+// Alias for backward compatibility
+export const getBugReportValidationSchema = getBugReportSchema

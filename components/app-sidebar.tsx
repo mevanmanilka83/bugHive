@@ -96,7 +96,7 @@ export function AppSidebar({
     },
     {
       title: "My Bugs",
-      url: "/dashboard/my-bugs",
+      url: "/dashboard/mybugs",
       icon: IconFileDescription,
     },
     {

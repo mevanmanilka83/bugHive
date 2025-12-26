@@ -2,9 +2,9 @@
 
 import { supabase, ensureValidUUID, handleFileUploads, parseArrayField } from "@/lib/shared/shared"
 import { requireAuth, type ActionResponse } from "@/lib/auth/helpers"
-import { createErrorResponse, handleSupabaseError } from "../shared/errors"
-import { validateWithSchema } from "../shared/validation"
-import { getBugReportValidationSchema } from "./zod/bugReport"
+import { createErrorResponse, handleSupabaseError } from "@/app/actions/shared/errors"
+import { validateWithSchema } from "@/app/actions/shared/validation"
+import { getBugReportSchema } from "./zod/bugReport"
 
 export async function createBugReport(formData: FormData): Promise<ActionResponse<{ bug?: any }>> {
   try {
@@ -41,7 +41,7 @@ export async function createBugReport(formData: FormData): Promise<ActionRespons
     }
 
     // Validate using Zod schema
-    const validation = validateWithSchema(getBugReportValidationSchema(), validationData)
+    const validation = validateWithSchema(getBugReportSchema(), validationData)
     if (!validation.success) {
       return validation
     }
