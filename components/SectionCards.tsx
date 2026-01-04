@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createBugSolution, getAllSolutions } from "@/app/actions/bug/bugSolution"
+import { createBugSolution, getAllSolutions } from "@/app/actions/bug/BugSolution"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
 import { Area, AreaChart, CartesianGrid, XAxis, Dot } from "recharts"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"

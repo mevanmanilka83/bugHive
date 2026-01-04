@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { createBugSolution } from "@/app/actions/bug/bugSolution"
+import { createBugSolution } from "@/app/actions/bug/BugSolution"
 import { toast } from "sonner"
 import { IconBulb } from "@tabler/icons-react"
 import { getBugSolutionSchema } from "@/lib"
