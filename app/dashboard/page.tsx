@@ -7,7 +7,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { saveUserToSupabase } from "@/app/actions/User"
+import { saveUserToSupabase } from "@/app/actions/user"
 
 export default async function DashboardPage() {
   const session = await requireAuthForPage()
