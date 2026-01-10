@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createBugSolution } from "@/app/actions/bug/bugSolution"
+import { createBugSolution } from "@/app/actions/bug/BugSolution"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { VoteButtons } from "@/components/bugs/VoteButtons"
 import { BugDetailedList } from "@/components/bugs/BugDetailedList"

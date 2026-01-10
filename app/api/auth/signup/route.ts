@@ -11,7 +11,7 @@
  */
 import { NextRequest } from "next/server"
 import { errorResponse, successResponse, validateWithSchema } from "@/lib"
-import { saveUserToSupabase } from "@/app/actions/user"
+import { saveUserToSupabase } from "@/app/actions/User"
 import { getSignupValidationSchema } from "@/lib"
 
 export const runtime = 'nodejs'

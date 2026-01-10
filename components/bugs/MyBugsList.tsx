@@ -18,7 +18,7 @@ import {
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
-import { getSolutionsByUser } from "@/app/actions/bug/bugSolution"
+import { getSolutionsByUser } from "@/app/actions/bug/BugSolution"
 
 interface MyBugsListProps {
   userId: string
