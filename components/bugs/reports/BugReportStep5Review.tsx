@@ -8,7 +8,10 @@ type Props = {
   description: string
   priority: string
   visibility: string
-  environment: string
+  environmentBrowser: string
+  environmentOs: string
+  environmentDevice: string
+  environmentVersion: string
   expectedBehavior: string
   actualBehavior: string
   stepsToReproduce: string
@@ -27,7 +30,10 @@ export function BugReportStep5Review({
   description,
   priority,
   visibility,
-  environment,
+  environmentBrowser,
+  environmentOs,
+  environmentDevice,
+  environmentVersion,
   expectedBehavior,
   actualBehavior,
   stepsToReproduce,
@@ -93,10 +99,37 @@ export function BugReportStep5Review({
               Environment & Behavior
             </h3>
             <div className="space-y-3">
-              <div>
-                <div className="font-medium text-sm">Environment</div>
-                <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{environment || "—"}</div>
-              </div>
+              {(environmentBrowser || environmentOs || environmentDevice || environmentVersion) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {environmentBrowser && (
+                    <div>
+                      <div className="font-medium text-sm">Browser</div>
+                      <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{environmentBrowser}</div>
+                    </div>
+                  )}
+                  {environmentOs && (
+                    <div>
+                      <div className="font-medium text-sm">Operating System</div>
+                      <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{environmentOs}</div>
+                    </div>
+                  )}
+                  {environmentDevice && (
+                    <div>
+                      <div className="font-medium text-sm">Device</div>
+                      <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{environmentDevice}</div>
+                    </div>
+                  )}
+                  {environmentVersion && (
+                    <div>
+                      <div className="font-medium text-sm">Version</div>
+                      <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{environmentVersion}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {!environmentBrowser && !environmentOs && !environmentDevice && !environmentVersion && (
+                <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">No environment details provided</div>
+              )}
               <div>
                 <div className="font-medium text-sm">Expected Behavior</div>
                 <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded whitespace-pre-wrap max-h-16 overflow-y-auto">{expectedBehavior || "—"}</div>

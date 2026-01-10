@@ -10,11 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type Props = {
   priority: string
   visibility: string
-  environment: string
   errors: BugDialogErrors
   onChangePriority: (value: string) => void
   onChangeVisibility: (value: string) => void
-  onChangeEnvironment: (value: string) => void
   canNext: boolean
   onNext: () => void
   onBack: () => void
@@ -25,11 +23,9 @@ type Props = {
 export function BugReportStep2Priority({
   priority,
   visibility,
-  environment,
   errors,
   onChangePriority,
   onChangeVisibility,
-  onChangeEnvironment,
   canNext,
   onNext,
   onBack,
@@ -82,17 +78,6 @@ export function BugReportStep2Priority({
           {errors.visibility && <p className="text-sm text-red-500">{errors.visibility}</p>}
         </div>
       )}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="bug-environment">Environment</Label>
-        <Input
-          id="bug-environment"
-          placeholder="Browser, OS, device, version, etc."
-          value={environment}
-          onChange={(e) => onChangeEnvironment(e.target.value)}
-          className={errors.environment ? "border-red-500" : ""}
-        />
-        {errors.environment && <p className="text-sm text-red-500">{errors.environment}</p>}
-      </div>
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}>Back</Button>
         <div className="flex gap-2">

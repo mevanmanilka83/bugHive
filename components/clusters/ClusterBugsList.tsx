@@ -1,15 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { IconLayoutGrid, IconList, IconEye, IconChartArea, IconBulb } from "@tabler/icons-react"
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { toast } from "sonner"
+import { BugDetailedList } from "@/components/bugs/BugDetailedList"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,12 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
-import { GraphDialog } from "@/components/bugs/GraphDialog"
-import { ChartConfig } from "@/components/ui/chart"
-import { getSolutionsByCluster } from "@/app/actions/bug/bugSolution"
-import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
 
 interface ClusterBugsListProps {
   clusterId: string
@@ -35,24 +24,14 @@ interface ClusterBugsListProps {
 
 export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
   const [bugs, setBugs] = React.useState<any[]>([])
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
   const [detailsOpen, setDetailsOpen] = React.useState(false)
   const [selectedBug, setSelectedBug] = React.useState<any | null>(null)
   const [detailsLoading, setDetailsLoading] = React.useState(false)
-  const [graphOpen, setGraphOpen] = React.useState(false)
   const [solutionOpen, setSolutionOpen] = React.useState(false)
   const [solutions, setSolutions] = React.useState<any[]>([])
   const [solutionsLoading, setSolutionsLoading] = React.useState(false)
-  const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
   const [loading, setLoading] = React.useState(false)
   const [clusterOwnerId, setClusterOwnerId] = React.useState<string | null>(null)
-
-  const chartConfig: ChartConfig = {
-    count: {
-      label: "Solutions",
-      color: "var(--primary)",
-    },
-  }
 
   const fetchBugs = React.useCallback(async () => {
     try {
@@ -70,29 +49,6 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
         setClusterOwnerId(clusterData?.cluster?.owner_id || null)
       }
 
-      // Fetch solutions for bugs in this cluster and build chart data
-      const solutionsResult = await getSolutionsByCluster(clusterId)
-      const solutions: any[] = solutionsResult?.solutions || []
-
-      // Build chart data from solutions and convert to cumulative
-      const byDay = new Map<string, number>()
-      for (const solution of solutions) {
-        const createdAt = solution.created_at || solution.createdAt || solution.createdat
-        const d = createdAt ? new Date(createdAt) : new Date()
-        const key = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).toISOString().slice(0, 10)
-        byDay.set(key, (byDay.get(key) || 0) + 1)
-      }
-      const sorted = Array.from(byDay.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
-      
-      // Convert to cumulative (running total) - starts from flow (low) to high
-      let cumulative = 0
-      const cumulativeData = sorted.map(([date, count]) => {
-        cumulative += count
-        return { date, count: cumulative }
-      })
-      
-      setChartData(cumulativeData)
     } finally {
       setLoading(false)
     }
@@ -210,135 +166,12 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        {loading ? (
-          <Skeleton className="h-5 w-24" />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
-          </p>
-        )}
-        <div className="flex items-center gap-1">
-          <button 
-            type="button" 
-            aria-label="Grid view" 
-            onClick={() => setViewMode("grid")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconLayoutGrid className="size-4" />
-          </button>
-          <button 
-            type="button" 
-            aria-label="List view" 
-            onClick={() => setViewMode("list")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconList className="size-4" />
-          </button>
-        </div>
-      </div>
-      <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-        {loading ? (
-          Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="@container/card">
-              <CardHeader className="flex flex-col px-4 gap-1">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-5 w-full" />
-              </CardHeader>
-              <CardFooter className="px-4 items-center justify-between gap-2">
-                <Skeleton className="h-4 w-20" />
-                <div className="flex items-center gap-1.5">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                </div>
-              </CardFooter>
-            </Card>
-          ))
-        ) : bugs.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            No bugs found for this cluster. Create your first bug report!
-          </div>
-        ) : (
-          bugs.map((bug) => {
-            const createdAt = bug.created_at || bug.createdAt
-            const created = createdAt ? new Date(createdAt) : undefined
-            const status = (bug.status || "open") as string
-            const priority = (bug.priority || "medium") as string
-            const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
-            return (
-              <Card key={bug.id} className="@container/card">
-                <CardHeader className="flex flex-col px-4 gap-1">
-                  <Badge 
-                    variant="outline" 
-                    className="capitalize text-[10px] px-1.5 py-0.5 text-white"
-                    style={
-                      status === 'open' ? { backgroundColor: '#0d9488', color: '#ffffff', borderColor: '#0d9488' }
-                      : status === 'closed' ? { backgroundColor: '#64748b', color: '#ffffff', borderColor: '#64748b' }
-                      : status === 'in_progress' ? { backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }
-                      : status === 'resolved' ? { backgroundColor: '#4f46e5', color: '#ffffff', borderColor: '#4f46e5' }
-                      : status === 'reopened' ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }
-                      : undefined
-                    }
-                  >
-                    {status}
-                  </Badge>
-                  <CardTitle className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg" title={bugTitle}>
-                    {bugTitle}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter className="px-4 items-center justify-between gap-2 text-xs">
-                  <div className="text-muted-foreground text-xs">{created ? created.toLocaleDateString() : ""}</div>
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="capitalize text-[11px] px-1.5 py-0.5">{priority}</Badge>
-                    <button 
-                      type="button" 
-                      aria-label="View bug" 
-                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                      onClick={() => openBugDetails(bug.id)}
-                    >
-                      <IconEye className="size-3.5" />
-                    </button>
-                    <button 
-                      type="button" 
-                      aria-label="View graph" 
-                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                      onClick={() => setGraphOpen(true)}
-                    >
-                      <IconChartArea className="size-3.5" />
-                    </button>
-                    {(status === 'closed' || status === 'resolved') ? (
-                      <button 
-                        type="button" 
-                        aria-label="View solutions (disabled - bug is closed or resolved)" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground opacity-50 cursor-not-allowed" 
-                        disabled
-                        title="Cannot add solutions to closed or resolved bugs"
-                      >
-                        <IconBulb className="size-3.5" />
-                      </button>
-                    ) : (
-                      <button 
-                        type="button" 
-                        aria-label="View solutions" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                        onClick={() => { 
-                          setSelectedBug(bug)
-                          setSolutionOpen(true)
-                          void fetchSolutions(bug.id) 
-                        }}
-                      >
-                        <IconBulb className="size-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </CardFooter>
-              </Card>
-            )
-          })
-        )}
-      </div>
+      <BugDetailedList
+        userId={userId}
+        bugs={bugs}
+        onBugClick={openBugDetails}
+        totalCount={bugs.length}
+      />
 
       {/* Details Drawer */}
       <Drawer open={detailsOpen} onOpenChange={setDetailsOpen}>
@@ -503,12 +336,6 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
         } : undefined}
       />
 
-      <GraphDialog
-        open={graphOpen}
-        onOpenChange={setGraphOpen}
-        chartData={chartData}
-        chartConfig={chartConfig}
-      />
     </div>
   )
 }

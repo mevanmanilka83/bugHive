@@ -40,7 +40,10 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   const [description, setDescription] = React.useState("")
   const [priority, setPriority] = React.useState("medium")
   const [visibility, setVisibility] = React.useState("public")
-  const [environment, setEnvironment] = React.useState("")
+  const [environmentBrowser, setEnvironmentBrowser] = React.useState("")
+  const [environmentOs, setEnvironmentOs] = React.useState("")
+  const [environmentDevice, setEnvironmentDevice] = React.useState("")
+  const [environmentVersion, setEnvironmentVersion] = React.useState("")
   const [expectedBehavior, setExpectedBehavior] = React.useState("")
   const [actualBehavior, setActualBehavior] = React.useState("")
   const [stepsToReproduce, setStepsToReproduce] = React.useState("")
@@ -54,7 +57,10 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     setDescription("")
     setPriority("medium")
     setVisibility("public")
-    setEnvironment("")
+    setEnvironmentBrowser("")
+    setEnvironmentOs("")
+    setEnvironmentDevice("")
+    setEnvironmentVersion("")
     setExpectedBehavior("")
     setActualBehavior("")
     setStepsToReproduce("")
@@ -73,6 +79,14 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean)
+
+    // Combine environment fields into a formatted string
+    const environmentParts: string[] = []
+    if (environmentBrowser) environmentParts.push(`Browser: ${environmentBrowser}`)
+    if (environmentOs) environmentParts.push(`OS: ${environmentOs}`)
+    if (environmentDevice) environmentParts.push(`Device: ${environmentDevice}`)
+    if (environmentVersion) environmentParts.push(`Version: ${environmentVersion}`)
+    const environment = environmentParts.length > 0 ? environmentParts.join(", ") : undefined
 
     return {
       title,
@@ -325,7 +339,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   }
 
   const canNextFromStep1 = React.useMemo(() => validateStep(1), [title, description, errors])
-  const canNextFromStep2 = React.useMemo(() => validateStep(2), [priority, visibility, environment, errors])
+  const canNextFromStep2 = React.useMemo(() => validateStep(2), [priority, visibility, errors])
 
   if (!mounted) {
     return (
@@ -378,11 +392,9 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
           <BugReportStep2Priority
             priority={priority}
             visibility={visibility}
-            environment={environment}
             errors={errors}
             onChangePriority={(v) => { setPriority(v); if (errors.priority) setErrors(prev => ({ ...prev, priority: '' })) }}
             onChangeVisibility={(v) => { setVisibility(v); if (errors.visibility) setErrors(prev => ({ ...prev, visibility: '' })) }}
-            onChangeEnvironment={(v) => { setEnvironment(v); if (errors.environment) setErrors(prev => ({ ...prev, environment: '' })) }}
             canNext={canNextFromStep2}
             onNext={() => { if (validateStepWithErrors(2)) setStep(3) }}
             onBack={() => setStep(1)}
@@ -410,9 +422,17 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             tagsInput={tagsInput}
             sourcesInput={sourcesInput}
             attachments={attachments}
+            environmentBrowser={environmentBrowser}
+            environmentOs={environmentOs}
+            environmentDevice={environmentDevice}
+            environmentVersion={environmentVersion}
             onChangeSteps={(v) => setStepsToReproduce(v)}
             onChangeTags={(v) => setTagsInput(v)}
             onChangeSources={(v) => setSourcesInput(v)}
+            onChangeEnvironmentBrowser={(v) => setEnvironmentBrowser(v)}
+            onChangeEnvironmentOs={(v) => setEnvironmentOs(v)}
+            onChangeEnvironmentDevice={(v) => setEnvironmentDevice(v)}
+            onChangeEnvironmentVersion={(v) => setEnvironmentVersion(v)}
             onUpload={handleFileUpload}
             onRemove={(id) => removeAttachment(id)}
             formatFileSize={formatFileSize}
@@ -428,7 +448,10 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             description={description}
             priority={priority}
             visibility={visibility}
-            environment={environment}
+            environmentBrowser={environmentBrowser}
+            environmentOs={environmentOs}
+            environmentDevice={environmentDevice}
+            environmentVersion={environmentVersion}
             expectedBehavior={expectedBehavior}
             actualBehavior={actualBehavior}
             stepsToReproduce={stepsToReproduce}

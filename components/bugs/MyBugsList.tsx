@@ -1,21 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { IconLayoutGrid, IconList, IconEye, IconExternalLink, IconChartArea, IconBulb } from "@tabler/icons-react"
 import { toast } from "sonner"
-
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { BugDetailedList } from "@/components/bugs/BugDetailedList"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -23,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
@@ -35,7 +26,6 @@ interface MyBugsListProps {
 
 export function MyBugsList({ userId }: MyBugsListProps) {
   const [bugs, setBugs] = React.useState<any[]>([])
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
   const [detailsOpen, setDetailsOpen] = React.useState(false)
   const [selectedBug, setSelectedBug] = React.useState<any | null>(null)
   const [detailsLoading, setDetailsLoading] = React.useState(false)
@@ -202,188 +192,14 @@ export function MyBugsList({ userId }: MyBugsListProps) {
     }
   }
 
-  // Separate bugs into private and public
-  const privateBugs = bugs.filter(bug => (bug.visibility || "public").toLowerCase() === "private")
-  const publicBugs = bugs.filter(bug => (bug.visibility || "public").toLowerCase() !== "private")
-
-  const renderBugCard = (bug: any) => {
-            const createdAt = bug.created_at || bug.createdAt
-            const created = createdAt ? new Date(createdAt) : undefined
-            const status = (bug.status || "open") as string
-            const priority = (bug.priority || "medium") as string
-            const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
-            return (
-              <Card key={bug.id} className="@container/card">
-                <CardHeader className="flex flex-col px-4 gap-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <Badge 
-                      variant="outline" 
-                      className="capitalize text-[10px] px-1.5 py-0.5 text-white"
-                      style={
-                        status === 'open' ? { backgroundColor: '#0d9488', color: '#ffffff', borderColor: '#0d9488' }
-                        : status === 'closed' ? { backgroundColor: '#64748b', color: '#ffffff', borderColor: '#64748b' }
-                        : status === 'in_progress' ? { backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }
-                        : status === 'resolved' ? { backgroundColor: '#4f46e5', color: '#ffffff', borderColor: '#4f46e5' }
-                        : status === 'reopened' ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }
-                        : undefined
-                      }
-                    >
-                      {status}
-                    </Badge>
-                    {bug.cluster_name && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
-                        {bug.cluster_name}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardTitle className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg" title={bugTitle}>
-                    {bugTitle}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter className="px-4 items-center justify-between gap-2 text-xs">
-                  <div className="text-muted-foreground text-xs">{created ? created.toLocaleDateString() : ""}</div>
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="outline" className="capitalize text-[11px] px-1.5 py-0.5">{priority}</Badge>
-                    <button 
-                      type="button" 
-                      aria-label="View bug" 
-                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                      onClick={() => openBugDetails(bug.id)}
-                    >
-                      <IconEye className="size-3.5" />
-                    </button>
-                    <button 
-                      type="button" 
-                      aria-label="View graph" 
-                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                      onClick={() => setGraphOpen(true)}
-                    >
-                      <IconChartArea className="size-3.5" />
-                    </button>
-                    {(status === 'closed' || status === 'resolved') ? (
-                      <button 
-                        type="button" 
-                        aria-label="View solutions (disabled - bug is closed or resolved)" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground opacity-50 cursor-not-allowed" 
-                        disabled
-                        title="Cannot add solutions to closed or resolved bugs"
-                      >
-                        <IconBulb className="size-3.5" />
-                      </button>
-                    ) : (
-                      <button 
-                        type="button" 
-                        aria-label="View solutions" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                        onClick={() => { 
-                          setSelectedBug(bug)
-                          setSolutionOpen(true)
-                          void fetchSolutions(bug.id) 
-                        }}
-                      >
-                        <IconBulb className="size-3.5" />
-                      </button>
-                    )}
-                    <button 
-                      type="button" 
-                      aria-label="Open details" 
-                      className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                    >
-                      <IconExternalLink className="size-3.5" />
-                    </button>
-                  </div>
-                </CardFooter>
-              </Card>
-            )
-          }
-
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        {loading ? (
-          <Skeleton className="h-5 w-24" />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
-          </p>
-        )}
-        <div className="flex items-center gap-1">
-          <button 
-            type="button" 
-            aria-label="Grid view" 
-            onClick={() => setViewMode("grid")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconLayoutGrid className="size-4" />
-          </button>
-          <button 
-            type="button" 
-            aria-label="List view" 
-            onClick={() => setViewMode("list")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconList className="size-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Only for me section - Private bugs */}
-      {privateBugs.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-base font-medium text-muted-foreground mb-4">Only for me</h2>
-          <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-            {privateBugs.map(renderBugCard)}
-          </div>
-        </div>
-      )}
-
-      {/* My Bugs section - Public bugs created by user */}
-      {publicBugs.length > 0 && (
-        <div className={privateBugs.length > 0 ? "mt-8" : ""}>
-          <h2 className="text-base font-medium text-muted-foreground mt-4 mb-4">My Bugs</h2>
-          <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-            {publicBugs.map(renderBugCard)}
-          </div>
-        </div>
-      )}
-
-      {/* Loading state */}
-      {loading && (
-        <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="@container/card">
-              <CardHeader className="flex flex-col px-4 gap-1">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-5 w-full" />
-              </CardHeader>
-              <CardFooter className="px-4 items-center justify-between gap-2">
-                <Skeleton className="h-4 w-20" />
-                <div className="flex items-center gap-1.5">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && bugs.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No bugs found. Create your first bug report!
-        </div>
-      )}
-
-      {/* Empty state when only private bugs exist */}
-      {!loading && publicBugs.length === 0 && privateBugs.length > 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No public bugs found.
-        </div>
-      )}
+      <BugDetailedList
+        userId={userId}
+        bugs={bugs}
+        onBugClick={openBugDetails}
+        totalCount={bugs.length}
+      />
 
       {/* Details Drawer */}
       <Drawer open={detailsOpen} onOpenChange={setDetailsOpen}>

@@ -1,21 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { IconLayoutGrid, IconList, IconEye, IconExternalLink, IconChartArea, IconBulb, IconFilter, IconSearch, IconX } from "@tabler/icons-react"
-import { toast } from "sonner"
-
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerTrigger } from "@/components/ui/drawer"
+import { BugDetailedList } from "@/components/bugs/BugDetailedList"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -24,14 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
 import { SolutionDialog } from "@/components/bugs/solutions/BugReportSolutionDialog"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
@@ -39,11 +24,11 @@ import { useIsMobile } from "@/hooks/useMobile"
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
+import { IconFilter, IconSearch } from "@tabler/icons-react"
+import { toast } from "sonner"
 
 interface FilterState {
   status: string[]
@@ -66,7 +51,6 @@ interface BugExploreListProps {
 export function BugExploreList({ userId }: BugExploreListProps) {
   const [bugs, setBugs] = React.useState<any[]>([])
   const [allBugs, setAllBugs] = React.useState<any[]>([])
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
   const [detailsOpen, setDetailsOpen] = React.useState(false)
   const [selectedBug, setSelectedBug] = React.useState<any | null>(null)
   const [detailsLoading, setDetailsLoading] = React.useState(false)
@@ -94,11 +78,6 @@ export function BugExploreList({ userId }: BugExploreListProps) {
   })
   const [availableTags, setAvailableTags] = React.useState<string[]>([])
   const [availableAssignees, setAvailableAssignees] = React.useState<string[]>([])
-  const [mounted, setMounted] = React.useState(false)
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const chartConfig: ChartConfig = {
     count: {
@@ -309,23 +288,6 @@ export function BugExploreList({ userId }: BugExploreListProps) {
       filters.dateModifiedTo !== "" ||
       filters.assignee !== ""
     )
-  }
-
-  async function openBugDetails(bugId: string) {
-    try {
-      setDetailsLoading(true)
-      setDetailsOpen(true)
-      const res = await fetch(`/api/bugs/${bugId}/reports`)
-      if (res.ok) {
-        const data = await res.json()
-        setSelectedBug(data?.bug || null)
-        return
-      }
-      const found = allBugs.find((b) => b.id === bugId)
-      setSelectedBug(found || null)
-    } finally {
-      setDetailsLoading(false)
-    }
   }
 
   async function fetchSolutions(bugId: string) {
@@ -612,379 +574,45 @@ export function BugExploreList({ userId }: BugExploreListProps) {
     </div>
   )
 
+  async function openBugDetails(bugId: string) {
+    try {
+      setDetailsLoading(true)
+      setDetailsOpen(true)
+      const res = await fetch(`/api/bugs/${bugId}/reports`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedBug(data?.bug || null)
+        return
+      }
+      const found = allBugs.find((b) => b.id === bugId)
+      setSelectedBug(found || null)
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
+
   return (
     <div>
-      {/* Search and Filter Bar */}
-      <div className="mb-6 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Search bugs by title or description..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          {isMobile ? (
-            <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <DrawerTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <IconFilter className="size-4" />
-                  Filters
-                  {hasActiveFilters() && (
-                    <Badge variant="secondary" className="ml-1">
-                      {[
-                        filters.status.length,
-                        filters.priority.length,
-                        filters.tags.length,
-                        filters.browser ? 1 : 0,
-                        filters.os ? 1 : 0,
-                        filters.device ? 1 : 0,
-                        filters.dateCreatedFrom || filters.dateCreatedTo ? 1 : 0,
-                        filters.dateModifiedFrom || filters.dateModifiedTo ? 1 : 0,
-                        filters.assignee ? 1 : 0,
-                      ].reduce((a, b) => a + b, 0)}
-                    </Badge>
-                  )}
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="max-h-[90vh]">
-                <DrawerHeader>
-                  <DrawerTitle>Filters</DrawerTitle>
-                  <DrawerDescription>
-                    {hasActiveFilters() && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearAllFilters}
-                        className="h-7 text-xs mt-2"
-                      >
-                        Clear All Filters
-                      </Button>
-                    )}
-                  </DrawerDescription>
-                </DrawerHeader>
-                <div className="px-4 pb-4 overflow-y-auto">
-                  <FilterContent />
-                </div>
-              </DrawerContent>
-            </Drawer>
-          ) : mounted ? (
-            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <IconFilter className="size-4" />
-                  Filters
-                  {hasActiveFilters() && (
-                    <Badge variant="secondary" className="ml-1">
-                      {[
-                        filters.status.length,
-                        filters.priority.length,
-                        filters.tags.length,
-                        filters.browser ? 1 : 0,
-                        filters.os ? 1 : 0,
-                        filters.device ? 1 : 0,
-                        filters.dateCreatedFrom || filters.dateCreatedTo ? 1 : 0,
-                        filters.dateModifiedFrom || filters.dateModifiedTo ? 1 : 0,
-                        filters.assignee ? 1 : 0,
-                      ].reduce((a, b) => a + b, 0)}
-                    </Badge>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent 
-                className="w-[min(600px,calc(100vw-4rem))] max-h-[min(calc(100vh-12rem),600px)] overflow-y-auto overscroll-contain" 
-                align="end"
-                side="bottom"
-                sideOffset={8}
-                avoidCollisions={true}
-                collisionPadding={24}
-                onOpenAutoFocus={(e) => {
-                  // Prevent auto focus to avoid scroll issues
-                  e.preventDefault()
-                }}
-              >
-                <FilterContent />
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <Button variant="outline" className="gap-2" disabled>
-              <IconFilter className="size-4" />
-              Filters
-              {hasActiveFilters() && (
-                <Badge variant="secondary" className="ml-1">
-                  {[
-                    filters.status.length,
-                    filters.priority.length,
-                    filters.tags.length,
-                    filters.browser ? 1 : 0,
-                    filters.os ? 1 : 0,
-                    filters.device ? 1 : 0,
-                    filters.dateCreatedFrom || filters.dateCreatedTo ? 1 : 0,
-                    filters.dateModifiedFrom || filters.dateModifiedTo ? 1 : 0,
-                    filters.assignee ? 1 : 0,
-                  ].reduce((a, b) => a + b, 0)}
-                </Badge>
-              )}
-            </Button>
-          )}
-        </div>
-
-        {/* Active Filters Display */}
-        {hasActiveFilters() && (
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-muted-foreground">Active filters:</span>
-            {filters.status.map(status => (
-              <Badge key={status} variant="secondary" className="gap-1">
-                Status: {status.replace('_', ' ')}
-                <button
-                  onClick={() => toggleFilter('status', status)}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            ))}
-            {filters.priority.map(priority => (
-              <Badge key={priority} variant="secondary" className="gap-1">
-                Priority: {priority}
-                <button
-                  onClick={() => toggleFilter('priority', priority)}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            ))}
-            {filters.tags.map(tag => (
-              <Badge key={tag} variant="secondary" className="gap-1">
-                Tag: {tag}
-                <button
-                  onClick={() => toggleFilter('tags', tag)}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            ))}
-            {filters.browser && (
-              <Badge variant="secondary" className="gap-1">
-                Browser: {filters.browser}
-                <button
-                  onClick={() => setFilters(prev => ({ ...prev, browser: "" }))}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            )}
-            {filters.os && (
-              <Badge variant="secondary" className="gap-1">
-                OS: {filters.os}
-                <button
-                  onClick={() => setFilters(prev => ({ ...prev, os: "" }))}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            )}
-            {filters.device && (
-              <Badge variant="secondary" className="gap-1">
-                Device: {filters.device}
-                <button
-                  onClick={() => setFilters(prev => ({ ...prev, device: "" }))}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            )}
-            {(filters.dateCreatedFrom || filters.dateCreatedTo) && (
-              <Badge variant="secondary" className="gap-1">
-                Created: {filters.dateCreatedFrom || '...'} to {filters.dateCreatedTo || '...'}
-                <button
-                  onClick={() => setFilters(prev => ({ ...prev, dateCreatedFrom: "", dateCreatedTo: "" }))}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            )}
-            {(filters.dateModifiedFrom || filters.dateModifiedTo) && (
-              <Badge variant="secondary" className="gap-1">
-                Modified: {filters.dateModifiedFrom || '...'} to {filters.dateModifiedTo || '...'}
-                <button
-                  onClick={() => setFilters(prev => ({ ...prev, dateModifiedFrom: "", dateModifiedTo: "" }))}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            )}
-            {filters.assignee && (
-              <Badge variant="secondary" className="gap-1">
-                Assignee: {filters.assignee}
-                <button
-                  onClick={() => setFilters(prev => ({ ...prev, assignee: "" }))}
-                  className="ml-1 hover:bg-secondary rounded-full"
-                >
-                  <IconX className="size-3" />
-                </button>
-              </Badge>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Results Header */}
-      <div className="mb-4 flex items-center justify-between">
-        {loading ? (
-          <Skeleton className="h-5 w-24" />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {bugs.length} bug{bugs.length !== 1 ? 's' : ''} found
-          </p>
-        )}
-        <div className="flex items-center gap-1">
-          <button 
-            type="button" 
-            aria-label="Grid view" 
-            onClick={() => setViewMode("grid")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconLayoutGrid className="size-4" />
-          </button>
-          <button 
-            type="button" 
-            aria-label="List view" 
-            onClick={() => setViewMode("list")} 
-            className={`rounded-md p-1.5 border transition-colors ${viewMode === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <IconList className="size-4" />
-          </button>
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search bugs by title or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-10"
+          />
         </div>
       </div>
 
-      {/* Bugs Grid/List */}
-      <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid gap-3 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs ${viewMode === "grid" ? "grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3" : "grid-cols-1"}`}>
-        {loading ? (
-          Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="@container/card">
-              <CardHeader className="flex flex-col px-4 gap-1">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-5 w-full" />
-              </CardHeader>
-              <CardFooter className="px-4 items-center justify-between gap-2">
-                <Skeleton className="h-4 w-20" />
-                <div className="flex items-center gap-1.5">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                </div>
-              </CardFooter>
-            </Card>
-          ))
-        ) : bugs.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            No bugs found. {hasActiveFilters() ? "Try adjusting your filters." : "Create your first bug report!"}
-          </div>
-        ) : (
-            bugs.map((bug) => {
-              const createdAt = bug.created_at || bug.createdAt
-              const created = createdAt ? new Date(createdAt) : undefined
-              const status = (bug.status || "open") as string
-              const priority = (bug.priority || "medium") as string
-              const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
-              return (
-                <Card key={bug.id} className="@container/card">
-                  <CardHeader className="flex flex-col px-4 gap-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <Badge 
-                        variant="outline" 
-                        className="capitalize text-[10px] px-1.5 py-0.5 text-white"
-                        style={
-                          status === 'open' ? { backgroundColor: '#0d9488', color: '#ffffff', borderColor: '#0d9488' }
-                          : status === 'closed' ? { backgroundColor: '#64748b', color: '#ffffff', borderColor: '#64748b' }
-                          : status === 'in_progress' ? { backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#0284c7' }
-                          : status === 'resolved' ? { backgroundColor: '#4f46e5', color: '#ffffff', borderColor: '#4f46e5' }
-                          : status === 'reopened' ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' }
-                          : undefined
-                        }
-                      >
-                        {status}
-                      </Badge>
-                      {bug.cluster_name && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
-                          {bug.cluster_name}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-base font-semibold leading-snug break-words @[250px]/card:text-lg" title={bugTitle}>
-                      {bugTitle}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardFooter className="px-4 items-center justify-between gap-2 text-xs">
-                    <div className="text-muted-foreground text-xs">{created ? created.toLocaleDateString() : ""}</div>
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="capitalize text-[11px] px-1.5 py-0.5">{priority}</Badge>
-                      <button 
-                        type="button" 
-                        aria-label="View bug" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                        onClick={() => openBugDetails(bug.id)}
-                      >
-                        <IconEye className="size-3.5" />
-                      </button>
-                      <button 
-                        type="button" 
-                        aria-label="View graph" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                        onClick={() => setGraphOpen(true)}
-                      >
-                        <IconChartArea className="size-3.5" />
-                      </button>
-                      {(status === 'closed' || status === 'resolved') ? (
-                        <button 
-                          type="button" 
-                          aria-label="View solutions (disabled - bug is closed or resolved)" 
-                          className="rounded-md p-1 border border-transparent text-muted-foreground opacity-50 cursor-not-allowed" 
-                          disabled
-                          title="Cannot add solutions to closed or resolved bugs"
-                        >
-                          <IconBulb className="size-3.5" />
-                        </button>
-                      ) : (
-                        <button 
-                          type="button" 
-                          aria-label="View solutions" 
-                          className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border" 
-                          onClick={() => { 
-                            setSelectedBug(bug)
-                            setSolutionOpen(true)
-                            void fetchSolutions(bug.id) 
-                          }}
-                        >
-                          <IconBulb className="size-3.5" />
-                        </button>
-                      )}
-                      <button 
-                        type="button" 
-                        aria-label="Open details" 
-                        className="rounded-md p-1 border border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-                      >
-                        <IconExternalLink className="size-3.5" />
-                      </button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              )
-            })
-          )}
-        </div>
+      <BugDetailedList
+        userId={userId}
+        bugs={bugs}
+        onBugClick={openBugDetails}
+        totalCount={bugs.length}
+      />
 
       {/* Details Drawer */}
       <Drawer open={detailsOpen} onOpenChange={setDetailsOpen}>

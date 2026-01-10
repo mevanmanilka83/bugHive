@@ -24,6 +24,8 @@ export function getBugReportSchema() {
     environment: z.string()
       .max(200, "Environment description must be less than 200 characters")
       .optional(),
+    os: z.enum(["windows", "macos", "linux", "ios", "android", "other"])
+      .optional(),
     expected_behavior: z.string()
       .min(3, "Expected behavior must be at least 3 characters")
       .max(1000, "Expected behavior must be less than 1000 characters")

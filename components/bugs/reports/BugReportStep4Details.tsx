@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { IconPaperclip, IconUpload, IconX } from "@tabler/icons-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { IconPaperclip, IconUpload, IconX, IconDeviceDesktop } from "@tabler/icons-react"
+import { Separator } from "@/components/ui/separator"
 
 type AttachmentFile = {
   file: File
@@ -18,9 +20,17 @@ type Props = {
   tagsInput: string
   sourcesInput: string
   attachments: AttachmentFile[]
+  environmentBrowser: string
+  environmentOs: string
+  environmentDevice: string
+  environmentVersion: string
   onChangeSteps: (value: string) => void
   onChangeTags: (value: string) => void
   onChangeSources: (value: string) => void
+  onChangeEnvironmentBrowser: (value: string) => void
+  onChangeEnvironmentOs: (value: string) => void
+  onChangeEnvironmentDevice: (value: string) => void
+  onChangeEnvironmentVersion: (value: string) => void
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
   onRemove: (id: string) => void
   formatFileSize: (bytes: number) => string
@@ -34,9 +44,17 @@ export function BugReportStep4Details({
   tagsInput,
   sourcesInput,
   attachments,
+  environmentBrowser,
+  environmentOs,
+  environmentDevice,
+  environmentVersion,
   onChangeSteps,
   onChangeTags,
   onChangeSources,
+  onChangeEnvironmentBrowser,
+  onChangeEnvironmentOs,
+  onChangeEnvironmentDevice,
+  onChangeEnvironmentVersion,
   onUpload,
   onRemove,
   formatFileSize,
@@ -46,6 +64,68 @@ export function BugReportStep4Details({
 }: Props) {
   return (
     <div className="flex flex-col gap-4">
+      <div className="rounded-lg border p-4 space-y-4">
+        <h3 className="font-semibold text-sm flex items-center gap-2">
+          <IconDeviceDesktop className="size-4" />
+          Environment
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="env-browser">Browser</Label>
+            <Select value={environmentBrowser || undefined} onValueChange={onChangeEnvironmentBrowser}>
+              <SelectTrigger id="env-browser">
+                <SelectValue placeholder="Select browser (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Chrome">Chrome</SelectItem>
+                <SelectItem value="Firefox">Firefox</SelectItem>
+                <SelectItem value="Safari">Safari</SelectItem>
+                <SelectItem value="Edge">Edge</SelectItem>
+                <SelectItem value="Opera">Opera</SelectItem>
+                <SelectItem value="Brave">Brave</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="env-os">Operating System</Label>
+            <Select value={environmentOs || undefined} onValueChange={onChangeEnvironmentOs}>
+              <SelectTrigger id="env-os">
+                <SelectValue placeholder="Select OS (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Windows">Windows</SelectItem>
+                <SelectItem value="macOS">macOS</SelectItem>
+                <SelectItem value="Linux">Linux</SelectItem>
+                <SelectItem value="iOS">iOS</SelectItem>
+                <SelectItem value="Android">Android</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="env-device">Device</Label>
+            <Input
+              id="env-device"
+              placeholder="e.g., iPhone 15, Desktop, etc."
+              value={environmentDevice}
+              onChange={(e) => onChangeEnvironmentDevice(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="env-version">Version</Label>
+            <Input
+              id="env-version"
+              placeholder="e.g., 1.2.3, Chrome 120, etc."
+              value={environmentVersion}
+              onChange={(e) => onChangeEnvironmentVersion(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
       <div className="flex flex-col gap-2">
         <Label htmlFor="bug-steps">Steps to Reproduce</Label>
         <Textarea
