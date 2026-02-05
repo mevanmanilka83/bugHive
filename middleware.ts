@@ -5,7 +5,8 @@ import { NextResponse } from "next/server"
 const ROUTE_PATTERNS = {
   AUTH_PAGES: ['/auth/signin', '/auth/signup'],
   API_AUTH_ROUTES: ['/api/auth/'],
-  PUBLIC_ROUTES: ['/api/health'],
+  // Routes that anyone can access without authentication
+  PUBLIC_ROUTES: ['/', '/api/health'],
 } as const
 
 // Route checking utilities
@@ -34,7 +35,7 @@ export default auth((req) => {
   // Handle auth pages
   if (isAuthPage(pathname)) {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl))
+      return NextResponse.redirect(new URL("/", nextUrl))
     }
     return NextResponse.next()
   }

@@ -617,13 +617,14 @@ export function BugExploreList({ userId, showTitle = true }: BugExploreListProps
         onOpenFilters={() => setFiltersOpen((open) => !open)}
         filtersOpen={filtersOpen}
         renderFiltersPanel={() => (
-          <div className="rounded-lg border bg-card px-4 py-4 shadow-sm">
+          <div className="rounded-lg border bg-muted/60 px-4 py-4">
             <FilterContent />
             <div className="mt-4 flex items-center justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="rounded-full px-4"
                 onClick={() => setFiltersOpen(false)}
               >
                 Cancel
@@ -631,6 +632,7 @@ export function BugExploreList({ userId, showTitle = true }: BugExploreListProps
               <Button
                 type="button"
                 size="sm"
+                className="rounded-full px-4"
                 onClick={() => {
                   applyFilters()
                   setFiltersOpen(false)

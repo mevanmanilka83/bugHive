@@ -337,7 +337,7 @@ export function BugDetailedList({
               <Button
                 type="button"
                 size="sm"
-                className="inline-flex items-center justify-center gap-1.5 rounded-md"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full px-4"
                 onClick={onOpenFilters}
               >
                 <IconFilter className="size-4" />

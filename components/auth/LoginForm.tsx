@@ -47,8 +47,8 @@ export function LoginForm({
       if (result?.error) {
         toast.error("Invalid email or password")
       } else {
-        toast.success("Welcome back! Redirecting to dashboard...")
-        router.push("/dashboard")
+        toast("Welcome back! ")
+        router.push("/")
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.")
@@ -59,7 +59,7 @@ export function LoginForm({
 
   const handleGitHubSignIn = () => {
     toast.loading("Signing in with GitHub...")
-    signIn("github", { callbackUrl: "/dashboard" })
+    signIn("github", { callbackUrl: "/" })
   }
 
   return (
@@ -80,7 +80,7 @@ export function LoginForm({
                   type="button"
                   onClick={handleGitHubSignIn}
                   disabled={isLoading}
-                  className="w-full"
+                  className="w-full rounded-full"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 mr-2">
                     <path
@@ -125,7 +125,7 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <Button type="submit" disabled={isLoading} className="w-full">
+                <Button type="submit" disabled={isLoading} className="w-full rounded-full">
                   {isLoading ? "Signing in..." : "Login"}
                 </Button>
                 <FieldDescription className="text-center">

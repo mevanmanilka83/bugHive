@@ -343,7 +343,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
   if (!mounted) {
     return (
-      <Button disabled>
+      <Button disabled className="rounded-full px-4">
         <IconReport className="size-4 mr-2" />
         Report Bug
       </Button>
@@ -353,7 +353,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="rounded-full px-4">
           <IconReport className="size-4 mr-2" />
           Report Bug
         </Button>
