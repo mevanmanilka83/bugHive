@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconChevronUp, IconChevronDown } from "@tabler/icons-react"
+import { IconArrowUp, IconArrowDown } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -112,7 +112,7 @@ export function VoteButtons({
           disabled={isVoting || !userId || userVote === "downvote"}
           title={userVote === "downvote" ? "You already downvoted. Remove your downvote first." : "Upvote"}
         >
-          <IconChevronUp className="size-4" />
+          <IconArrowUp className="size-4" />
         </Button>
         <span className="text-xs font-medium min-w-[2ch] text-center">
           {score > 0 ? `+${score}` : score}
@@ -129,7 +129,7 @@ export function VoteButtons({
           disabled={isVoting || !userId || userVote === "upvote"}
           title={userVote === "upvote" ? "You already upvoted. Remove your upvote first." : "Downvote"}
         >
-          <IconChevronDown className="size-4" />
+          <IconArrowDown className="size-4" />
         </Button>
       </div>
     )
@@ -149,7 +149,7 @@ export function VoteButtons({
         disabled={isVoting || !userId || userVote === "downvote"}
         title={userVote === "downvote" ? "You already downvoted. Remove your downvote first." : "Upvote"}
       >
-        <IconChevronUp className="size-5" />
+        <IconArrowUp className="size-5" />
       </Button>
       <span
         className={cn(
@@ -172,7 +172,7 @@ export function VoteButtons({
         disabled={isVoting || !userId || userVote === "upvote"}
         title={userVote === "upvote" ? "You already upvoted. Remove your upvote first." : "Downvote"}
       >
-        <IconChevronDown className="size-5" />
+        <IconArrowDown className="size-5" />
       </Button>
     </div>
   )

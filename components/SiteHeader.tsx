@@ -26,7 +26,7 @@ export function SiteHeader({
           <div className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-md">
             <GalleryVerticalEnd className="size-3" />
           </div>
-          <h1 className="text-base font-medium">Bug Hive Dashboard</h1>
+          <h1 className="text-base font-medium">BugHive Dashboard</h1>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-muted-foreground hidden sm:block">

@@ -1,26 +1,70 @@
 "use client"
 
 import * as React from "react"
-import { IconFilter } from "@tabler/icons-react"
+import {
+  IconChevronDown,
+  IconEye,
+  IconFilter,
+  IconMessageCircle,
+  IconShare3,
+} from "@tabler/icons-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { VoteButtons } from "@/components/bugs/VoteButtons"
 import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdownMenu"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 
 interface BugDetailedListProps {
   userId: string
   bugs: any[]
   onBugClick?: (bugId: string) => void
   totalCount?: number
+  showTitle?: boolean
+  onOpenFilters?: () => void
+  filtersOpen?: boolean
+  renderFiltersPanel?: () => React.ReactNode
 }
 
-export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDetailedListProps) {
-  const [sortBy, setSortBy] = React.useState<"newest" | "active" | "votes" | "unanswered">("newest")
+type SortOption =
+  | "newest"
+  | "active"
+  | "votes"
+  | "unanswered"
+  | "most_viewed"
+  | "my_bugs"
+
+export function BugDetailedList({
+  userId,
+  bugs,
+  onBugClick,
+  totalCount,
+  showTitle = true,
+  onOpenFilters,
+  filtersOpen,
+  renderFiltersPanel,
+}: BugDetailedListProps) {
+  const [sortBy, setSortBy] = React.useState<SortOption>("newest")
 
   const [solutionCounts, setSolutionCounts] = React.useState<Record<string, number>>({})
   const [userInfo, setUserInfo] = React.useState<Record<string, { name?: string; image?: string; reputation?: number }>>({})
+  const [pageSize, setPageSize] = React.useState(15)
+  const [currentPage, setCurrentPage] = React.useState(1)
 
   React.useEffect(() => {
     // Fetch solution counts and user info for all bugs
@@ -81,44 +125,64 @@ export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDet
   }, [bugs.map(b => b.id).join(',')])
 
   const sortedBugs = React.useMemo(() => {
-    let sorted = [...bugs]
-    
-    // Filter unanswered first if needed
+    let working = [...bugs]
+
+    // Filter-based modes
     if (sortBy === "unanswered") {
-      sorted = sorted.filter(bug => (solutionCounts[bug.id] ?? 0) === 0)
+      working = working.filter(bug => (solutionCounts[bug.id] ?? 0) === 0)
     }
-    
+
+    if (sortBy === "my_bugs") {
+      working = working.filter(bug => bug.created_by === userId)
+    }
+
     // Then sort
     switch (sortBy) {
       case "newest":
-        return sorted.sort((a, b) => {
+      case "unanswered":
+      case "my_bugs":
+        return working.sort((a, b) => {
           const dateA = new Date(a.created_at || a.createdAt || 0).getTime()
           const dateB = new Date(b.created_at || b.createdAt || 0).getTime()
           return dateB - dateA
         })
       case "active":
-        return sorted.sort((a, b) => {
+        return working.sort((a, b) => {
           const dateA = new Date(a.updated_at || a.updatedAt || a.created_at || 0).getTime()
           const dateB = new Date(b.updated_at || b.updatedAt || b.created_at || 0).getTime()
           return dateB - dateA
         })
       case "votes":
-        return sorted.sort((a, b) => {
+        return working.sort((a, b) => {
           const scoreA = (a.upvotes_count || 0) - (a.downvotes_count || 0)
           const scoreB = (b.upvotes_count || 0) - (b.downvotes_count || 0)
           return scoreB - scoreA
         })
-      case "unanswered":
-        // Already filtered, sort by newest
-        return sorted.sort((a, b) => {
-          const dateA = new Date(a.created_at || a.createdAt || 0).getTime()
-          const dateB = new Date(b.created_at || b.createdAt || 0).getTime()
-          return dateB - dateA
+      case "most_viewed":
+        return working.sort((a, b) => {
+          const viewsA = a.views || 0
+          const viewsB = b.views || 0
+          return viewsB - viewsA
         })
       default:
-        return sorted
+        return working
     }
-  }, [bugs, sortBy, solutionCounts])
+  }, [bugs, sortBy, solutionCounts, userId])
+
+  const totalItems = sortedBugs.length
+  const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0
+
+  React.useEffect(() => {
+    // Reset to first page when sort, filters, or page size change
+    setCurrentPage(1)
+  }, [sortBy, pageSize, totalItems])
+
+  const paginatedBugs = React.useMemo(() => {
+    if (totalItems === 0) return []
+    const start = (currentPage - 1) * pageSize
+    const end = start + pageSize
+    return sortedBugs.slice(start, end)
+  }, [sortedBugs, currentPage, pageSize, totalItems])
 
   const formatTimeAgo = (date: Date): string => {
     const now = new Date()
@@ -136,89 +200,164 @@ export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDet
 
   const displayCount = totalCount !== undefined ? totalCount : bugs.length
 
+  const pageNumbers = React.useMemo(() => {
+    if (totalPages === 0) return []
+
+    const pages: (number | string)[] = []
+    const maxVisible = 5
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+      return pages
+    }
+
+    // Always show first page
+    pages.push(1)
+
+    const start = Math.max(2, currentPage - 1)
+    const end = Math.min(totalPages - 1, currentPage + 1)
+
+    if (start > 2) {
+      pages.push("…")
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
+    if (end < totalPages - 1) {
+      pages.push("…")
+    }
+
+    pages.push(totalPages)
+
+    return pages
+  }, [totalPages, currentPage])
+
   return (
     <div className="w-full">
       {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between mb-3">
-          {/* Left: Title and Count */}
-          <div>
-            <h1 className="text-3xl font-bold mb-1">All Bugs</h1>
+      <div className="mb-6 space-y-2">
+        {/* Title and primary actions */}
+        {showTitle && (
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-1">All Bugs</h1>
+            </div>
+            <div>
+              <BugReportDialog />
+            </div>
+          </div>
+        )}
+
+        {/* Count, tabs, and filter – styled similar to StackOverflow */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
             <p className="text-sm text-muted-foreground">
               {displayCount.toLocaleString()} bugs
             </p>
-          </div>
-          {/* Right: Report Bug Button */}
-          <div>
-            <BugReportDialog />
-          </div>
-        </div>
 
-        {/* Filter and Sort Bar */}
-        <div className="flex items-center justify-between bg-muted/30 rounded-lg px-2 py-1.5">
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-1 flex-1">
-            <button
-              className={cn(
-                "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                sortBy === "newest"
-                  ? "bg-white text-black border border-border shadow-sm"
-                  : "text-black hover:text-black/80"
-              )}
-              onClick={() => setSortBy("newest")}
-            >
-              Newest
-            </button>
-            <button
-              className={cn(
-                "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                sortBy === "active"
-                  ? "bg-white text-black border border-border shadow-sm"
-                  : "text-black hover:text-black/80"
-              )}
-              onClick={() => setSortBy("active")}
-            >
-              Active
-            </button>
-            <button
-              className={cn(
-                "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                sortBy === "votes"
-                  ? "bg-white text-black border border-border shadow-sm"
-                  : "text-black hover:text-black/80"
-              )}
-              onClick={() => setSortBy("votes")}
-            >
-              Votes
-            </button>
-            <button
-              className={cn(
-                "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                sortBy === "unanswered"
-                  ? "bg-white text-black border border-border shadow-sm"
-                  : "text-black hover:text-black/80"
-              )}
-              onClick={() => setSortBy("unanswered")}
-            >
-              Unanswered
-            </button>
+            {/* Tabs group */}
+            <div className="inline-flex items-center gap-1 rounded-md border bg-background px-1 py-1">
+              <button
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  sortBy === "newest"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSortBy("newest")}
+              >
+                Newest
+              </button>
+              <button
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  sortBy === "active"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSortBy("active")}
+              >
+                Active
+              </button>
+              <button
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  sortBy === "votes"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSortBy("votes")}
+              >
+                Most voted
+              </button>
+              <button
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  sortBy === "unanswered"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSortBy("unanswered")}
+              >
+                Unanswered
+              </button>
+
+              {/* More dropdown for extra, project-specific modes */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer inline-flex items-center gap-1",
+                      sortBy === "most_viewed" || sortBy === "my_bugs"
+                        ? "bg-muted font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    More
+                    <IconChevronDown className="size-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy("most_viewed")}>
+                    Most viewed
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("my_bugs")}>
+                    My reported bugs
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Filter Button */}
-          <div className="ml-2">
-            <button
-              className="h-8 px-3 text-sm bg-white text-black border border-black rounded-md hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-1.5"
-            >
-              <IconFilter className="size-4" />
-              Filter
-            </button>
-          </div>
+          {onOpenFilters && (
+            <div>
+              <Button
+                type="button"
+                size="sm"
+                className="inline-flex items-center justify-center gap-1.5 rounded-md"
+                onClick={onOpenFilters}
+              >
+                <IconFilter className="size-4" />
+                Filter
+              </Button>
+            </div>
+          )}
         </div>
+
+        {/* Filters panel (rendered directly under tabs when open) */}
+        {filtersOpen && renderFiltersPanel && (
+          <div className="mt-3">
+            {renderFiltersPanel()}
+          </div>
+        )}
       </div>
 
       {/* Bug List */}
       <div className="space-y-0 border-t">
-        {sortedBugs.map((bug) => {
+        {paginatedBugs.map((bug) => {
           const createdAt = bug.created_at || bug.createdAt
           const created = createdAt ? new Date(createdAt) : new Date()
           const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
@@ -253,12 +392,6 @@ export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDet
                   userId={userId}
                   compact={true}
                 />
-                {/* Engagement Metrics (small gray text, stacked vertically) */}
-                <div className="flex flex-col gap-0.5 text-xs text-muted-foreground text-center mt-1">
-                  <div className="font-semibold text-foreground">{score} {score === 1 ? 'vote' : 'votes'}</div>
-                  <div>{solutionCount ?? 0} {solutionCount === 1 ? 'answer' : 'answers'}</div>
-                  <div>{views} {views === 1 ? 'view' : 'views'}</div>
-                </div>
               </div>
 
               {/* Main Content Area */}
@@ -274,12 +407,12 @@ export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDet
                     {descriptionSnippet}
                   </p>
                 )}
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
                   {tags.slice(0, 5).map((tag: string) => (
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="text-xs px-1.5 py-0.5 bg-muted text-muted-foreground hover:bg-muted/80 cursor-pointer"
+                      className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/80 cursor-pointer border-0"
                     >
                       {tag}
                     </Badge>
@@ -288,9 +421,44 @@ export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDet
                     <span className="text-xs text-muted-foreground">+{tags.length - 5} more</span>
                   )}
                 </div>
+
+                {/* Engagement pills – votes, answers, views, share */}
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                    <span className="font-semibold text-foreground">
+                      {score > 0 ? `+${score}` : score}
+                    </span>
+                    <span>{score === 1 ? "vote" : "votes"}</span>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                    <IconMessageCircle className="size-3" />
+                    <span className="font-medium text-foreground">
+                      {solutionCount ?? 0}
+                    </span>
+                    <span>{solutionCount === 1 ? "answer" : "answers"}</span>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                    <IconEye className="size-3" />
+                    <span className="font-medium text-foreground">
+                      {views}
+                    </span>
+                    <span>{views === 1 ? "view" : "views"}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // TODO: implement share behavior (e.g., copy link)
+                    }}
+                  >
+                    <IconShare3 className="size-3" />
+                    <span className="font-medium text-foreground">Share</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Right Column - User Metadata (aligned vertically) */}
+              {/* Right Column - User Metadata (aligned vertically, date at bottom-right) */}
               <div className="flex flex-col items-end gap-0.5 min-w-[120px] flex-shrink-0 text-xs">
                 <div className="flex items-center gap-1.5">
                   <Avatar className="size-5">
@@ -313,7 +481,7 @@ export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDet
                     <span className="text-muted-foreground font-medium text-xs">{userReputation}</span>
                   </div>
                 </div>
-                <div className="text-muted-foreground text-right text-xs">
+                <div className="mt-auto text-muted-foreground text-right text-xs">
                   {formatTimeAgo(created)}
                 </div>
               </div>
@@ -321,6 +489,62 @@ export function BugDetailedList({ userId, bugs, onBugClick, totalCount }: BugDet
           )
         })}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 0 && (
+        <div className="border-t bg-background/60 px-3 py-4">
+          <Pagination className="mx-0">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  aria-disabled={currentPage === 1}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (currentPage > 1) {
+                      setCurrentPage((p) => Math.max(1, p - 1))
+                    }
+                  }}
+                />
+              </PaginationItem>
+
+              {pageNumbers.map((p, index) =>
+                typeof p === "string" ? (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={p}>
+                    <PaginationLink
+                      href="#"
+                      isActive={p === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setCurrentPage(p)
+                      }}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  aria-disabled={currentPage === totalPages}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (currentPage < totalPages) {
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {sortedBugs.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">

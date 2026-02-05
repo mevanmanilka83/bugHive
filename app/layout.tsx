@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bug Hive - Authentication Demo",
-  description: "A Next.js app with NextAuth.js and Supabase authentication",
+  title: "BugHive",
+  description: "BugHive – collaborative bug tracking and solutions",
 };
 
 export default function RootLayout({

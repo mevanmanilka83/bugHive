@@ -46,9 +46,10 @@ interface FilterState {
 
 interface BugExploreListProps {
   userId: string
+  showTitle?: boolean
 }
 
-export function BugExploreList({ userId }: BugExploreListProps) {
+export function BugExploreList({ userId, showTitle = true }: BugExploreListProps) {
   const [bugs, setBugs] = React.useState<any[]>([])
   const [allBugs, setAllBugs] = React.useState<any[]>([])
   const [detailsOpen, setDetailsOpen] = React.useState(false)
@@ -612,6 +613,34 @@ export function BugExploreList({ userId }: BugExploreListProps) {
         bugs={bugs}
         onBugClick={openBugDetails}
         totalCount={bugs.length}
+        showTitle={showTitle}
+        onOpenFilters={() => setFiltersOpen((open) => !open)}
+        filtersOpen={filtersOpen}
+        renderFiltersPanel={() => (
+          <div className="rounded-lg border bg-card px-4 py-4 shadow-sm">
+            <FilterContent />
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFiltersOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  applyFilters()
+                  setFiltersOpen(false)
+                }}
+              >
+                Apply filters
+              </Button>
+            </div>
+          </div>
+        )}
       />
 
       {/* Details Drawer */}

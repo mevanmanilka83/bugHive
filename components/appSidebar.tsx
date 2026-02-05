@@ -127,7 +127,7 @@ export function AppSidebar({
                 <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
                   <GalleryVerticalEnd className="size-4" />
                 </div>
-                <span className="text-base font-semibold">Bug Hive</span>
+                <span className="text-base font-semibold">BugHive</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
