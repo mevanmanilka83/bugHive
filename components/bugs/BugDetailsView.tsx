@@ -9,8 +9,15 @@ import { SolutionVoteButtons } from "@/components/bugs/solutions/SolutionVoteBut
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
-import { IconBulb, IconEye, IconShare3 } from "@tabler/icons-react"
+import { IconBulb, IconChevronDown, IconEye, IconShare3 } from "@tabler/icons-react"
 import { stripHtml } from "@/lib/utils-client"
+import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdownMenu"
 
 export interface BugDetailsViewProps {
   bug: {
@@ -47,12 +54,15 @@ type SolutionItem = {
   } | null
 }
 
+type SolutionSortOption = "newest" | "active" | "votes" | "unanswered" | "most_viewed"
+
 export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const isLoggedIn = Boolean(userId)
   const [currentBug, setCurrentBug] = React.useState(bug)
   const [solutionOpen, setSolutionOpen] = React.useState(false)
   const [solutions, setSolutions] = React.useState<SolutionItem[]>([])
   const [solutionsLoading, setSolutionsLoading] = React.useState(true)
+  const [solutionSortBy, setSolutionSortBy] = React.useState<SolutionSortOption>("newest")
 
   const formatSolutionTimeAgo = (date: Date): string => {
     const now = new Date()
@@ -130,6 +140,42 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
     created_at: s.created_at,
   }))
 
+  const sortedSolutions = React.useMemo(() => {
+    let working = [...solutions]
+
+    if (solutionSortBy === "unanswered") {
+      working = working.filter((solution) => {
+        const upvotes = (solution as any).upvotes_count || 0
+        const downvotes = (solution as any).downvotes_count || 0
+        return upvotes + downvotes === 0
+      })
+    }
+
+    switch (solutionSortBy) {
+      case "newest":
+      case "active":
+        return working.sort((a, b) => {
+          const dateA = new Date(a.created_at || 0).getTime()
+          const dateB = new Date(b.created_at || 0).getTime()
+          return dateB - dateA
+        })
+      case "votes":
+        return working.sort((a, b) => {
+          const scoreA = ((a as any).upvotes_count || 0) - ((a as any).downvotes_count || 0)
+          const scoreB = ((b as any).upvotes_count || 0) - ((b as any).downvotes_count || 0)
+          return scoreB - scoreA
+        })
+      case "most_viewed":
+        return working.sort((a, b) => {
+          const viewsA = (a as any).views || 0
+          const viewsB = (b as any).views || 0
+          return viewsB - viewsA
+        })
+      default:
+        return working
+    }
+  }, [solutions, solutionSortBy])
+
   return (
     <>
       <div className="mt-2 mb-4">
@@ -175,6 +221,82 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                 </Button>
               ))}
           </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {solutions.length} solution{solutions.length === 1 ? "" : "s"}
+            </p>
+            <div className="inline-flex items-center gap-1 rounded-md border bg-background px-1 py-1">
+              <button
+                type="button"
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  solutionSortBy === "newest"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSolutionSortBy("newest")}
+              >
+                Newest
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  solutionSortBy === "active"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSolutionSortBy("active")}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  solutionSortBy === "votes"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSolutionSortBy("votes")}
+              >
+                Most voted
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                  solutionSortBy === "unanswered"
+                    ? "bg-muted font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setSolutionSortBy("unanswered")}
+              >
+                Unanswered
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer inline-flex items-center gap-1",
+                      solutionSortBy === "most_viewed"
+                        ? "bg-muted font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    More
+                    <IconChevronDown className="size-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSolutionSortBy("most_viewed")}>
+                    Most viewed
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
         <div className="p-4 md:p-6">
           {solutionsLoading ? (
@@ -185,7 +307,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
             </p>
           ) : (
             <ul className="space-y-0">
-              {solutions.map((solution) => {
+              {sortedSolutions.map((solution) => {
                 const upvotes = (solution as any).upvotes_count || 0
                 const downvotes = (solution as any).downvotes_count || 0
                 const score = upvotes - downvotes

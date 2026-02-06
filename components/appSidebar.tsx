@@ -103,13 +103,13 @@ export function AppSidebar({
   const navSecondary = [
     {
       title: "Notifications",
-      url: "/dashboard/notifications",
+      url: "/notifications",
       icon: IconBell,
       notificationCount,
     },
     {
       title: "Settings",
-      url: "/dashboard/settings",
+      url: "/settings",
       icon: IconSettings,
     },
   ]

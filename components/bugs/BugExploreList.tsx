@@ -301,10 +301,10 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
         <h4 className="font-semibold">Filters</h4>
         {hasActiveFilters() && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={clearAllFilters}
-            className="h-7 text-xs"
+            className="h-7 rounded-full px-4 text-xs"
           >
             Clear All
           </Button>
@@ -367,6 +367,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
             <Label htmlFor="env-browser" className="text-xs text-muted-foreground">Browser</Label>
             <Input
               id="env-browser"
+              type="text"
               placeholder="e.g. Chrome"
               value={filters.browser}
               onChange={(e) => setFilters(prev => ({ ...prev, browser: e.target.value }))}
@@ -377,6 +378,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
             <Label htmlFor="env-os" className="text-xs text-muted-foreground">OS</Label>
             <Input
               id="env-os"
+              type="text"
               placeholder="e.g. macOS, Windows"
               value={filters.os}
               onChange={(e) => setFilters(prev => ({ ...prev, os: e.target.value }))}
@@ -387,6 +389,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
             <Label htmlFor="env-device" className="text-xs text-muted-foreground">Device</Label>
             <Input
               id="env-device"
+              type="text"
               placeholder="e.g. iPhone 15"
               value={filters.device}
               onChange={(e) => setFilters(prev => ({ ...prev, device: e.target.value }))}
@@ -544,6 +547,15 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
           <div className="rounded-lg border bg-muted/60 px-4 py-4">
             <FilterContent />
             <div className="mt-4 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full px-4"
+                onClick={clearAllFilters}
+              >
+                Clear filters
+              </Button>
               <Button
                 type="button"
                 variant="outline"
