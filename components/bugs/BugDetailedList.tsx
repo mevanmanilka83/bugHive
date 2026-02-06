@@ -15,6 +15,7 @@ import { VoteButtons } from "@/components/bugs/VoteButtons"
 import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 import { cn } from "@/lib/utils"
 import { stripHtml } from "@/lib/utils-client"
+import { toast } from "sonner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +72,32 @@ export function BugDetailedList({
   const [userInfo, setUserInfo] = React.useState<Record<string, { name?: string; image?: string; reputation?: number }>>({})
   const [pageSize, setPageSize] = React.useState(15)
   const [currentPage, setCurrentPage] = React.useState(1)
+
+  const copyToClipboard = React.useCallback(async (text: string) => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+        return true
+      }
+    } catch {
+      // Fall back to legacy copy method below.
+    }
+
+    try {
+      const textarea = document.createElement("textarea")
+      textarea.value = text
+      textarea.setAttribute("readonly", "")
+      textarea.style.position = "fixed"
+      textarea.style.opacity = "0"
+      document.body.appendChild(textarea)
+      textarea.select()
+      const success = document.execCommand("copy")
+      document.body.removeChild(textarea)
+      return success
+    } catch {
+      return false
+    }
+  }, [])
 
   React.useEffect(() => {
     // Fetch solution counts and user info for all bugs
@@ -457,9 +484,17 @@ export function BugDetailedList({
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation()
-                      // TODO: implement share behavior (e.g., copy link)
+                      if (typeof window !== "undefined") {
+                        const url = `${window.location.origin}/bugs/${bug.id}`
+                        const copied = await copyToClipboard(url)
+                        if (copied) {
+                          toast("Bug link copied to clipboard")
+                        } else {
+                          toast.error("Failed to copy link")
+                        }
+                      }
                     }}
                   >
                     <IconShare3 className="size-3" />

@@ -45,7 +45,11 @@ type SolutionItem = {
   title?: string | null
   description?: string | null
   created_at: string
+  updated_at?: string | null
   links?: string[] | null
+  views?: number | null
+  upvotes_count?: number | null
+  downvotes_count?: number | null
   user?: {
     id: string
     name?: string | null
@@ -63,6 +67,32 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const [solutions, setSolutions] = React.useState<SolutionItem[]>([])
   const [solutionsLoading, setSolutionsLoading] = React.useState(true)
   const [solutionSortBy, setSolutionSortBy] = React.useState<SolutionSortOption>("newest")
+
+  const copyToClipboard = React.useCallback(async (text: string) => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+        return true
+      }
+    } catch {
+      // Fall back to legacy copy method below.
+    }
+
+    try {
+      const textarea = document.createElement("textarea")
+      textarea.value = text
+      textarea.setAttribute("readonly", "")
+      textarea.style.position = "fixed"
+      textarea.style.opacity = "0"
+      document.body.appendChild(textarea)
+      textarea.select()
+      const success = document.execCommand("copy")
+      document.body.removeChild(textarea)
+      return success
+    } catch {
+      return false
+    }
+  }, [])
 
   const formatSolutionTimeAgo = (date: Date): string => {
     const now = new Date()
@@ -143,33 +173,45 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const sortedSolutions = React.useMemo(() => {
     let working = [...solutions]
 
+    const getTime = (value?: string | null) => (value ? new Date(value).getTime() : 0)
+    const getActiveTime = (solution: SolutionItem) =>
+      getTime(solution.updated_at || solution.created_at)
+
     if (solutionSortBy === "unanswered") {
       working = working.filter((solution) => {
-        const upvotes = (solution as any).upvotes_count || 0
-        const downvotes = (solution as any).downvotes_count || 0
+        const upvotes = solution.upvotes_count || 0
+        const downvotes = solution.downvotes_count || 0
         return upvotes + downvotes === 0
       })
     }
 
     switch (solutionSortBy) {
       case "newest":
+        return working.sort((a, b) => {
+          const dateA = getTime(a.created_at)
+          const dateB = getTime(b.created_at)
+          return dateB - dateA
+        })
       case "active":
         return working.sort((a, b) => {
-          const dateA = new Date(a.created_at || 0).getTime()
-          const dateB = new Date(b.created_at || 0).getTime()
-          return dateB - dateA
+          const dateA = getActiveTime(a)
+          const dateB = getActiveTime(b)
+          if (dateB !== dateA) return dateB - dateA
+          return getTime(b.created_at) - getTime(a.created_at)
         })
       case "votes":
         return working.sort((a, b) => {
-          const scoreA = ((a as any).upvotes_count || 0) - ((a as any).downvotes_count || 0)
-          const scoreB = ((b as any).upvotes_count || 0) - ((b as any).downvotes_count || 0)
-          return scoreB - scoreA
+          const scoreA = (a.upvotes_count || 0) - (a.downvotes_count || 0)
+          const scoreB = (b.upvotes_count || 0) - (b.downvotes_count || 0)
+          if (scoreB !== scoreA) return scoreB - scoreA
+          return getActiveTime(b) - getActiveTime(a)
         })
       case "most_viewed":
         return working.sort((a, b) => {
-          const viewsA = (a as any).views || 0
-          const viewsB = (b as any).views || 0
-          return viewsB - viewsA
+          const viewsA = a.views || 0
+          const viewsB = b.views || 0
+          if (viewsB !== viewsA) return viewsB - viewsA
+          return getActiveTime(b) - getActiveTime(a)
         })
       default:
         return working
@@ -404,14 +446,16 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                           <button
                             type="button"
                             className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation()
                               if (typeof window !== "undefined") {
                                 const url = `${window.location.origin}/bugs/${currentBug.id}#solution-${solution.id}`
-                                navigator.clipboard.writeText(url).then(
-                                  () => toast("Solution link copied to clipboard"),
-                                  () => toast.error("Failed to copy link")
-                                )
+                                const copied = await copyToClipboard(url)
+                                if (copied) {
+                                  toast("Solution link copied to clipboard")
+                                } else {
+                                  toast.error("Failed to copy link")
+                                }
                               }
                             }}
                           >
