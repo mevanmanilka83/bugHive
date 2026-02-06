@@ -3,9 +3,7 @@
 import * as React from "react"
 import { z } from "zod"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
 import { createBugSolution } from "@/app/actions/bug/BugSolution"
 import { toast } from "sonner"
 import { IconBulb } from "@tabler/icons-react"
@@ -341,36 +339,12 @@ export function SolutionDialog({
         </DialogHeader>
         
         <div className="grid gap-6">
-          {/* Bug Information Card */}
-          {bugData && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Related Bug</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{bugData.title}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {bugData.priority || "medium"}
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    {bugData.status || "open"}
-                  </Badge>
-                </div>
-                {bugData.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {bugData.description}
-                  </p>
-                )}
-                {isBugClosedOrResolved && (
-                  <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded-md">
-                    <p className="text-sm text-destructive font-medium">
-                      This bug is {bugData.status}. Solutions cannot be added to closed or resolved bugs.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {bugData && isBugClosedOrResolved && (
+            <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-md">
+              <p className="text-sm text-destructive font-medium">
+                This bug is {bugData.status}. Solutions cannot be added to closed or resolved bugs.
+              </p>
+            </div>
           )}
 
           {/* Step Progress */}
@@ -453,57 +427,6 @@ export function SolutionDialog({
               onCancel={() => onOpenChange(false)}
             />
           )}
-
-          <Separator />
-
-          {/* Existing Solutions */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground">Existing Solutions</h3>
-            {solutionsLoading ? (
-              <div className="text-muted-foreground text-sm">Loading solutions...</div>
-            ) : (
-              <>
-                {solutions.length === 0 ? (
-                  <div className="text-muted-foreground text-sm">No solutions submitted yet.</div>
-                ) : (
-                  <div className="space-y-3">
-                    {solutions.map((solution) => (
-                      <Card key={solution.id} className="border-l-4 border-l-blue-500">
-                        <CardContent className="pt-4">
-                          <div className="space-y-2">
-                            <div className="flex items-start justify-between">
-                              <h4 className="font-medium text-sm">{solution.title || "Untitled Solution"}</h4>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(solution.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
-                              {solution.content}
-                            </p>
-                            {Array.isArray(solution.links) && solution.links.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {solution.links.map((link, i) => (
-                                  <a
-                                    key={i}
-                                    href={link}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs text-blue-600 hover:underline break-all"
-                                  >
-                                    {link}
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
       </DialogContent>
     </Dialog>

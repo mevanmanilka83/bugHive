@@ -89,3 +89,25 @@ export function extractUsernameFromEmail(email: string | null | undefined, fallb
   const parts = email.split('@')
   return parts[0] || fallback
 }
+
+// ============================================================================
+// HTML UTILITIES
+// ============================================================================
+
+/**
+ * Strip HTML tags for plain-text snippet (e.g. list previews, search).
+ * Does not sanitize; use only for display of trusted content.
+ */
+export function stripHtml(html: string): string {
+  if (!html || typeof html !== "string") return ""
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+}
+
+/**
+ * Whether the string looks like HTML (e.g. from rich editor).
+ */
+export function isHtmlContent(s: string): boolean {
+  if (!s || typeof s !== "string") return false
+  const t = s.trim()
+  return t.startsWith("<") && t.endsWith(">")
+}

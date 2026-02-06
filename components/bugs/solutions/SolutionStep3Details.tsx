@@ -136,7 +136,7 @@ export default function SolutionStep3Details({
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemoveAttachment(attachment.id)}
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 rounded-full"
                   >
                     <IconX className="size-4" />
                   </Button>
@@ -148,10 +148,10 @@ export default function SolutionStep3Details({
       </div>
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="ghost" onClick={onBack} className="rounded-full">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onNext}>Review</Button>
+          <Button variant="outline" onClick={onCancel} className="rounded-full">Cancel</Button>
+          <Button onClick={onNext} className="rounded-full">Review</Button>
         </div>
       </div>
     </div>

@@ -108,6 +108,7 @@ export {
 export { env } from "./env"
 export {
   supabase,
+  getSupabaseAdmin,
   getS3Client,
   handlers,
   signIn,

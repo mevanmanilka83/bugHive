@@ -52,8 +52,6 @@ export function SignupForm({
         throw new Error(errorData.error || "Failed to create account")
       }
 
-      toast.success("Account created successfully!")
-
       // Auto sign in after successful signup
       const result = await signIn("credentials", {
         email,
@@ -64,8 +62,8 @@ export function SignupForm({
       if (result?.error) {
         toast.error("Account created but failed to sign in. Please try signing in manually.")
       } else {
-        toast.success("Welcome! Redirecting to dashboard...")
-        router.push("/dashboard")
+        toast("Account created successfully!")
+        router.replace("/")
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An error occurred")
@@ -76,7 +74,7 @@ export function SignupForm({
 
   const handleGitHubSignIn = () => {
     toast.loading("Signing in with GitHub...")
-    signIn("github", { callbackUrl: "/dashboard" })
+    signIn("github", { callbackUrl: "/" })
   }
 
   return (

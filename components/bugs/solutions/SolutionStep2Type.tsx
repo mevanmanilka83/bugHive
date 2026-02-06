@@ -84,10 +84,10 @@ export default function SolutionStep2Type({
         </div>
       </div>
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="ghost" onClick={onBack} className="rounded-full">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onNext} disabled={!canNext}>Next</Button>
+          <Button variant="outline" onClick={onCancel} className="rounded-full">Cancel</Button>
+          <Button onClick={onNext} disabled={!canNext} className="rounded-full">Next</Button>
         </div>
       </div>
     </div>

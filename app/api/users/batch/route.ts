@@ -4,21 +4,16 @@
  * Purpose: HTTP endpoint for fetching multiple users at once
  * - GET /api/users/batch?ids=id1,id2,id3 - Fetch multiple users by their IDs
  * 
- * Why separate from /api/users/[id]?
- * - Cleaner API design - batch operations have dedicated endpoint
- * - Used by components that need to fetch multiple user profiles efficiently
- * - Reduces number of HTTP requests when displaying user lists
+ * Public (no auth required) so that bug list can show creator names for everyone,
+ * including when viewing public bugs while logged out.
  */
-import { checkAuth, supabase } from "@/lib"
+import { supabase } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  const authResult = await checkAuth()
-  if (authResult instanceof NextResponse) return authResult
-
   const searchParams = request.nextUrl.searchParams
   const ids = searchParams.get('ids')
   

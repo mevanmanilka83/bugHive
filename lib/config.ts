@@ -70,6 +70,34 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 })
 
+/** Server-only Supabase client using the service role key. Bypasses RLS. Use for server actions that already validate the user (e.g. voting). */
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null
+
+export function getSupabaseAdmin(): ReturnType<typeof createClient> {
+  if (typeof window !== 'undefined') {
+    throw new Error('getSupabaseAdmin() must only be used on the server')
+  }
+  const serviceKey = env.supabaseServiceKey
+  if (!serviceKey || !serviceKey.trim()) {
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY is required for server-side operations that bypass RLS (e.g. voting). ' +
+      'Set it in your environment. Find it in Supabase Dashboard → Settings → API.'
+    )
+  }
+  if (serviceKey.startsWith('sb_publishable_')) {
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY must be the service_role secret (long JWT starting with eyJ...), not the publishable key. ' +
+      'In Supabase Dashboard → Settings → API, use the "service_role" key (click Reveal), not the anon/publishable key.'
+    )
+  }
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
+  }
+  return _supabaseAdmin
+}
+
 // ============================================================================
 // AWS S3 CONFIGURATION
 // ============================================================================

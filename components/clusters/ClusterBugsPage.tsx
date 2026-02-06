@@ -13,9 +13,11 @@ import { ClusterMembersDialog } from "./ClusterMembersDialog"
 interface ClusterBugsPageProps {
   clusterId: string
   userId: string
+  /** Link for "Back to Clusters" and error redirects (e.g. "/clusters" or "/dashboard/clusters") */
+  clustersHref?: string
 }
 
-export function ClusterBugsPage({ clusterId, userId }: ClusterBugsPageProps) {
+export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/clusters" }: ClusterBugsPageProps) {
   const router = useRouter()
   const [cluster, setCluster] = React.useState<any | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -29,7 +31,7 @@ export function ClusterBugsPage({ clusterId, userId }: ClusterBugsPageProps) {
         if (!res.ok) {
           if (res.status === 404) {
             toast.error("Cluster not found")
-            router.push("/dashboard/clusters")
+            router.push(clustersHref)
             return
           }
           throw new Error("Failed to fetch cluster")
@@ -38,7 +40,7 @@ export function ClusterBugsPage({ clusterId, userId }: ClusterBugsPageProps) {
         setCluster(data?.cluster || null)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Failed to load cluster")
-        router.push("/dashboard/clusters")
+        router.push(clustersHref)
       } finally {
         setLoading(false)
       }
@@ -66,7 +68,7 @@ export function ClusterBugsPage({ clusterId, userId }: ClusterBugsPageProps) {
         <Button
           variant="outline"
           className="mt-4"
-          onClick={() => router.push("/dashboard/clusters")}
+          onClick={() => router.push(clustersHref)}
         >
           <IconArrowLeft className="size-4 mr-2" />
           Back to Clusters
@@ -84,7 +86,7 @@ export function ClusterBugsPage({ clusterId, userId }: ClusterBugsPageProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push("/dashboard/clusters")}
+          onClick={() => router.push(clustersHref)}
           className="mb-4"
         >
           <IconArrowLeft className="size-4 mr-2" />

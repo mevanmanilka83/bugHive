@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { type BugDialogErrors } from "@/lib"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,6 +25,8 @@ type Props = {
   environmentOs: string
   environmentDevice: string
   environmentVersion: string
+  errors?: BugDialogErrors
+  canNext?: boolean
   onChangeSteps: (value: string) => void
   onChangeTags: (value: string) => void
   onChangeSources: (value: string) => void
@@ -58,6 +61,8 @@ export function BugReportStep4Details({
   onUpload,
   onRemove,
   formatFileSize,
+  errors = {},
+  canNext = true,
   onReview,
   onBack,
   onCancel,
@@ -127,14 +132,18 @@ export function BugReportStep4Details({
       <Separator />
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="bug-steps">Steps to Reproduce</Label>
+        <Label htmlFor="bug-steps">Steps to Reproduce <span className="text-red-500">*</span></Label>
         <Textarea
           id="bug-steps"
           placeholder={"1) Go to ...\n2) Click ...\n3) Observe ..."}
           value={stepsToReproduce}
           onChange={(e) => onChangeSteps(e.target.value)}
           rows={5}
+          className={errors.steps_to_reproduce ? "border-red-500" : ""}
         />
+        {errors.steps_to_reproduce && (
+          <p className="text-sm text-red-500">{errors.steps_to_reproduce}</p>
+        )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
@@ -211,7 +220,7 @@ export function BugReportStep4Details({
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemove(attachment.id)}
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 rounded-full"
                   >
                     <IconX className="size-4" />
                   </Button>
@@ -223,10 +232,10 @@ export function BugReportStep4Details({
       </div>
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="outline" onClick={onBack} className="rounded-full px-4">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onReview}>Review</Button>
+          <Button variant="outline" onClick={onCancel} className="rounded-full px-4">Cancel</Button>
+          <Button onClick={onReview} disabled={!canNext} className="rounded-full px-4">Review</Button>
         </div>
       </div>
     </div>

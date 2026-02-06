@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconReport } from "@tabler/icons-react"
+import { Check } from "lucide-react"
 import { toast } from "sonner"
 import { z } from "zod"
 import { getBugReportSchema } from "@/lib"
@@ -9,7 +10,6 @@ import { type BugPayload, type BugDialogErrors, type BugFormData } from "@/lib"
 import { createBugReport } from "@/app/actions/bug/BugReport"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
 import BugReportStep1Basic from "@/components/bugs/reports/BugReportStep1Basic"
 import BugReportStep2Priority from "@/components/bugs/reports/BugReportStep2Priority"
 import BugReportStep3Behavior from "@/components/bugs/reports/BugReportStep3Behavior"
@@ -108,8 +108,8 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     const stepFields: Record<number, (keyof BugPayload)[]> = {
       1: ['title', 'description'], // Required fields
       2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
-      3: [], // Optional fields - no validation needed
-      4: [], // Optional fields - no validation needed
+      3: ['expected_behavior', 'actual_behavior'], // Behavior step: require both
+      4: ['steps_to_reproduce'], // Details step: require steps to reproduce
       5: [] // Review step
     }
 
@@ -340,6 +340,8 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
   const canNextFromStep1 = React.useMemo(() => validateStep(1), [title, description, errors])
   const canNextFromStep2 = React.useMemo(() => validateStep(2), [priority, visibility, errors])
+  const canNextFromStep3 = React.useMemo(() => validateStep(3), [expectedBehavior, actualBehavior, errors])
+  const canNextFromStep4 = React.useMemo(() => validateStep(4), [stepsToReproduce, errors])
 
   if (!mounted) {
     return (
@@ -363,19 +365,87 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
           <DialogTitle>Report a bug</DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className={`font-medium ${step === 1 ? "text-foreground" : ""}`}>1. Basic Info</div>
-          <Separator orientation="vertical" className="h-3" />
-          <div className={`font-medium ${step === 2 ? "text-foreground" : ""}`}>2. Priority</div>
-          <Separator orientation="vertical" className="h-3" />
-          <div className={`font-medium ${step === 3 ? "text-foreground" : ""}`}>3. Behavior</div>
-          <Separator orientation="vertical" className="h-3" />
-          <div className={`font-medium ${step === 4 ? "text-foreground" : ""}`}>4. Details</div>
-          <Separator orientation="vertical" className="h-3" />
-          <div className={`font-medium ${step === 5 ? "text-foreground" : ""}`}>5. Review</div>
+        {/* Multi-step progress indicator with visible connecting lines */}
+        <div className="w-full py-5">
+          <div className="flex items-start w-full gap-0">
+            {[
+              { num: 1, label: "Basic Info" },
+              { num: 2, label: "Priority" },
+              { num: 3, label: "Behavior" },
+              { num: 4, label: "Details" },
+              { num: 5, label: "Review" },
+            ].map(({ num, label }, index) => {
+              const isCompleted = step > num
+              const isCurrent = step === num
+              const isFuture = step < num
+              const showConnector = index < 4
+              return (
+                <React.Fragment key={num}>
+                  <div className="flex flex-col items-center shrink-0">
+                    {/* Step circle */}
+                    <div
+                      className={`
+                        relative flex items-center justify-center size-9 rounded-full border-2 transition-all duration-300 ease-out
+                        ${isCompleted
+                          ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                          : ""
+                        }
+                        ${isCurrent
+                          ? "bg-primary/10 border-primary text-primary font-semibold scale-110 ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
+                          : ""
+                        }
+                        ${isFuture
+                          ? "border-muted-foreground/25 bg-muted/40 text-muted-foreground"
+                          : ""
+                        }
+                      `}
+                    >
+                      {isCompleted ? (
+                        <Check className="size-5 shrink-0" strokeWidth={2.5} />
+                      ) : (
+                        <span className="text-sm font-semibold">{num}</span>
+                      )}
+                    </div>
+                    <span
+                      className={`
+                        mt-2 text-xs font-medium transition-colors duration-200 text-center whitespace-nowrap
+                        ${isCompleted ? "text-primary" : ""}
+                        ${isCurrent ? "text-foreground font-semibold" : ""}
+                        ${isFuture ? "text-muted-foreground" : ""}
+                      `}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  {/* Connecting line: extends to circle edges like reference */}
+                  {showConnector && (
+                    <div
+                      className="shrink-0 mt-4 flex items-center px-0.5"
+                      style={{ width: 120 }}
+                      aria-hidden
+                    >
+                      <div
+                        className="w-full overflow-hidden rounded-full"
+                        style={{
+                          height: 2,
+                          backgroundColor: "rgb(163 163 163)",
+                        }}
+                      >
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+                          style={{ width: step > num ? "100%" : "0%" }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </div>
         </div>
 
         {step === 1 && (
+          <div key="step-1" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
           <BugReportStep1Basic
             title={title}
             description={description}
@@ -386,9 +456,11 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             onNext={() => { if (validateStepWithErrors(1)) setStep(2) }}
             onCancel={() => setOpen(false)}
           />
+          </div>
         )}
 
         {step === 2 && (
+          <div key="step-2" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
           <BugReportStep2Priority
             priority={priority}
             visibility={visibility}
@@ -401,22 +473,27 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             onCancel={() => setOpen(false)}
             hideVisibility={!!clusterId}
           />
+          </div>
         )}
 
         {step === 3 && (
+          <div key="step-3" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
           <BugReportStep3Behavior
             expectedBehavior={expectedBehavior}
             actualBehavior={actualBehavior}
             errors={errors}
+            canNext={canNextFromStep3}
             onChangeExpected={(v) => { setExpectedBehavior(v); if (errors.expected_behavior) setErrors(prev => ({ ...prev, expected_behavior: '' })) }}
             onChangeActual={(v) => { setActualBehavior(v); if (errors.actual_behavior) setErrors(prev => ({ ...prev, actual_behavior: '' })) }}
-            onNext={() => setStep(4)}
+            onNext={() => { if (validateStepWithErrors(3)) setStep(4) }}
             onBack={() => setStep(2)}
             onCancel={() => setOpen(false)}
           />
+          </div>
         )}
 
         {step === 4 && (
+          <div key="step-4" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
           <BugReportStep4Details
             stepsToReproduce={stepsToReproduce}
             tagsInput={tagsInput}
@@ -426,7 +503,8 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             environmentOs={environmentOs}
             environmentDevice={environmentDevice}
             environmentVersion={environmentVersion}
-            onChangeSteps={(v) => setStepsToReproduce(v)}
+            errors={errors}
+            onChangeSteps={(v) => { setStepsToReproduce(v); if (errors.steps_to_reproduce) setErrors(prev => ({ ...prev, steps_to_reproduce: '' })) }}
             onChangeTags={(v) => setTagsInput(v)}
             onChangeSources={(v) => setSourcesInput(v)}
             onChangeEnvironmentBrowser={(v) => setEnvironmentBrowser(v)}
@@ -436,13 +514,16 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             onUpload={handleFileUpload}
             onRemove={(id) => removeAttachment(id)}
             formatFileSize={formatFileSize}
-            onReview={() => setStep(5)}
+            canNext={canNextFromStep4}
+            onReview={() => { if (validateStepWithErrors(4)) setStep(5) }}
             onBack={() => setStep(3)}
             onCancel={() => setOpen(false)}
           />
+          </div>
         )}
 
         {step === 5 && (
+          <div key="step-5" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
           <BugReportStep5Review
             title={title}
             description={description}
@@ -464,6 +545,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             onSubmit={handleSubmit}
             hideVisibility={!!clusterId}
           />
+          </div>
         )}
       </DialogContent>
     </Dialog>

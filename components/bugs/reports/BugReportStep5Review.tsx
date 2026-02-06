@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { BugDescriptionContent } from "@/components/bugs/BugDescriptionContent"
 import { IconAlertTriangle, IconDeviceDesktop, IconEye, IconLock, IconReport, IconTags, IconUsers } from "@tabler/icons-react"
 
 type Props = {
@@ -63,7 +64,9 @@ export function BugReportStep5Review({
               </div>
               <div>
                 <div className="font-medium text-sm">Description</div>
-                <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded whitespace-pre-wrap max-h-20 overflow-y-auto">{description || "(No description)"}</div>
+                <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded max-h-20 overflow-y-auto">
+                <BugDescriptionContent content={description} fallback="(No description)" className="text-muted-foreground" />
+              </div>
               </div>
             </div>
           </div>
@@ -174,10 +177,10 @@ export function BugReportStep5Review({
       </div>
 
       <div className="flex justify-between pt-4 border-t">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="outline" onClick={onBack} className="rounded-full px-4">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancel</Button>
-          <Button onClick={onSubmit} disabled={isSubmitting}>
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="rounded-full px-4">Cancel</Button>
+          <Button onClick={onSubmit} disabled={isSubmitting} className="rounded-full px-4">
             {isSubmitting ? "Submitting..." : "Submit Bug Report"}
           </Button>
         </div>

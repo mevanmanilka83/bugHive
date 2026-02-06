@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
 import { type SolutionDialogErrors } from "@/lib"
 
 interface SolutionStep1BasicProps {
@@ -43,19 +43,18 @@ export default function SolutionStep1Basic({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="solution-description">Solution Description <span className="text-red-500">*</span></Label>
-        <Textarea
-          id="solution-description"
-          placeholder="Detailed description of the solution, including implementation steps, technical details, and any considerations..."
+        <RichTextEditor
           value={description}
-          onChange={(e) => onChangeDescription(e.target.value)}
-          rows={6}
-          className={errors.description ? "border-red-500" : ""}
+          onChange={onChangeDescription}
+          placeholder="Detailed description of the solution, including implementation steps, technical details, and any considerations..."
+          hasError={!!errors.description}
+          minHeight="180px"
         />
         {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={onNext} disabled={!canNext}>Next</Button>
+        <Button variant="outline" onClick={onCancel} className="rounded-full">Cancel</Button>
+        <Button onClick={onNext} disabled={!canNext} className="rounded-full">Next</Button>
       </div>
     </div>
   )

@@ -9,6 +9,7 @@ type Props = {
   expectedBehavior: string
   actualBehavior: string
   errors: BugDialogErrors
+  canNext?: boolean
   onChangeExpected: (value: string) => void
   onChangeActual: (value: string) => void
   onNext: () => void
@@ -20,6 +21,7 @@ export function BugReportStep3Behavior({
   expectedBehavior,
   actualBehavior,
   errors,
+  canNext = true,
   onChangeExpected,
   onChangeActual,
   onNext,
@@ -29,7 +31,7 @@ export function BugReportStep3Behavior({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="bug-expected">Expected Behavior</Label>
+        <Label htmlFor="bug-expected">Expected Behavior <span className="text-red-500">*</span></Label>
         <Textarea
           id="bug-expected"
           placeholder="What should happen?"
@@ -41,7 +43,7 @@ export function BugReportStep3Behavior({
         {errors.expected_behavior && <p className="text-sm text-red-500">{errors.expected_behavior}</p>}
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="bug-actual">Actual Behavior</Label>
+        <Label htmlFor="bug-actual">Actual Behavior <span className="text-red-500">*</span></Label>
         <Textarea
           id="bug-actual"
           placeholder="What actually happens?"
@@ -53,10 +55,10 @@ export function BugReportStep3Behavior({
         {errors.actual_behavior && <p className="text-sm text-red-500">{errors.actual_behavior}</p>}
       </div>
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="outline" onClick={onBack} className="rounded-full px-4">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onNext}>Next</Button>
+          <Button variant="outline" onClick={onCancel} className="rounded-full px-4">Cancel</Button>
+          <Button onClick={onNext} disabled={!canNext} className="rounded-full px-4">Next</Button>
         </div>
       </div>
     </div>

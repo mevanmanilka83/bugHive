@@ -21,9 +21,11 @@ import { getClusters, deleteCluster } from "@/app/actions/cluster"
 
 interface ClustersListProps {
   userId: string
+  /** Base path for cluster links (e.g. "/clusters" for homepage UI, "/dashboard" for dashboard) */
+  basePath?: string
 }
 
-export function ClustersList({ userId }: ClustersListProps) {
+export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListProps) {
   const router = useRouter()
   const [clusters, setClusters] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -106,7 +108,7 @@ export function ClustersList({ userId }: ClustersListProps) {
             {clusters.length} cluster{clusters.length !== 1 ? 's' : ''}
           </p>
         )}
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)} className="rounded-full px-4">
           <IconPlus className="size-4 mr-2" />
           Create Cluster
         </Button>
@@ -145,7 +147,7 @@ export function ClustersList({ userId }: ClustersListProps) {
                   if ((e.target as HTMLElement).closest('button')) {
                     return
                   }
-                  router.push(`/dashboard/clusters/${cluster.id}`)
+                  router.push(basePath === "/clusters" ? `/clusters/${cluster.id}` : `/dashboard/clusters/${cluster.id}`)
                 }}
               >
                 <CardHeader>

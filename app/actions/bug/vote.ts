@@ -2,7 +2,7 @@
 
 import {
   ensureValidUUID,
-  supabase,
+  getSupabaseAdmin,
   requireAuth,
   createErrorResponse,
   handleSupabaseError,
@@ -35,9 +35,10 @@ export async function voteOnBug(
     }
     const { session } = authResult
     const userId = ensureValidUUID(session.user.id)
+    const db = getSupabaseAdmin()
 
     // Validate bug exists
-    const { data: bug, error: bugError } = await supabase
+    const { data: bug, error: bugError } = await db
       .from('bugs')
       .select('id')
       .eq('id', ensureValidUUID(bugId))
@@ -51,7 +52,7 @@ export async function voteOnBug(
     }
 
     // Check if user already voted
-    const { data: existingVote, error: voteError } = await supabase
+    const { data: existingVote, error: voteError } = await db
       .from('bug_votes')
       .select('id, vote_type')
       .eq('bug_id', ensureValidUUID(bugId))
@@ -63,10 +64,9 @@ export async function voteOnBug(
     }
 
     if (existingVote) {
-      // User already voted - can only remove their vote, not change it
       if (existingVote.vote_type === voteType) {
         // Same vote type - remove the vote (toggle off)
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await db
           .from('bug_votes')
           .delete()
           .eq('id', existingVote.id)
@@ -75,29 +75,19 @@ export async function voteOnBug(
           return handleSupabaseError(deleteError, 'Failed to remove vote')
         }
       } else {
-        // Different vote type - user already voted, cannot change vote
-        // Return current vote status without making changes
-        const { data: bugWithVotes, error: fetchError } = await supabase
-          .from('bugs')
-          .select('upvotes_count, downvotes_count')
-          .eq('id', ensureValidUUID(bugId))
-          .single()
+        // Different vote type - switch vote (update row)
+        const { error: updateError } = await db
+          .from('bug_votes')
+          .update({ vote_type: voteType, updated_at: new Date().toISOString() })
+          .eq('id', existingVote.id)
 
-        if (fetchError) {
-          return handleSupabaseError(fetchError, 'Failed to fetch vote counts')
-        }
-
-        return {
-          success: true,
-          bug_id: bugId,
-          vote_type: existingVote.vote_type,
-          upvotes_count: bugWithVotes?.upvotes_count || 0,
-          downvotes_count: bugWithVotes?.downvotes_count || 0
+        if (updateError) {
+          return handleSupabaseError(updateError, 'Failed to change vote')
         }
       }
     } else {
       // New vote - insert
-      const { error: insertError } = await supabase
+      const { error: insertError } = await db
         .from('bug_votes')
         .insert({
           bug_id: ensureValidUUID(bugId),
@@ -111,7 +101,7 @@ export async function voteOnBug(
     }
 
     // Get updated vote counts and user's current vote
-    const { data: bugWithVotes, error: fetchError } = await supabase
+    const { data: bugWithVotes, error: fetchError } = await db
       .from('bugs')
       .select('upvotes_count, downvotes_count')
       .eq('id', ensureValidUUID(bugId))
@@ -122,7 +112,7 @@ export async function voteOnBug(
     }
 
     // Get user's current vote status
-    const { data: userVote } = await supabase
+    const { data: userVote } = await db
       .from('bug_votes')
       .select('vote_type')
       .eq('bug_id', ensureValidUUID(bugId))
@@ -149,7 +139,8 @@ export async function getUserVote(
   userId: string
 ): Promise<ActionResponse<{ vote_type: VoteType | null }>> {
   try {
-    const { data: vote, error } = await supabase
+    const db = getSupabaseAdmin()
+    const { data: vote, error } = await db
       .from('bug_votes')
       .select('vote_type')
       .eq('bug_id', ensureValidUUID(bugId))

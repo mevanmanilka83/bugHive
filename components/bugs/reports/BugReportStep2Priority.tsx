@@ -79,10 +79,10 @@ export function BugReportStep2Priority({
         </div>
       )}
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="outline" onClick={onBack} className="rounded-full px-4">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onNext} disabled={!canNext}>Next</Button>
+          <Button variant="outline" onClick={onCancel} className="rounded-full px-4">Cancel</Button>
+          <Button onClick={onNext} disabled={!canNext} className="rounded-full px-4">Next</Button>
         </div>
       </div>
     </div>

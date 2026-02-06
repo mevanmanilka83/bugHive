@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
 import { type BugDialogErrors } from "@/lib"
 
 type Props = {
@@ -42,19 +42,18 @@ export function BugReportStep1Basic({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="bug-desc">Description <span className="text-red-500">*</span></Label>
-        <Textarea
-          id="bug-desc"
-          placeholder="What's happening? Brief overview of the issue."
+        <RichTextEditor
           value={description}
-          onChange={(e) => onChangeDescription(e.target.value)}
-          rows={4}
-          className={errors.description ? "border-red-500" : ""}
+          onChange={onChangeDescription}
+          placeholder="What's happening? Brief overview of the issue."
+          hasError={!!errors.description}
+          minHeight="160px"
         />
         {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={onNext} disabled={!canNext}>Next</Button>
+        <Button variant="outline" onClick={onCancel} className="rounded-full px-4">Cancel</Button>
+        <Button onClick={onNext} disabled={!canNext} className="rounded-full px-4">Next</Button>
       </div>
     </div>
   )

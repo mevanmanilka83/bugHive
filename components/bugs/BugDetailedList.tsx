@@ -14,6 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { VoteButtons } from "@/components/bugs/VoteButtons"
 import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 import { cn } from "@/lib/utils"
+import { stripHtml } from "@/lib/utils-client"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,9 @@ interface BugDetailedListProps {
   onOpenFilters?: () => void
   filtersOpen?: boolean
   renderFiltersPanel?: () => React.ReactNode
+  /** When the bug creator is the current user, use this name if batch user fetch didn't return them */
+  currentUserName?: string
+  currentUserImage?: string
 }
 
 type SortOption =
@@ -58,6 +62,8 @@ export function BugDetailedList({
   onOpenFilters,
   filtersOpen,
   renderFiltersPanel,
+  currentUserName,
+  currentUserImage,
 }: BugDetailedListProps) {
   const [sortBy, setSortBy] = React.useState<SortOption>("newest")
 
@@ -362,9 +368,10 @@ export function BugDetailedList({
           const created = createdAt ? new Date(createdAt) : new Date()
           const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
           const description = bug.description || ""
-          const descriptionSnippet = description.length > 200 
-            ? description.substring(0, 200) + "..." 
-            : description
+          const plainDescription = stripHtml(description)
+          const descriptionSnippet = plainDescription.length > 200 
+            ? plainDescription.substring(0, 200) + "..." 
+            : plainDescription
           const tags = Array.isArray(bug.tags) ? bug.tags : []
           const upvotes = bug.upvotes_count || 0
           const downvotes = bug.downvotes_count || 0
@@ -373,9 +380,12 @@ export function BugDetailedList({
           const views = bug.views || 0
 
           const user = bug.created_by ? userInfo[bug.created_by] : null
-          const userName = user?.name || 'Unknown'
-          const userImage = user?.image
-          const userReputation = user?.reputation || 0
+          const isCurrentUserCreator = bug.created_by === userId
+          const userName =
+            user?.name ||
+            (isCurrentUserCreator && currentUserName ? currentUserName : 'Unknown')
+          const userImage = user?.image ?? (isCurrentUserCreator ? currentUserImage : undefined)
+          const userReputation = user?.reputation ?? 0
 
           return (
             <div
@@ -478,7 +488,9 @@ export function BugDetailedList({
                     >
                       {userName}
                     </a>
-                    <span className="text-muted-foreground font-medium text-xs">{userReputation}</span>
+                    {userReputation > 0 && (
+                      <span className="text-muted-foreground font-medium text-xs">{userReputation}</span>
+                    )}
                   </div>
                 </div>
                 <div className="mt-auto text-muted-foreground text-right text-xs">
@@ -492,7 +504,7 @@ export function BugDetailedList({
 
       {/* Pagination */}
       {totalPages > 0 && (
-        <div className="border-t bg-background/60 px-3 py-4">
+        <div className="border-t bg-background/60 px-3 py-2">
           <Pagination className="mx-0">
             <PaginationContent>
               <PaginationItem>

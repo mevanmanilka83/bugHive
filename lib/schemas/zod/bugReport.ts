@@ -35,6 +35,7 @@ export function getBugReportSchema() {
       .max(1000, "Actual behavior must be less than 1000 characters")
       .optional(),
     steps_to_reproduce: z.string()
+      .min(5, "Steps to reproduce must be at least 5 characters")
       .max(2000, "Steps to reproduce must be less than 2000 characters")
       .optional(),
     tags: z.array(z.string().min(1, "Tag cannot be empty").max(50, "Tag must be less than 50 characters"))

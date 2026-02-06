@@ -27,7 +27,7 @@ interface CreateClusterDialogProps {
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="rounded-full px-4">
       {pending ? "Creating..." : "Create Cluster"}
     </Button>
   )
@@ -100,7 +100,7 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-full px-4">
               Cancel
             </Button>
             <SubmitButton />

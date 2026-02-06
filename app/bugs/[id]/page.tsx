@@ -1,43 +1,53 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 import { IconBug, IconHome2, IconTag, IconUsersGroup } from "@tabler/icons-react"
-import { auth } from "@/lib"
-import { BugExploreList } from "@/components/bugs/BugExploreList"
-import { Button } from "@/components/ui/button"
-import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
+import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
+import { BugDetailsView } from "@/components/bugs/BugDetailsView"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { SidebarDashboardActions } from "@/components/SidebarDashboardActions"
+import { notFound } from "next/navigation"
 
-export default async function Home() {
+export default async function BugDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const session = await auth()
-  const userId = session?.user.id ?? ""
+  const { id } = await params
+  const bugId = ensureValidUUID(id)
+
+  let bug: Awaited<ReturnType<typeof getSingleRecord>>
+  try {
+    bug = await getSingleRecord("bugs", bugId)
+  } catch {
+    notFound()
+  }
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
-        {/* Top navigation – simple, public-friendly */}
+        {/* Top navigation – same as homepage */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-md">
-                <GalleryVerticalEnd className="h-4 w-4" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-base font-semibold leading-tight">BugHive</span>
-              </div>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <HomeHeaderUser session={session} />
-          </div>
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-2">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-md">
+                  <GalleryVerticalEnd className="h-4 w-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-base font-semibold leading-tight">BugHive</span>
+                </div>
+              </Link>
+            </div>
+            <div className="flex items-center gap-2">
+              <HomeHeaderUser session={session} />
+            </div>
           </div>
         </header>
 
-        {/* Main content – StackOverflow-like public bug list with left sidebar */}
+        {/* Main content – same layout as homepage with left sidebar */}
         <div className="flex flex-1 gap-6 py-6">
-          {/* Left sidebar (public navigation) */}
+          {/* Left sidebar (same as homepage) */}
           <aside className="hidden w-52 shrink-0 flex-col justify-between text-sm text-muted-foreground md:flex">
             <nav className="space-y-1">
               <Link
@@ -49,27 +59,27 @@ export default async function Home() {
               </Link>
               <Link
                 href="/"
-                className="flex items-center gap-2 rounded-full bg-muted px-3 py-2 text-sm font-medium text-foreground"
+                className="flex items-center gap-2 rounded-full px-3 py-2 text-sm hover:bg-muted"
               >
                 <IconBug className="size-4" />
                 <span>Public bugs</span>
               </Link>
               <Link
-                href={session ? "/mybugs" : "/auth/signin"}
+                href="/mybugs"
                 className="flex items-center gap-2 rounded-full px-3 py-2 text-sm hover:bg-muted"
               >
                 <IconBug className="size-4" />
                 <span>My bugs</span>
               </Link>
               <Link
-                href={session ? "/dashboard/bugs" : "/auth/signin"}
+                href="/dashboard/bugs"
                 className="flex items-center gap-2 rounded-full px-3 py-2 text-sm hover:bg-muted"
               >
                 <IconTag className="size-4" />
                 <span>Tags</span>
               </Link>
               <Link
-                href={session ? "/clusters" : "/auth/signin"}
+                href="/clusters"
                 className="flex items-center gap-2 rounded-full px-3 py-2 text-sm hover:bg-muted"
               >
                 <IconUsersGroup className="size-4" />
@@ -81,38 +91,22 @@ export default async function Home() {
             </div>
           </aside>
 
-          {/* Main list column */}
-          <section className="flex-1">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h1 className="mb-1 text-2xl font-semibold">Newest Bugs</h1>
-                <p className="text-sm text-muted-foreground">
-                  Discover real bugs reported by the BugHive community.
-                </p>
-              </div>
-              <div className="hidden sm:block">
-                {session ? (
-                  <BugReportDialog />
-                ) : (
-                  <Button asChild className="rounded-full px-4">
-                    <Link href="/auth/signin">
-                      Report Bug
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <BugExploreList
-              userId={userId}
-              showTitle={false}
-              currentUserName={session?.user?.name ?? session?.user?.email ?? undefined}
-              currentUserImage={session?.user?.image ?? undefined}
+          {/* Main content column */}
+          <section className="flex-1 min-w-0">
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
+            >
+              ← Back to Public bugs
+            </Link>
+            <BugDetailsView
+              bug={bug}
+              userId={session?.user?.id ?? undefined}
             />
           </section>
         </div>
 
-        {/* Footer */}
+        {/* Footer – same as homepage */}
         <footer className="mt-auto border-t bg-background">
           <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>

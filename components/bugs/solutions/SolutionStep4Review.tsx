@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { BugDescriptionContent } from "@/components/bugs/BugDescriptionContent"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 
@@ -50,7 +51,9 @@ export default function SolutionStep4Review({
         </div>
         <div>
           <Label className="text-sm font-medium text-muted-foreground">Description</Label>
-          <p className="text-sm whitespace-pre-wrap">{description || "—"}</p>
+          <div className="text-sm">
+            <BugDescriptionContent content={description} fallback="—" />
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
@@ -87,10 +90,10 @@ export default function SolutionStep4Review({
       </div>
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
+        <Button variant="ghost" onClick={onBack} className="rounded-full">Back</Button>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancel</Button>
-          <Button onClick={onSubmit} disabled={isSubmitting || !title.trim() || !description.trim() || !solutionType}>
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="rounded-full">Cancel</Button>
+          <Button onClick={onSubmit} disabled={isSubmitting || !title.trim() || !description.trim() || !solutionType} className="rounded-full">
             {isSubmitting ? "Submitting..." : "Submit Solution"}
           </Button>
         </div>

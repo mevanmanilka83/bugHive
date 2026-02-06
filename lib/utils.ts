@@ -20,7 +20,9 @@ export {
   generateUUID,
   generateUUIDFromEmailSync,
   ensureValidUUID,
-  extractUsernameFromEmail
+  extractUsernameFromEmail,
+  stripHtml,
+  isHtmlContent
 } from "./utils-client"
 
 // ============================================================================
