@@ -90,7 +90,7 @@ export default function SolutionStep4Review({
       </div>
 
       <div className="flex justify-between">
-        <Button variant="ghost" onClick={onBack} className="rounded-full">Back</Button>
+        <Button variant="outline" onClick={onBack} className="rounded-full">Back</Button>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="rounded-full">Cancel</Button>
           <Button onClick={onSubmit} disabled={isSubmitting || !title.trim() || !description.trim() || !solutionType} className="rounded-full">

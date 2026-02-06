@@ -108,7 +108,7 @@ export function BugDetailsForm({ bug, userId, onStatusChange }: BugDetailsFormPr
       </div>
       <div className="flex flex-col gap-1.5">
         <Label>Description</Label>
-        <div className="rounded-md border border-input bg-muted/30 px-3 py-2 min-h-[100px]">
+        <div className="rounded-md border border-input bg-background px-3 py-2 min-h-[100px] opacity-50 cursor-not-allowed">
           <BugDescriptionContent content={bug.description ?? ""} fallback="—" />
         </div>
       </div>

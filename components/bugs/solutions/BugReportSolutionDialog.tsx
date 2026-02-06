@@ -3,10 +3,10 @@
 import * as React from "react"
 import { z } from "zod"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
 import { createBugSolution } from "@/app/actions/bug/BugSolution"
 import { toast } from "sonner"
 import { IconBulb } from "@tabler/icons-react"
+import { Check } from "lucide-react"
 import { getBugSolutionSchema } from "@/lib"
 import { type SolutionPayload, type SolutionDialogErrors, type SolutionFormData } from "@/lib"
 import SolutionStep1Basic from "./SolutionStep1Basic"
@@ -221,7 +221,8 @@ export function SolutionDialog({
         window.dispatchEvent(new CustomEvent('solution:created', { detail: { solution: result.solution, bugId: bugData.id } }))
       }
 
-      toast.success("Solution submitted")
+      // Use neutral toast styling instead of green success variant
+      toast("Solution submitted")
       onOpenChange(false)
     } catch (err: any) {
       toast.error(err?.message || "Something went wrong")
@@ -347,15 +348,75 @@ export function SolutionDialog({
             </div>
           )}
 
-          {/* Step Progress */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className={`font-medium ${step === 1 ? "text-foreground" : ""}`}>1. Basic Info</div>
-            <Separator orientation="vertical" className="h-3" />
-            <div className={`font-medium ${step === 2 ? "text-foreground" : ""}`}>2. Solution Type</div>
-            <Separator orientation="vertical" className="h-3" />
-            <div className={`font-medium ${step === 3 ? "text-foreground" : ""}`}>3. Details</div>
-            <Separator orientation="vertical" className="h-3" />
-            <div className={`font-medium ${step === 4 ? "text-foreground" : ""}`}>4. Review</div>
+          {/* Multi-step progress indicator (match bug report style) */}
+          <div className="w-full py-5">
+            <div className="flex items-start w-full gap-0">
+              {[
+                { num: 1, label: "Basic Info" },
+                { num: 2, label: "Solution Type" },
+                { num: 3, label: "Details" },
+                { num: 4, label: "Review" },
+              ].map(({ num, label }, index) => {
+                const isCompleted = step > num
+                const isCurrent = step === num
+                const isFuture = step < num
+                const showConnector = index < 3
+
+                return (
+                  <React.Fragment key={num}>
+                    <div className="flex flex-col items-center shrink-0">
+                      {/* Step circle */}
+                      <div
+                        className={`
+                          relative flex items-center justify-center size-9 rounded-full border-2 transition-all duration-300 ease-out
+                          ${isCompleted ? "bg-primary border-primary text-primary-foreground shadow-sm" : ""}
+                          ${isCurrent ? "bg-primary/10 border-primary text-primary font-semibold scale-110 ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : ""}
+                          ${isFuture ? "border-muted-foreground/25 bg-muted/40 text-muted-foreground" : ""}
+                        `}
+                      >
+                        {isCompleted ? (
+                          <Check className="size-5 shrink-0" strokeWidth={2.5} />
+                        ) : (
+                          <span className="text-sm font-semibold">{num}</span>
+                        )}
+                      </div>
+                      <span
+                        className={`
+                          mt-2 text-xs font-medium transition-colors duration-200 text-center whitespace-nowrap
+                          ${isCompleted ? "text-primary" : ""}
+                          ${isCurrent ? "text-foreground font-semibold" : ""}
+                          ${isFuture ? "text-muted-foreground" : ""}
+                        `}
+                      >
+                        {label}
+                      </span>
+                    </div>
+
+                    {/* Connecting line between steps */}
+                    {showConnector && (
+                      <div
+                        className="shrink-0 mt-4 flex items-center px-0.5"
+                        style={{ width: 120 }}
+                        aria-hidden
+                      >
+                        <div
+                          className="w-full overflow-hidden rounded-full"
+                          style={{
+                            height: 2,
+                            backgroundColor: "rgb(163 163 163)",
+                          }}
+                        >
+                          <div
+                            className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+                            style={{ width: step > num ? "100%" : "0%" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
+                )
+              })}
+            </div>
           </div>
 
           {/* Step 1: Basic Information */}

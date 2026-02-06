@@ -41,45 +41,45 @@ function stripEmptyParagraphs(html: string): string {
 function EditorContent({
   value,
   onChange,
-  placeholder,
-  className,
-  hasError,
 }: {
   value: string
   onChange: (html: string) => void
-  placeholder?: string
-  className?: string
-  hasError?: boolean
 }) {
-  const { export: exportApi, import: importApi, listeners } = useEditor()
+  const { commands, listeners } = useEditor()
   const lastEmittedRef = React.useRef<string>(value)
   const initialSync = React.useRef(false)
 
   // Sync initial value into editor (and when parent resets the form)
   React.useEffect(() => {
-    if (!importApi.fromHTML) return
     const normalized = stripEmptyParagraphs(value)
     if (normalized === "" && lastEmittedRef.current === "") return
     if (normalized === lastEmittedRef.current) return
     initialSync.current = true
-    importApi.fromHTML(normalized || "<p></p>").then(() => {
-      lastEmittedRef.current = normalized
+    // Use htmlExtension commands if available
+    if (commands.importFromHTML) {
+      commands.importFromHTML(normalized || "<p></p>", { preventFocus: true }).then(() => {
+        lastEmittedRef.current = normalized
+        initialSync.current = false
+      })
+    } else {
       initialSync.current = false
-    })
-  }, [value, importApi])
+    }
+  }, [value, commands])
 
   // On editor update, export HTML and notify parent
   React.useEffect(() => {
     const unregister = listeners?.registerUpdate?.(() => {
       if (initialSync.current) return
-      exportApi.toHTML?.().then((html) => {
+      // Prefer htmlExtension export command if available
+      if (commands.exportToHTML) {
+        const html = commands.exportToHTML()
         const out = stripEmptyParagraphs(html ?? "")
         lastEmittedRef.current = out
         onChange(out)
-      })
+      }
     })
     return () => unregister?.()
-  }, [listeners, exportApi, onChange])
+  }, [listeners, commands, onChange])
 
   return null
 }
@@ -338,7 +338,7 @@ export function RichTextEditor({
           />
         </div>
       </div>
-      <EditorContent value={value} onChange={onChange} placeholder={placeholder} className={className} hasError={hasError} />
+      <EditorContent value={value} onChange={onChange} />
     </Provider>
   )
 }

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { createSolutionHandler, getMultipleRecords, extractRouteId, successResponse } from "@/lib"
+import { createSolutionHandler, getMultipleRecords, extractRouteId, successResponse, supabase } from "@/lib"
 
 const solutionHandler = createSolutionHandler()
 
@@ -12,8 +12,43 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const bugId = await extractRouteId(context)
-  const solutions = await getMultipleRecords("bug_solution_details", "bug_id", bugId)
-  return successResponse({ solutions })
+
+  const { data: solutions, error } = await supabase
+    .from("bug_solution_details")
+    .select("*")
+    .eq("bug_id", bugId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching solutions:", error)
+    return successResponse({ solutions: [] })
+  }
+
+  const creatorIds = (solutions || [])
+    .map((solution: any) => solution.created_by)
+    .filter((id: string | null) => Boolean(id)) as string[]
+
+  if (creatorIds.length === 0) {
+    return successResponse({ solutions: solutions || [] })
+  }
+
+  const { data: users, error: usersError } = await supabase
+    .from("users")
+    .select("id, name, email, image")
+    .in("id", creatorIds)
+
+  if (usersError) {
+    console.error("Error fetching users:", usersError)
+    return successResponse({ solutions: solutions || [] })
+  }
+
+  const userById = new Map((users || []).map((user: any) => [user.id, user]))
+  const formattedSolutions = (solutions || []).map((solution: any) => ({
+    ...solution,
+    user: userById.get(solution.created_by) || null,
+  }))
+
+  return successResponse({ solutions: formattedSolutions })
 }
 
 export const POST = solutionHandler.POST

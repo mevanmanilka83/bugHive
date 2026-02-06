@@ -1,24 +1,44 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 import { IconBug, IconHome2, IconTag, IconUsersGroup } from "@tabler/icons-react"
-import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
+import { auth, getSingleRecord, ensureValidUUID, supabase } from "@/lib"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
+import { SolutionDetailsForm } from "@/components/bugs/SolutionDetailsForm"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { SidebarDashboardActions } from "@/components/SidebarDashboardActions"
 import { notFound } from "next/navigation"
 
-export default async function BugDetailsPage({
+export default async function BugSolutionDetailsPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ bugId: string; solutionId: string }>
 }) {
   const session = await auth()
-  const { id } = await params
-  const bugId = ensureValidUUID(id)
+  const { bugId, solutionId } = await params
+  const bugUuid = ensureValidUUID(bugId)
+  const solutionUuid = ensureValidUUID(solutionId)
 
   let bug: Awaited<ReturnType<typeof getSingleRecord>>
   try {
-    bug = await getSingleRecord("bugs", bugId)
+    bug = await getSingleRecord("bugs", bugUuid)
+  } catch {
+    notFound()
+  }
+
+  // Fetch the solution details
+  let solution: any = null
+  try {
+    const { data, error } = await supabase
+      .from("bug_solution_details")
+      .select("*")
+      .eq("id", solutionUuid)
+      .eq("bug_id", bugUuid)
+      .single()
+
+    if (error || !data) {
+      notFound()
+    }
+    solution = data
   } catch {
     notFound()
   }
@@ -26,7 +46,7 @@ export default async function BugDetailsPage({
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
-        {/* Top navigation – same as homepage */}
+        {/* Top navigation – same as bug details page */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3">
@@ -45,9 +65,9 @@ export default async function BugDetailsPage({
           </div>
         </header>
 
-        {/* Main content – same layout as homepage with left sidebar */}
+        {/* Main content – same layout as bug details page */}
         <div className="flex flex-1 gap-6 py-6">
-          {/* Left sidebar (same as homepage) */}
+          {/* Left sidebar (same as bug details) */}
           <aside className="hidden w-52 shrink-0 flex-col justify-between text-sm text-muted-foreground md:flex">
             <nav className="space-y-1">
               <Link
@@ -94,19 +114,29 @@ export default async function BugDetailsPage({
           {/* Main content column */}
           <section className="flex-1 min-w-0">
             <Link
-              href="/"
+              href={`/bugs/${bugUuid}`}
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
             >
-              ← Back to Public bugs
+              ← Back to bug details
             </Link>
-            <BugDetailsView
-              bug={bug}
-              userId={session?.user?.id ?? undefined}
-            />
+            <div className="mb-4">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {solution?.title || "Solution details"}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Solution information and details
+              </p>
+            </div>
+            <div className="flex flex-col gap-4 overflow-y-auto text-sm rounded-lg border bg-card p-4 md:p-6">
+              <SolutionDetailsForm
+                solution={solution}
+                userId={session?.user?.id ?? undefined}
+              />
+            </div>
           </section>
         </div>
 
-        {/* Footer – same as homepage */}
+        {/* Footer – same as bug details page */}
         <footer className="mt-auto border-t bg-background">
           <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>
@@ -117,3 +147,4 @@ export default async function BugDetailsPage({
     </main>
   )
 }
+
