@@ -19,6 +19,18 @@ export default async function BugDetailsPage({
   let bug: Awaited<ReturnType<typeof getSingleRecord>>
   try {
     bug = await getSingleRecord("bugs", validatedBugId)
+    
+    // Increment view count
+    try {
+      const { supabase } = await import("@/lib/config")
+      await supabase
+        .from("bugs")
+        .update({ views: (bug.views || 0) + 1 })
+        .eq("id", validatedBugId)
+    } catch (e) {
+      console.error("Failed to increment bug view count:", e)
+      // Don't fail the page load if view count increment fails
+    }
   } catch {
     notFound()
   }

@@ -166,8 +166,8 @@ export function BugDetailedList({
         })
       case "most_viewed":
         return working.sort((a, b) => {
-          const viewsA = a.views || 0
-          const viewsB = b.views || 0
+          const viewsA = a.views || 0 // Dynamic view count
+          const viewsB = b.views || 0 // Dynamic view count
           return viewsB - viewsA
         })
       default:

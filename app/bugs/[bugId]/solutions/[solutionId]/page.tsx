@@ -39,6 +39,17 @@ export default async function BugSolutionDetailsPage({
       notFound()
     }
     solution = data
+    
+    // Increment view count for solution
+    try {
+      await supabase
+        .from("bug_solution_details")
+        .update({ views: (solution.views || 0) + 1 })
+        .eq("id", solutionUuid)
+    } catch (e) {
+      console.error("Failed to increment solution view count:", e)
+      // Don't fail the page load if view count increment fails
+    }
   } catch {
     notFound()
   }
