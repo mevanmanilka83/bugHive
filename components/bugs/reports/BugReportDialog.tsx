@@ -328,7 +328,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         window.dispatchEvent(new CustomEvent('bug:created', { detail: result.bug }))
       }
 
-      toast.success("Bug report created successfully")
+      toast("Bug report created successfully")
       setOpen(false)
       resetForm()
     } catch (err: any) {

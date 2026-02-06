@@ -48,10 +48,27 @@ function EditorContent({
   const { commands, listeners } = useEditor()
   const lastEmittedRef = React.useRef<string>(value)
   const initialSync = React.useRef(false)
+  const hasHydratedRef = React.useRef(false)
 
   // Sync initial value into editor (and when parent resets the form)
   React.useEffect(() => {
     const normalized = stripEmptyParagraphs(value)
+    if (!hasHydratedRef.current) {
+      if (normalized === "") {
+        lastEmittedRef.current = ""
+        hasHydratedRef.current = true
+        return
+      }
+      if (commands.importFromHTML) {
+        initialSync.current = true
+        commands.importFromHTML(normalized || "<p></p>", { preventFocus: true }).then(() => {
+          lastEmittedRef.current = normalized
+          initialSync.current = false
+          hasHydratedRef.current = true
+        })
+      }
+      return
+    }
     if (normalized === "" && lastEmittedRef.current === "") return
     if (normalized === lastEmittedRef.current) return
     initialSync.current = true

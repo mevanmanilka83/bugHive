@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
-import { IconBug, IconHome2, IconTag, IconUsersGroup } from "@tabler/icons-react"
+import { IconBell, IconBug, IconHome2, IconSettings, IconTag, IconUsersGroup } from "@tabler/icons-react"
 import { auth } from "@/lib"
 import { BugExploreList } from "@/components/bugs/BugExploreList"
 import { Button } from "@/components/ui/button"
@@ -76,8 +76,26 @@ export default async function Home() {
                 <span>Teams & clusters</span>
               </Link>
             </nav>
-            <div className="mt-6 border-t pt-4">
-              <SidebarDashboardActions isAuthenticated={!!session} />
+            <div className="mt-6">
+              <nav className="space-y-1 mb-4">
+                <Link
+                  href={session ? "/notifications" : "/auth/signin"}
+                  className="flex items-center gap-2 rounded-full px-3 py-2 text-sm hover:bg-muted"
+                >
+                  <IconBell className="size-4" />
+                  <span>Notifications</span>
+                </Link>
+                <Link
+                  href={session ? "/settings" : "/auth/signin"}
+                  className="flex items-center gap-2 rounded-full px-3 py-2 text-sm hover:bg-muted"
+                >
+                  <IconSettings className="size-4" />
+                  <span>Settings</span>
+                </Link>
+              </nav>
+              <div className="border-t pt-4">
+                <SidebarDashboardActions isAuthenticated={!!session} />
+              </div>
             </div>
           </aside>
 

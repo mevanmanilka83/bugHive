@@ -143,7 +143,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
       <div className="flex flex-col gap-4 overflow-y-auto text-sm rounded-lg border bg-card p-4 md:p-6 mb-6">
         <BugDetailsForm
           bug={currentBug}
-          userId={userId}
+          userId={userId ?? undefined}
           onStatusChange={handleStatusChange}
         />
       </div>
@@ -170,8 +170,8 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                   Add solution
                 </Button>
               ) : (
-                <Button asChild variant="outline" className="rounded-full">
-                  <Link href="/auth/signin">Sign in to add a solution</Link>
+                <Button asChild className="rounded-full">
+                  <Link href="/auth/signin">Add solution</Link>
                 </Button>
               ))}
           </div>

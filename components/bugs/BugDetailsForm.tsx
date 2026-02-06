@@ -4,7 +4,6 @@ import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { BugDescriptionContent } from "@/components/bugs/BugDescriptionContent"
 import {
   Select,
@@ -13,14 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-const STATUS_STYLES: Record<string, { backgroundColor: string; color: string; borderColor: string }> = {
-  open: { backgroundColor: "#0d9488", color: "#ffffff", borderColor: "#0d9488" },
-  closed: { backgroundColor: "#64748b", color: "#ffffff", borderColor: "#64748b" },
-  in_progress: { backgroundColor: "#0284c7", color: "#ffffff", borderColor: "#0284c7" },
-  resolved: { backgroundColor: "#4f46e5", color: "#ffffff", borderColor: "#4f46e5" },
-  reopened: { backgroundColor: "#f59e0b", color: "#ffffff", borderColor: "#f59e0b" },
-}
 
 export interface BugDetailsFormProps {
   bug: {
@@ -88,13 +79,7 @@ export function BugDetailsForm({ bug, userId, onStatusChange }: BugDetailsFormPr
               </SelectContent>
             </Select>
           ) : (
-            <Badge
-              variant="outline"
-              className="capitalize w-fit text-white"
-              style={STATUS_STYLES[status] ?? undefined}
-            >
-              {status.replace(/_/g, " ")}
-            </Badge>
+            <Input value={status.replace(/_/g, " ")} disabled className="capitalize" />
           )}
         </div>
         <div className="flex flex-col gap-1.5">
