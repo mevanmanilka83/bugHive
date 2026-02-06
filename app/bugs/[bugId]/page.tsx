@@ -2,6 +2,7 @@ import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 import { IconBug, IconHome2, IconTag, IconUsersGroup } from "@tabler/icons-react"
 import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
+import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { SidebarDashboardActions } from "@/components/SidebarDashboardActions"
@@ -21,16 +22,7 @@ export default async function BugDetailsPage({
     bug = await getSingleRecord("bugs", validatedBugId)
     
     // Increment view count
-    try {
-      const { supabase } = await import("@/lib/config")
-      await supabase
-        .from("bugs")
-        .update({ views: (bug.views || 0) + 1 })
-        .eq("id", validatedBugId)
-    } catch (e) {
-      console.error("Failed to increment bug view count:", e)
-      // Don't fail the page load if view count increment fails
-    }
+    await incrementViewCount("bugs", validatedBugId)
   } catch {
     notFound()
   }
