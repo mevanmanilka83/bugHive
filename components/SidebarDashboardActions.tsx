@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { signOut } from "next-auth/react"
 
 interface SidebarDashboardActionsProps {
   isAuthenticated: boolean
@@ -11,10 +10,6 @@ interface SidebarDashboardActionsProps {
 export function SidebarDashboardActions({
   isAuthenticated,
 }: SidebarDashboardActionsProps) {
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/" })
-  }
-
   return (
     <div className="flex flex-col gap-2">
       <Button asChild className="w-full rounded-full">
@@ -22,15 +17,6 @@ export function SidebarDashboardActions({
           Dashboard
         </Link>
       </Button>
-      {isAuthenticated && (
-        <Button
-          type="button"
-          className="w-full rounded-full"
-          onClick={handleLogout}
-        >
-          Log out
-        </Button>
-      )}
     </div>
   )
 }
