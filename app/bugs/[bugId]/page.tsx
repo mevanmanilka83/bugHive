@@ -3,6 +3,7 @@ import { GalleryVerticalEnd } from "lucide-react"
 import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
+import { RelatedBugsPanel } from "@/components/bugs/RelatedBugsPanel"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 import { notFound } from "next/navigation"
@@ -28,7 +29,7 @@ export default async function BugDetailsPage({
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4">
         {/* Top navigation – same as homepage */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
@@ -49,7 +50,7 @@ export default async function BugDetailsPage({
         </header>
 
         {/* Main content – same layout as homepage with left sidebar */}
-        <div className="flex flex-1 gap-6 py-6">
+        <div className="flex flex-1 flex-col gap-6 py-6 md:grid md:grid-cols-[200px_minmax(0,1fr)_320px] md:items-start lg:grid-cols-[220px_minmax(0,1fr)_360px] xl:grid-cols-[240px_minmax(0,1fr)_380px]">
           {/* Left sidebar (same as homepage) */}
           <SidebarPublicNav
             active="public"
@@ -59,7 +60,7 @@ export default async function BugDetailsPage({
           />
 
           {/* Main content column */}
-          <section className="flex-1 min-w-0">
+          <section className="min-w-0">
             <Link
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
@@ -71,6 +72,10 @@ export default async function BugDetailsPage({
               userId={session?.user?.id ?? undefined}
             />
           </section>
+
+          <aside className="w-full">
+            <RelatedBugsPanel bugId={bug.id} />
+          </aside>
         </div>
 
         {/* Footer – same as homepage */}

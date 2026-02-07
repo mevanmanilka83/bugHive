@@ -100,7 +100,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {loading ? (
           <Skeleton className="h-5 w-24" />
         ) : (
@@ -108,7 +108,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
             {clusters.length} cluster{clusters.length !== 1 ? 's' : ''}
           </p>
         )}
-        <Button onClick={() => setCreateDialogOpen(true)} className="rounded-full px-4">
+        <Button onClick={() => setCreateDialogOpen(true)} className="w-full rounded-full px-4 sm:w-auto">
           <IconPlus className="size-4 mr-2" />
           Create Cluster
         </Button>

@@ -273,25 +273,26 @@ export function BugDetailedList({
       <div className="mb-6 space-y-2">
         {/* Title and primary actions */}
         {showTitle && (
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-1">All Bugs</h1>
+              <h1 className="text-xl font-bold mb-1 sm:text-3xl">All Bugs</h1>
             </div>
-            <div>
+            <div className="w-full sm:w-auto">
               <BugReportDialog />
             </div>
           </div>
         )}
 
         {/* Count, tabs, and filter – styled similar to StackOverflow */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <p className="shrink-0 text-sm text-muted-foreground">
               {displayCount.toLocaleString()} bugs
             </p>
 
-            {/* Tabs group */}
-            <div className="inline-flex items-center gap-1 rounded-md border bg-background px-1 py-1">
+            {/* Tabs group – horizontal scroll on mobile */}
+            <div className="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
+              <div className="inline-flex flex-nowrap items-center gap-1 rounded-md border bg-background px-1 py-1 min-w-0">
               <button
                 className={cn(
                   "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
@@ -361,6 +362,7 @@ export function BugDetailedList({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             </div>
           </div>
 
@@ -417,10 +419,10 @@ export function BugDetailedList({
           return (
             <div
               key={bug.id}
-              className="flex gap-3 py-3 px-3 border-b hover:bg-muted/50 transition-colors"
+              className="flex gap-2 py-2 px-2 border-b hover:bg-muted/50 transition-colors sm:gap-3 sm:py-3 sm:px-3"
             >
               {/* Left Column - Vote Buttons and Engagement Metrics */}
-              <div className="flex flex-col items-center gap-1 min-w-[70px] flex-shrink-0">
+              <div className="flex flex-col items-center gap-1 min-w-[56px] flex-shrink-0 sm:min-w-[70px]">
                 {/* Vote Buttons */}
                 <VoteButtons
                   bugId={bug.id}
@@ -504,7 +506,7 @@ export function BugDetailedList({
               </div>
 
               {/* Right Column - User Metadata (aligned vertically, date at bottom-right) */}
-              <div className="flex flex-col items-end gap-0.5 min-w-[120px] flex-shrink-0 text-xs">
+              <div className="flex flex-col items-end gap-0.5 min-w-[80px] flex-shrink-0 text-xs sm:min-w-[120px]">
                 <div className="flex items-center gap-1.5">
                   <Avatar className="size-5">
                     <AvatarImage src={userImage || undefined} alt={userName} />

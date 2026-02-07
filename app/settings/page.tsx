@@ -2,6 +2,7 @@ import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 import { requireAuthForPage } from "@/lib"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
+import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 
 export default async function SettingsPage() {
@@ -9,7 +10,7 @@ export default async function SettingsPage() {
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3">
@@ -36,9 +37,9 @@ export default async function SettingsPage() {
             className="hidden md:flex"
           />
 
-          <section className="flex-1">
+          <section className="flex-1 min-w-0">
             <div className="mb-4">
-              <h1 className="mb-1 text-2xl font-semibold">Settings</h1>
+              <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Settings</h1>
               <p className="text-sm text-muted-foreground">
                 Manage your account preferences and notifications.
               </p>
@@ -56,6 +57,7 @@ export default async function SettingsPage() {
           </div>
         </footer>
       </div>
+      <MobileBottomNav active="settings" isAuthenticated />
     </main>
   )
 }

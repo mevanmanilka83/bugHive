@@ -5,6 +5,7 @@ import { BugExploreList } from "@/components/bugs/BugExploreList"
 import { Button } from "@/components/ui/button"
 import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
+import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 
 export default async function Home() {
@@ -13,7 +14,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         {/* Top navigation – simple, public-friendly */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
@@ -45,19 +46,19 @@ export default async function Home() {
           />
 
           {/* Main list column */}
-          <section className="flex-1">
-            <div className="mb-4 flex items-start justify-between gap-4">
+          <section className="flex-1 min-w-0">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="mb-1 text-2xl font-semibold">Newest Bugs</h1>
+                <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Newest Bugs</h1>
                 <p className="text-sm text-muted-foreground">
                   Discover real bugs reported by the BugHive community.
                 </p>
               </div>
-              <div className="hidden sm:block">
+              <div className="w-full sm:w-auto">
                 {session ? (
                   <BugReportDialog />
                 ) : (
-                  <Button asChild className="rounded-full px-4">
+                  <Button asChild className="w-full rounded-full px-4 sm:w-auto">
                     <Link href="/auth/signin">
                       Report Bug
                     </Link>
@@ -83,6 +84,7 @@ export default async function Home() {
           </div>
         </footer>
       </div>
+      <MobileBottomNav active="public" isAuthenticated={!!session} useAuthFallback />
     </main>
   )
 }

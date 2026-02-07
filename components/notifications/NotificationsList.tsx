@@ -185,17 +185,17 @@ export function NotificationsList({ userId }: NotificationsListProps) {
   return (
     <div>
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "unread")}>
-        <div className="mb-4 flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="unread">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="unread" className="flex-1 sm:flex-initial">
               Unread ({unreadCount})
             </TabsTrigger>
-            <TabsTrigger value="all">
+            <TabsTrigger value="all" className="flex-1 sm:flex-initial">
               All ({notifications.length})
             </TabsTrigger>
           </TabsList>
           {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
+            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead} className="w-full sm:w-auto">
               <IconCheck className="size-4 mr-2" />
               Mark all as read
             </Button>
