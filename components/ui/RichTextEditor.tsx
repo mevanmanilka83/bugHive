@@ -115,6 +115,8 @@ const BLOCK_OPTIONS: { value: "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "q
 function Toolbar({ hasError }: { hasError?: boolean }) {
   const { commands, activeStates, editor } = useEditor()
   const [blockOpen, setBlockOpen] = React.useState(false)
+  const [linkOpen, setLinkOpen] = React.useState(false)
+  const [linkUrl, setLinkUrl] = React.useState("https://ui.shadcn.com/docs")
 
   const currentBlock =
     activeStates?.isQuote ? "quote" :
@@ -151,6 +153,30 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
           commands.toggleHeading?.(headingTag)
         }
       }
+    }, 10)
+  }
+
+  const openLinkCard = () => {
+    setLinkUrl("https://ui.shadcn.com/docs")
+    setLinkOpen(true)
+  }
+
+  const insertLink = () => {
+    if (!editor) return
+    const url = linkUrl.trim()
+    if (!url) return
+
+    setLinkOpen(false)
+
+    const rootElement = editor.getRootElement()
+    if (rootElement) {
+      rootElement.focus()
+    } else {
+      editor.focus()
+    }
+
+    setTimeout(() => {
+      commands.insertLink?.(url, url)
     }, 10)
   }
 
@@ -246,15 +272,56 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       {/* Link */}
       <button
         type="button"
-        onClick={() => commands.insertLink?.()}
+        onClick={() => (linkOpen ? setLinkOpen(false) : openLinkCard())}
         className={`rounded-md p-1.5 hover:bg-muted ${activeStates?.isLink ? "bg-muted" : ""}`}
         title="Link"
         aria-pressed={!!activeStates?.isLink}
+        aria-expanded={linkOpen}
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
       </button>
+      {linkOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40" aria-hidden onClick={() => setLinkOpen(false)} />
+          <div className="fixed left-1/2 top-1/2 z-50 w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-input bg-popover p-4 shadow-lg">
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-muted-foreground" htmlFor="rte-link-url">
+                URL
+              </label>
+              <input
+                id="rte-link-url"
+                type="url"
+                value={linkUrl}
+                onChange={(event) => setLinkUrl(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") insertLink()
+                  if (event.key === "Escape") setLinkOpen(false)
+                }}
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                autoFocus
+              />
+            </div>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setLinkOpen(false)}
+                className="rounded-md border border-input px-2.5 py-1 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={insertLink}
+                className="rounded-md bg-primary px-2.5 py-1 text-sm text-primary-foreground"
+              >
+                Insert
+              </button>
+            </div>
+          </div>
+        </>
+      )}
       <span className="mx-1 h-4 w-px bg-border" aria-hidden />
       {/* Lists */}
       <button
@@ -341,7 +408,7 @@ export function RichTextEditor({
   return (
     <Provider extensions={extensions}>
       <div
-        className={`overflow-hidden rounded-md border bg-background ${hasError ? "border-red-500" : "border-input"} ${className}`}
+        className={`rounded-md border bg-background ${hasError ? "border-red-500" : "border-input"} ${className}`}
       >
         <Toolbar hasError={hasError} />
         <div style={{ minHeight }} className="px-3 py-2">

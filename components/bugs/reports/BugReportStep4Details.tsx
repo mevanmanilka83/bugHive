@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { IconPaperclip, IconUpload, IconX, IconDeviceDesktop } from "@tabler/icons-react"
 import { Separator } from "@/components/ui/separator"
 
@@ -22,7 +23,7 @@ type Props = {
   sourcesInput: string
   attachments: AttachmentFile[]
   environmentBrowser: string
-  environmentOs: string
+  environmentOs: string[]
   environmentDevice: string
   environmentVersion: string
   errors?: BugDialogErrors
@@ -31,7 +32,7 @@ type Props = {
   onChangeTags: (value: string) => void
   onChangeSources: (value: string) => void
   onChangeEnvironmentBrowser: (value: string) => void
-  onChangeEnvironmentOs: (value: string) => void
+  onChangeEnvironmentOs: (value: string[]) => void
   onChangeEnvironmentDevice: (value: string) => void
   onChangeEnvironmentVersion: (value: string) => void
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
@@ -67,6 +68,15 @@ export function BugReportStep4Details({
   onBack,
   onCancel,
 }: Props) {
+  const osOptions = ["Windows", "macOS", "Linux", "iOS", "Android", "Other"]
+
+  const toggleOs = (os: string, checked: boolean) => {
+    const next = checked
+      ? Array.from(new Set([...environmentOs, os]))
+      : environmentOs.filter((value) => value !== os)
+    onChangeEnvironmentOs(next)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border p-4 space-y-4">
@@ -94,19 +104,23 @@ export function BugReportStep4Details({
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="env-os">Operating System</Label>
-            <Select value={environmentOs || undefined} onValueChange={onChangeEnvironmentOs}>
-              <SelectTrigger id="env-os">
-                <SelectValue placeholder="Select OS (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Windows">Windows</SelectItem>
-                <SelectItem value="macOS">macOS</SelectItem>
-                <SelectItem value="Linux">Linux</SelectItem>
-                <SelectItem value="iOS">iOS</SelectItem>
-                <SelectItem value="Android">Android</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <div id="env-os" className="grid grid-cols-2 gap-2">
+              {osOptions.map((os) => (
+                <div key={os} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`env-os-${os}`}
+                    checked={environmentOs.includes(os)}
+                    onCheckedChange={(checked) => toggleOs(os, Boolean(checked))}
+                  />
+                  <Label
+                    htmlFor={`env-os-${os}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {os}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="env-device">Device</Label>

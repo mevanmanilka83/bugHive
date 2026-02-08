@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server"
-import { extractRouteId, getSingleRecord, successResponse, errorResponse, stripHtml } from "@/lib"
+import { extractRouteId, getSingleRecord, successResponse, errorResponse } from "@/lib"
+import { stripHtml } from "@/lib/utils-client"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -9,7 +10,20 @@ const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models
 
 const SNIPPET_LENGTH = 180
 const MAX_RESULTS_PER_SOURCE = 6
+const GITHUB_PAGE_SIZE = 15
 const MAX_QUERY_TEXT = 600
+
+/**
+ * Normalized result shape for related items. Same structure can be used when
+ * adding Reddit or Stack Overflow later (add new source values and fetchers).
+ */
+export type RelatedResult = {
+  id: string
+  title: string
+  url: string
+  source: "github_issue" | "github_repo"
+  snippet: string
+}
 
 type GeminiQueries = {
   issueQuery: string
@@ -79,20 +93,25 @@ async function generateQueries(params: {
   description: string
   tags: string[]
   errorMessage?: string
+  signature: BugSignature
 }) {
+  const anchorQuery = buildSignatureQuery(params.signature)
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return null
+  if (!apiKey) {
+    return { issueQuery: anchorQuery, repoQuery: "" }
+  }
 
-  const { title, description, tags, errorMessage } = params
+  const { title, description, tags, errorMessage, signature } = params
 
   const prompt = [
-    "You generate GitHub search queries only.",
-    "Return JSON with keys: issueQuery, repoQuery.",
-    "Use the bug title, description, tags, and optional error message.",
-    "Prioritize crashes on submit, validation errors, empty or missing tags, form or modal failures.",
-    "Include GitHub qualifiers like in:title,body for issues and in:name,description,readme for repos.",
-    "Keep each query under 200 characters and avoid markdown.",
+    "You generate a GitHub search query for ISSUES only. Output valid JSON with key: issueQuery.",
+    "Rules:",
+    "- issueQuery must include the provided anchors (language/framework, error name, key API/function, and 1 symptom phrase when available).",
+    "- issueQuery must find issues about the SAME language/framework AND same explicit error/exception when available.",
+    "- Include: in:title,body is:issue",
+    "- Keep the query under 200 characters. No markdown. Output only JSON.",
     "",
+    `Anchors: ${signature.anchors.join(" | ") || "(none)"}`,
     `Title: ${title}`,
     `Description: ${description}`,
     `Tags: ${tags.join(", ") || "(none)"}`,
@@ -114,19 +133,337 @@ async function generateQueries(params: {
     }
   )
 
-  if (!response.ok) return null
+  if (!response.ok) return { issueQuery: anchorQuery, repoQuery: "" }
 
   const data = await response.json()
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-  if (!text || typeof text !== "string") return null
+  if (!text || typeof text !== "string") return { issueQuery: anchorQuery, repoQuery: "" }
 
   const parsed = parseGeminiJson(text)
-  if (!parsed?.issueQuery || !parsed?.repoQuery) return null
+  if (!parsed?.issueQuery) return { issueQuery: anchorQuery, repoQuery: "" }
 
-  return parsed
+  const issueQuery = truncateQuery(parsed.issueQuery)
+  if (!queryIncludesAnchors(issueQuery, signature)) {
+    return { issueQuery: anchorQuery, repoQuery: "" }
+  }
+
+  return { issueQuery, repoQuery: "" }
 }
 
-function normalizeIssue(item: GitHubIssue) {
+/** GitHub search query length limit (keep under 256) */
+const MAX_QUERY_LEN = 200
+
+function truncateQuery(q: string): string {
+  const t = (q || "").trim()
+  return t.length <= MAX_QUERY_LEN ? t : t.slice(0, MAX_QUERY_LEN)
+}
+
+/** Terms that identify language/framework or specific error type. */
+const STRONG_TERMS = new Set([
+  "python", "react", "vue", "angular", "javascript", "java", "flutter", "swift", "kotlin",
+  "zerodivisionerror", "typeerror", "nullpointerexception", "keyerror", "valueerror",
+  "indexerror", "attributeerror", "runtimeerror", "division", "zero",
+])
+
+const LANGUAGE_FRAMEWORK_TERMS = [
+  "vba",
+  "visual basic",
+  "microsoft access",
+  "ms access",
+  "access database",
+  "jet sql",
+  "python",
+  "javascript",
+  "typescript",
+  "node",
+  "react",
+  "react native",
+  "next.js",
+  "nextjs",
+  "vue",
+  "angular",
+  "svelte",
+  "express",
+  "nestjs",
+  "django",
+  "flask",
+  "fastapi",
+  "java",
+  "spring",
+  "kotlin",
+  "swift",
+  "flutter",
+  "ruby",
+  "rails",
+  "php",
+  "laravel",
+  "go",
+  "rust",
+  "c#",
+  "c++",
+  "c",
+  "dotnet",
+]
+
+const DOMAIN_BLOCKLISTS = [
+  {
+    name: "cloud_infra",
+    terms: [
+      "azure",
+      "aws",
+      "gcp",
+      "cloud",
+      "app service",
+      "lambda",
+      "kubernetes",
+      "k8s",
+      "docker",
+      "container",
+      "deployment",
+      "helm",
+      "vercel",
+      "netlify",
+      "cloudflare",
+      "internal server error",
+      "http 500",
+      "500 error",
+      "api",
+      "server",
+    ],
+  },
+  {
+    name: "tooling_ecosystem",
+    terms: [
+      "renovate",
+      "dependabot",
+      "homebrew",
+      "brew",
+      "bottling",
+      "linux arm",
+      "github actions",
+      "workflow",
+      "ci",
+      "buildkite",
+    ],
+  },
+  {
+    name: "mobile",
+    terms: [
+      "android",
+      "ios",
+      "iphone",
+      "ipad",
+      "react native",
+      "swiftui",
+      "xcode",
+      "apk",
+      "gradle",
+      "adb",
+      "play store",
+      "app store",
+      "cocoapods",
+      "mobile",
+    ],
+  },
+]
+
+/**
+ * Extract key technical terms and strong terms (language/error) from the bug.
+ * Strong terms are used to require that results match the same tech or error type.
+ */
+function extractKeyTerms(params: {
+  title: string
+  description: string
+  tags: string[]
+  errorMessage?: string
+}): { terms: string[]; strongTermsFromBug: string[] } {
+  const seen = new Set<string>()
+  const add = (word: string) => {
+    const w = word.replace(/[^\w]/g, "").toLowerCase()
+    if (w.length > 2 && !/^\d+$/.test(w)) seen.add(w)
+  }
+  const text = [
+    params.errorMessage || "",
+    params.title || "",
+    (params.description || "").slice(0, 400),
+    ...(params.tags || []),
+  ].join(" ")
+  const words = text.split(/\s+/).filter(Boolean)
+  words.forEach(add)
+  const strongTermsFromBug = Array.from(seen).filter((s) => STRONG_TERMS.has(s))
+  const priority = [
+    "python", "zerodivisionerror", "division", "react", "vue", "angular",
+    "java", "javascript", "typescript", "kotlin", "swift", "flutter",
+    "typeerror", "undefined", "map", "null", "empty", "average",
+    "crash", "error", "reading", "properties", "cannot", "render", "data",
+  ]
+  const prioritySet = new Set(priority)
+  const ordered = [...priority.filter((p) => seen.has(p)), ...Array.from(seen).filter((s) => !prioritySet.has(s))]
+  return { terms: ordered.slice(0, 16), strongTermsFromBug }
+}
+
+type BugSignature = {
+  languageTerms: string[]
+  hardError?: string
+  apiTerms: string[]
+  symptomPhrases: string[]
+  softTerms: string[]
+  anchors: string[]
+}
+
+const SIGNATURE_STOPWORDS = new Set([
+  "error",
+  "exception",
+  "failure",
+  "issue",
+  "bug",
+  "cannot",
+  "cant",
+  "unable",
+  "null",
+  "undefined",
+  "none",
+  "true",
+  "false",
+  "with",
+  "without",
+  "when",
+  "while",
+  "where",
+  "this",
+  "that",
+  "from",
+  "into",
+  "only",
+  "also",
+  "data",
+  "value",
+])
+
+const SYMPTOM_PHRASES = [
+  "division by zero",
+  "zero division",
+  "empty list",
+  "index out of range",
+  "out of range",
+  "null pointer",
+  "cannot read property",
+  "cannot read properties",
+  "undefined is not a function",
+  "none type",
+  "not iterable",
+  "unexpected token",
+  "segmentation fault",
+  "docmd.runsql",
+  "run sql",
+  "update query",
+  "syntax error in update statement",
+]
+
+function normalizeTerm(term: string): string {
+  return term.trim().toLowerCase()
+}
+
+function detectTerms(textLower: string, terms: string[]): string[] {
+  const found: string[] = []
+  terms.forEach((term) => {
+    if (textLower.includes(term)) found.push(term)
+  })
+  return Array.from(new Set(found))
+}
+
+function buildSignatureQuery(signature: BugSignature): string {
+  const parts: string[] = []
+  if (signature.hardError) parts.push(`"${signature.hardError}"`)
+  if (signature.languageTerms[0]) parts.push(signature.languageTerms[0])
+  if (signature.apiTerms[0]) parts.push(signature.apiTerms[0])
+  if (signature.symptomPhrases[0]) parts.push(`"${signature.symptomPhrases[0]}"`)
+
+  const base = parts.filter(Boolean).join(" ").trim() || "bug"
+  return truncateQuery(`${base} in:title,body is:issue`)
+}
+
+function queryIncludesAnchors(query: string, signature: BugSignature): boolean {
+  if (signature.anchors.length === 0) return true
+  const normalizedQuery = query.toLowerCase().replace(/"/g, "")
+  const requiredMatches = Math.min(2, signature.anchors.length)
+  const matchCount = signature.anchors.filter((anchor) =>
+    normalizedQuery.includes(anchor.toLowerCase())
+  ).length
+  return matchCount >= requiredMatches
+}
+
+function extractBugSignature(params: {
+  title: string
+  description: string
+  tags: string[]
+  errorMessage?: string
+}): BugSignature {
+  const rawText = [
+    params.errorMessage || "",
+    params.title || "",
+    params.description || "",
+    ...(params.tags || []),
+  ].join(" ")
+
+  const lower = rawText.toLowerCase()
+
+  const hardErrorMatches = rawText.match(/\b[A-Z][A-Za-z0-9]+(?:Error|Exception)\b/g) || []
+  const hardError = hardErrorMatches.length > 0 ? hardErrorMatches[0] : undefined
+
+  const languageTerms = detectTerms(lower, LANGUAGE_FRAMEWORK_TERMS)
+
+  const apiTerms: string[] = []
+  const addApiTerm = (term: string) => {
+    const t = normalizeTerm(term)
+    if (!t || t.length < 3) return
+    if (SIGNATURE_STOPWORDS.has(t)) return
+    if (languageTerms.includes(t)) return
+    if (!apiTerms.includes(t)) apiTerms.push(t)
+  }
+
+  const functionMatches = rawText.match(/\b[A-Za-z_][A-Za-z0-9_]*\s*\(/g) || []
+  functionMatches.forEach((match) => addApiTerm(match.replace("(", "").trim()))
+
+  const dottedMatches = rawText.match(/\b[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+\b/g) || []
+  dottedMatches.forEach((match) => addApiTerm(match))
+
+  const tokenMatches = rawText.match(/\b[A-Za-z_][A-Za-z0-9_]{2,}\b/g) || []
+  tokenMatches.forEach((token) => addApiTerm(token))
+
+  const symptomPhrases = SYMPTOM_PHRASES.filter((phrase) => lower.includes(phrase)).slice(0, 2)
+
+  const softTerms = [...apiTerms.slice(0, 3), ...symptomPhrases].map(normalizeTerm)
+
+  const anchors = [
+    hardError,
+    languageTerms[0],
+    apiTerms[0],
+    symptomPhrases[0],
+  ].filter(Boolean) as string[]
+
+  return {
+    languageTerms,
+    hardError,
+    apiTerms: apiTerms.slice(0, 3),
+    symptomPhrases,
+    softTerms,
+    anchors,
+  }
+}
+
+/**
+ * Fallback when Gemini is unavailable or fails: build queries from error
+ * message, title, and tags so results are still relevant to the bug.
+ */
+function buildFallbackQueries(signature: BugSignature): GeminiQueries {
+  return {
+    issueQuery: buildSignatureQuery(signature),
+    repoQuery: "",
+  }
+}
+
+function normalizeIssue(item: GitHubIssue): RelatedResult {
   const repoName = pickRepositoryName(item.repository_url)
   const snippet = toSnippet(item.body) || (repoName ? `From ${repoName}` : "")
 
@@ -134,18 +471,20 @@ function normalizeIssue(item: GitHubIssue) {
     id: `issue-${item.id}`,
     title: item.title,
     url: item.html_url,
-    source: "github_issue" as const,
+    source: "github_issue",
     snippet,
   }
 }
 
-function normalizeRepo(item: GitHubRepo) {
-  const snippet = toSnippet(item.description)
+function normalizeRepo(item: GitHubRepo): RelatedResult {
+  const snippet =
+    toSnippet(item.description) ||
+    (item.full_name ? `Repository: ${item.full_name}` : "GitHub repository")
   return {
     id: `repo-${item.id}`,
     title: item.full_name || item.name,
     url: item.html_url,
-    source: "github_repo" as const,
+    source: "github_repo",
     snippet,
   }
 }
@@ -167,10 +506,39 @@ export async function GET(
     const tags = Array.isArray(bug.tags) ? bug.tags.map(String) : []
     const errorMessage = typeof bug.actual_behavior === "string" ? trimQueryText(bug.actual_behavior) : undefined
 
-    const queries = await generateQueries({ title, description, tags, errorMessage })
-    if (!queries) {
-      return successResponse({ results: [] })
+    const signature = extractBugSignature({
+      title: String(bug.title || "").trim() || title,
+      description,
+      tags,
+      errorMessage,
+    })
+
+    if (!signature.hardError && signature.languageTerms.length === 0 && signature.softTerms.length === 0) {
+      return successResponse({
+        results: [],
+        message: "No related GitHub issues found for this bug.",
+      })
     }
+
+    let queries = await generateQueries({
+      title,
+      description,
+      tags,
+      errorMessage,
+      signature,
+    })
+    if (!queries) {
+      queries = buildFallbackQueries(signature)
+    }
+
+    const { terms: keyTerms } = extractKeyTerms({
+      title: String(bug.title || "").trim() || title,
+      description,
+      tags,
+      errorMessage,
+    })
+    const keyTermsLower = keyTerms.map((t) => t.toLowerCase())
+    const bugContext = [title, description, errorMessage, ...tags].join(" ").toLowerCase()
 
     const githubToken = process.env.GITHUB_TOKEN
     const headers: Record<string, string> = {
@@ -182,48 +550,126 @@ export async function GET(
       headers.Authorization = `Bearer ${githubToken}`
     }
 
+    const issueQuery = truncateQuery(queries.issueQuery)
+    const q = issueQuery.includes("is:issue") ? issueQuery : `${issueQuery} is:issue`
+
     const issuesUrl = new URL("https://api.github.com/search/issues")
-    issuesUrl.searchParams.set("q", queries.issueQuery)
-    issuesUrl.searchParams.set("sort", "comments")
-    issuesUrl.searchParams.set("order", "desc")
-    issuesUrl.searchParams.set("per_page", String(MAX_RESULTS_PER_SOURCE))
+    issuesUrl.searchParams.set("q", q)
+    issuesUrl.searchParams.set("per_page", String(GITHUB_PAGE_SIZE))
 
-    const reposUrl = new URL("https://api.github.com/search/repositories")
-    reposUrl.searchParams.set("q", queries.repoQuery)
-    reposUrl.searchParams.set("sort", "updated")
-    reposUrl.searchParams.set("order", "desc")
-    reposUrl.searchParams.set("per_page", String(MAX_RESULTS_PER_SOURCE))
-
-    const [issuesRes, reposRes] = await Promise.all([
-      fetch(issuesUrl.toString(), { headers }),
-      fetch(reposUrl.toString(), { headers }),
-    ])
-
-    if (!issuesRes.ok || !reposRes.ok) {
-      return successResponse({ results: [] })
+    let issueItems: GitHubIssue[] = []
+    try {
+      const issuesRes = await fetch(issuesUrl.toString(), { headers })
+      const issuesData = issuesRes.ok ? await issuesRes.json() : { items: [] }
+      issueItems = Array.isArray(issuesData?.items) ? (issuesData.items as GitHubIssue[]) : []
+      // Fail closed: no generic fallback query to avoid irrelevant results.
+    } catch {
+      issueItems = []
     }
 
-    const issuesData = await issuesRes.json()
-    const reposData = await reposRes.json()
-
-    const issueItems = Array.isArray(issuesData?.items) ? issuesData.items : []
-    const repoItems = Array.isArray(reposData?.items) ? reposData.items : []
-
     const issuesWithDiscussion = issueItems.filter((item: GitHubIssue) => (item.comments || 0) > 0)
-    const selectedIssues = (issuesWithDiscussion.length > 0 ? issuesWithDiscussion : issueItems)
-      .slice(0, MAX_RESULTS_PER_SOURCE)
+    const rawIssues = (issuesWithDiscussion.length > 0 ? issuesWithDiscussion : issueItems)
+      .slice(0, GITHUB_PAGE_SIZE)
       .map(normalizeIssue)
 
-    const activeRepos = repoItems.filter(
-      (item: GitHubRepo) => (item.stargazers_count || 0) + (item.forks_count || 0) > 0
-    )
-    const selectedRepos = (activeRepos.length > 0 ? activeRepos : repoItems)
-      .slice(0, MAX_RESULTS_PER_SOURCE)
-      .map(normalizeRepo)
+    function relevanceScore(item: RelatedResult): number {
+      const text = `${item.title} ${item.snippet}`.toLowerCase()
+      return keyTermsLower.filter((term) => text.includes(term)).length
+    }
 
-    const results = [...selectedIssues, ...selectedRepos]
+    function matchesLanguage(item: RelatedResult): boolean {
+      if (signature.languageTerms.length === 0) return true
+      const text = `${item.title} ${item.snippet}`.toLowerCase()
+      return signature.languageTerms.some((lang) => text.includes(lang))
+    }
 
-    return successResponse({ results })
+    function matchesHardError(item: RelatedResult): boolean {
+      if (!signature.hardError) return true
+      const text = `${item.title} ${item.snippet}`.toLowerCase()
+      return text.includes(signature.hardError.toLowerCase())
+    }
+
+    function softMatchCount(item: RelatedResult): number {
+      if (signature.softTerms.length === 0) return 0
+      const text = `${item.title} ${item.snippet}`.toLowerCase()
+      return signature.softTerms.filter((term) => text.includes(term)).length
+    }
+
+    function matchesApiTerm(item: RelatedResult): boolean {
+      if (signature.apiTerms.length === 0) return true
+      const text = `${item.title} ${item.snippet}`.toLowerCase()
+      return signature.apiTerms.some((term) => text.includes(term.toLowerCase()))
+    }
+
+    function passesDomainBlocklist(item: RelatedResult): boolean {
+      const text = `${item.title} ${item.snippet}`.toLowerCase()
+      for (const domain of DOMAIN_BLOCKLISTS) {
+        const bugMentionsDomain = domain.terms.some((term) => bugContext.includes(term))
+        if (!bugMentionsDomain && domain.terms.some((term) => text.includes(term))) {
+          return false
+        }
+      }
+      return true
+    }
+
+    function blocklistPenalty(item: RelatedResult): number {
+      const text = `${item.title} ${item.snippet}`.toLowerCase()
+      let penalty = 0
+      for (const domain of DOMAIN_BLOCKLISTS) {
+        const bugMentionsDomain = domain.terms.some((term) => bugContext.includes(term))
+        if (!bugMentionsDomain && domain.terms.some((term) => text.includes(term))) {
+          penalty += 2
+        }
+      }
+      return penalty
+    }
+
+    const minSoftMatchesStrict = signature.softTerms.length > 0 ? 1 : 0
+    const minSoftMatchesRelaxed = signature.softTerms.length > 0 ? 1 : 0
+
+    const strictIssues = rawIssues
+      .map((item) => ({
+        item,
+        score: relevanceScore(item),
+        softScore: softMatchCount(item),
+      }))
+      .filter(
+        (x) =>
+          matchesLanguage(x.item) &&
+            matchesHardError(x.item) &&
+            passesDomainBlocklist(x.item) &&
+            matchesApiTerm(x.item) &&
+          x.softScore >= minSoftMatchesStrict
+      )
+      .sort((a, b) => b.softScore - a.softScore || b.score - a.score)
+
+    const relaxedIssues = rawIssues
+      .map((item) => ({
+        item,
+        score: relevanceScore(item),
+        softScore: softMatchCount(item),
+        penalty: blocklistPenalty(item),
+      }))
+      .filter(
+        (x) =>
+          matchesLanguage(x.item) &&
+            matchesHardError(x.item) &&
+            matchesApiTerm(x.item) &&
+            x.softScore >= minSoftMatchesRelaxed
+      )
+      .sort((a, b) =>
+        (b.softScore - b.penalty) - (a.softScore - a.penalty) || b.score - a.score
+      )
+
+    const chosen = strictIssues.length > 0 ? strictIssues : relaxedIssues
+    const issues = chosen.slice(0, MAX_RESULTS_PER_SOURCE).map((x) => x.item)
+
+    const results = issues
+
+    return successResponse({
+      results,
+      message: results.length === 0 ? "No related GitHub issues found for this bug." : undefined,
+    })
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : "Failed to load related bugs")
   }

@@ -42,7 +42,8 @@ export {
   parseArrayField,
   parseQueryFilters,
   extractUsernameFromEmail,
-  extractRouteId
+  extractRouteId,
+  stripHtml
 } from "./utils"
 
 // ============================================================================

@@ -10,7 +10,7 @@ type Props = {
   priority: string
   visibility: string
   environmentBrowser: string
-  environmentOs: string
+  environmentOs: string[]
   environmentDevice: string
   environmentVersion: string
   expectedBehavior: string
@@ -102,7 +102,7 @@ export function BugReportStep5Review({
               Environment & Behavior
             </h3>
             <div className="space-y-3">
-              {(environmentBrowser || environmentOs || environmentDevice || environmentVersion) && (
+              {(environmentBrowser || environmentOs.length > 0 || environmentDevice || environmentVersion) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {environmentBrowser && (
                     <div>
@@ -110,10 +110,12 @@ export function BugReportStep5Review({
                       <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{environmentBrowser}</div>
                     </div>
                   )}
-                  {environmentOs && (
+                  {environmentOs.length > 0 && (
                     <div>
                       <div className="font-medium text-sm">Operating System</div>
-                      <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{environmentOs}</div>
+                      <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+                        {environmentOs.join(", ")}
+                      </div>
                     </div>
                   )}
                   {environmentDevice && (
@@ -130,7 +132,7 @@ export function BugReportStep5Review({
                   )}
                 </div>
               )}
-              {!environmentBrowser && !environmentOs && !environmentDevice && !environmentVersion && (
+              {!environmentBrowser && environmentOs.length === 0 && !environmentDevice && !environmentVersion && (
                 <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">No environment details provided</div>
               )}
               <div>

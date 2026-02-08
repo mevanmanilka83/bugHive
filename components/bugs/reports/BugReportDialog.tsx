@@ -41,7 +41,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   const [priority, setPriority] = React.useState("medium")
   const [visibility, setVisibility] = React.useState("public")
   const [environmentBrowser, setEnvironmentBrowser] = React.useState("")
-  const [environmentOs, setEnvironmentOs] = React.useState("")
+  const [environmentOs, setEnvironmentOs] = React.useState<string[]>([])
   const [environmentDevice, setEnvironmentDevice] = React.useState("")
   const [environmentVersion, setEnvironmentVersion] = React.useState("")
   const [expectedBehavior, setExpectedBehavior] = React.useState("")
@@ -58,7 +58,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     setPriority("medium")
     setVisibility("public")
     setEnvironmentBrowser("")
-    setEnvironmentOs("")
+    setEnvironmentOs([])
     setEnvironmentDevice("")
     setEnvironmentVersion("")
     setExpectedBehavior("")
@@ -83,7 +83,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     // Combine environment fields into a formatted string
     const environmentParts: string[] = []
     if (environmentBrowser) environmentParts.push(`Browser: ${environmentBrowser}`)
-    if (environmentOs) environmentParts.push(`OS: ${environmentOs}`)
+    if (environmentOs.length > 0) environmentParts.push(`OS: ${environmentOs.join(", ")}`)
     if (environmentDevice) environmentParts.push(`Device: ${environmentDevice}`)
     if (environmentVersion) environmentParts.push(`Version: ${environmentVersion}`)
     const environment = environmentParts.length > 0 ? environmentParts.join(", ") : undefined
