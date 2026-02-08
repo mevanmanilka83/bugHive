@@ -37,7 +37,7 @@ export default async function ClusterDetailPage({
           </div>
         </header>
 
-        <div className="flex flex-1 gap-6 py-6">
+        <div className="flex flex-1 gap-4 py-4">
           <SidebarPublicNav
             active="clusters"
             isAuthenticated

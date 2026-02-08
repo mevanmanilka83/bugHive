@@ -45,11 +45,18 @@ interface FilterState {
 interface BugExploreListProps {
   userId: string
   showTitle?: boolean
+  showReportButton?: boolean
   currentUserName?: string
   currentUserImage?: string
 }
 
-export function BugExploreList({ userId, showTitle = true, currentUserName, currentUserImage }: BugExploreListProps) {
+export function BugExploreList({
+  userId,
+  showTitle = true,
+  showReportButton = true,
+  currentUserName,
+  currentUserImage,
+}: BugExploreListProps) {
   const router = useRouter()
   const [bugs, setBugs] = React.useState<any[]>([])
   const [allBugs, setAllBugs] = React.useState<any[]>([])
@@ -413,7 +420,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateCreatedFrom}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateCreatedFrom: e.target.value }))}
-                className="h-8 text-sm sm:text-base"
+                className="h-8"
               />
             </div>
             <div className="space-y-1">
@@ -423,7 +430,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateCreatedTo}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateCreatedTo: e.target.value }))}
-                className="h-8 text-sm sm:text-base"
+                className="h-8"
               />
             </div>
           </div>
@@ -440,7 +447,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateModifiedFrom}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateModifiedFrom: e.target.value }))}
-                className="h-8 text-sm sm:text-base"
+                className="h-8"
               />
             </div>
             <div className="space-y-1">
@@ -450,7 +457,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateModifiedTo}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateModifiedTo: e.target.value }))}
-                className="h-8 text-sm sm:text-base"
+                className="h-8"
               />
             </div>
           </div>
@@ -539,6 +546,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
         onBugClick={openBugDetails}
         totalCount={bugs.length}
         showTitle={showTitle}
+        showReportButton={showReportButton}
         currentUserName={currentUserName}
         currentUserImage={currentUserImage}
         onOpenFilters={() => setFiltersOpen((open) => !open)}

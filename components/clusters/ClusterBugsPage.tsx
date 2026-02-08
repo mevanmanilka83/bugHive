@@ -85,29 +85,29 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
 
   return (
     <div className="min-w-0">
-      <div className="mb-6">
+      <div className="mb-4 rounded-lg border bg-background/80 p-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => router.push(clustersHref)}
-          className="mb-4 -ml-2"
+          className="mb-3 -ml-2"
         >
           <IconArrowLeft className="size-4 mr-2" />
           Back to Clusters
         </Button>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-semibold mb-2 sm:text-2xl break-words">{cluster.name}</h1>
+            <h1 className="text-xl font-semibold mb-1 sm:text-2xl break-words">{cluster.name}</h1>
             {cluster.description && (
               <>
                 <div
-                  className="prose prose-sm max-w-none text-muted-foreground mb-2 break-words overflow-hidden"
+                  className="prose prose-sm max-w-2xl text-muted-foreground mb-2 break-words [overflow-wrap:anywhere] leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: cluster.description }}
                 />
-                <Separator className="my-3" />
+                <Separator className="my-2" />
               </>
             )}
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <div className="my-1 flex flex-wrap items-center gap-3 pt-1 text-sm text-muted-foreground">
               <button
                 onClick={() => setMembersDialogOpen(true)}
                 className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer"
@@ -152,7 +152,7 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
         onOpenChange={setEditDialogOpen}
         cluster={cluster}
         onSuccess={(updated) => {
-          setCluster((prev) => (prev ? { ...prev, name: updated.name, description: updated.description } : null))
+          setCluster((prev: any) => (prev ? { ...prev, name: updated.name, description: updated.description } : null))
         }}
       />
     </div>

@@ -170,7 +170,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
             const inviteCount = cluster.invites?.length || 0
 
             return (
-              <Card 
+              <Card
                 key={cluster.id}
                 className="cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={(e) => {
@@ -181,18 +181,18 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                   router.push(basePath === "/clusters" ? `/clusters/${cluster.id}` : `/dashboard/clusters/${cluster.id}`)
                 }}
               >
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="text-lg">{cluster.name}</CardTitle>
+                      <CardTitle className="text-lg leading-tight">{cluster.name}</CardTitle>
                       {cluster.description && (
-                        <CardDescription className="mt-1 line-clamp-2 text-ellipsis sm:whitespace-nowrap sm:overflow-hidden">
+                        <CardDescription className="mt-2 max-w-[60ch] break-words leading-relaxed text-muted-foreground line-clamp-3">
                           {previewText(cluster.description)}
                         </CardDescription>
                       )}
                     </div>
                     {isOwner && (
-                      <div className="flex gap-1 shrink-0 self-end sm:self-start">
+                      <div className="flex gap-1 shrink-0 self-start">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -200,7 +200,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleEditClick(cluster)
                           }}
-                          className="h-11 min-w-[44px] w-11 sm:h-8 sm:min-w-0 sm:w-8"
+                          className="h-10 w-10"
                           aria-label="Edit cluster"
                         >
                           <IconPencil className="size-4" />
@@ -212,7 +212,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleInviteClick(cluster)
                           }}
-                          className="h-11 min-w-[44px] w-11 sm:h-8 sm:min-w-0 sm:w-8"
+                          className="h-10 w-10"
                           aria-label="Invite to cluster"
                         >
                           <IconMail className="size-4" />
@@ -224,7 +224,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleDeleteClick(cluster)
                           }}
-                          className="h-11 min-w-[44px] w-11 sm:h-8 sm:min-w-0 sm:w-8 text-destructive hover:text-destructive"
+                          className="h-10 w-10 text-destructive hover:text-destructive"
                           aria-label="Delete cluster"
                         >
                           <IconTrash className="size-4" />
@@ -233,8 +233,8 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap items-center gap-2 justify-between text-sm text-muted-foreground">
+                <CardContent className="pt-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
                     <div className="flex flex-wrap items-center gap-3">
                       <button
                         type="button"
@@ -262,7 +262,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                       )}
                     </div>
                     {isOwner && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                      <span className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-1 rounded leading-none">
                         Owner
                       </span>
                     )}
