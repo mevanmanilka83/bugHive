@@ -328,18 +328,18 @@ export function SolutionDialog({
       }
       onOpenChange(newOpen)
     }}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[calc(100vw-1rem)] max-h-[90dvh] overflow-x-hidden overflow-y-auto p-4 sm:max-w-4xl sm:max-h-[90vh] sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <IconBulb className="size-5" />
-            Submit Solution
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <IconBulb className="size-5 shrink-0" />
+            <span className="min-w-0 break-words">Submit Solution</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="min-w-0">
             Provide solution details and optional attachments, then review and submit.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-6">
+        <div className="grid min-w-0 gap-4 sm:gap-6">
           {bugData && isBugClosedOrResolved && (
             <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-md">
               <p className="text-sm text-destructive font-medium">
@@ -348,9 +348,9 @@ export function SolutionDialog({
             </div>
           )}
 
-          {/* Multi-step progress indicator (match bug report style) */}
-          <div className="w-full py-5">
-            <div className="flex items-start w-full gap-0">
+          {/* Multi-step progress indicator – compact on mobile */}
+          <div className="w-full min-w-0 py-3 sm:py-5">
+            <div className="flex items-start w-full gap-0 min-w-0">
               {[
                 { num: 1, label: "Basic Info" },
                 { num: 2, label: "Solution Type" },
@@ -365,38 +365,39 @@ export function SolutionDialog({
                 return (
                   <React.Fragment key={num}>
                     <div className="flex flex-col items-center shrink-0">
-                      {/* Step circle */}
-                      <div
-                        className={`
-                          relative flex items-center justify-center size-9 rounded-full border-2 transition-all duration-300 ease-out
+                      {/* Fixed-height row so connector line aligns with circle center */}
+                      <div className="flex h-7 items-center justify-center sm:h-9">
+                        <div
+                          className={`
+                          relative flex items-center justify-center size-7 rounded-full border-2 transition-all duration-300 ease-out sm:size-9
                           ${isCompleted ? "bg-primary border-primary text-primary-foreground shadow-sm" : ""}
                           ${isCurrent ? "bg-primary/10 border-primary text-primary font-semibold scale-110 ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : ""}
                           ${isFuture ? "border-muted-foreground/25 bg-muted/40 text-muted-foreground" : ""}
                         `}
-                      >
-                        {isCompleted ? (
-                          <Check className="size-5 shrink-0" strokeWidth={2.5} />
-                        ) : (
-                          <span className="text-sm font-semibold">{num}</span>
-                        )}
+                        >
+                          {isCompleted ? (
+                            <Check className="size-3.5 shrink-0 sm:size-5" strokeWidth={2.5} />
+                          ) : (
+                            <span className="text-[10px] font-semibold sm:text-sm">{num}</span>
+                          )}
+                        </div>
                       </div>
                       <span
                         className={`
-                          mt-2 text-xs font-medium transition-colors duration-200 text-center whitespace-nowrap
+                          mt-1.5 hidden text-xs font-medium transition-colors duration-200 text-center whitespace-nowrap sm:mt-2 sm:block
                           ${isCompleted ? "text-primary" : ""}
                           ${isCurrent ? "text-foreground font-semibold" : ""}
                           ${isFuture ? "text-muted-foreground" : ""}
                         `}
+                        aria-hidden
                       >
                         {label}
                       </span>
                     </div>
 
-                    {/* Connecting line between steps */}
                     {showConnector && (
                       <div
-                        className="shrink-0 mt-4 flex items-center px-0.5"
-                        style={{ width: 120 }}
+                        className="flex h-7 min-w-1 flex-1 max-w-[40px] shrink-0 items-center px-0.5 sm:h-9 sm:max-w-none sm:flex-none sm:w-[120px]"
                         aria-hidden
                       >
                         <div
@@ -418,6 +419,11 @@ export function SolutionDialog({
               })}
             </div>
           </div>
+
+          {/* Mobile: show current step name when stepper labels are hidden */}
+          <p className="sm:hidden text-sm font-medium text-muted-foreground mt-1 mb-2 min-w-0" aria-live="polite">
+            Step {step}: {["Basic Info", "Solution Type", "Details", "Review"][step - 1]}
+          </p>
 
           {/* Step 1: Basic Information */}
           {step === 1 && (

@@ -360,14 +360,14 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
           Report Bug
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[calc(100vw-1rem)] max-h-[90dvh] overflow-x-hidden overflow-y-auto p-4 sm:max-w-4xl sm:max-h-[90vh] sm:p-6">
         <DialogHeader>
-          <DialogTitle>Report a bug</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">Report a bug</DialogTitle>
         </DialogHeader>
 
-        {/* Multi-step progress indicator with visible connecting lines */}
-        <div className="w-full py-5">
-          <div className="flex items-start w-full gap-0">
+        {/* Multi-step progress indicator – numbers only on mobile to avoid overflow */}
+        <div className="w-full min-w-0 py-3 sm:py-5">
+          <div className="flex items-start w-full gap-0 min-w-0">
             {[
               { num: 1, label: "Basic Info" },
               { num: 2, label: "Priority" },
@@ -382,46 +382,47 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
               return (
                 <React.Fragment key={num}>
                   <div className="flex flex-col items-center shrink-0">
-                    {/* Step circle */}
-                    <div
-                      className={`
-                        relative flex items-center justify-center size-9 rounded-full border-2 transition-all duration-300 ease-out
-                        ${isCompleted
-                          ? "bg-primary border-primary text-primary-foreground shadow-sm"
-                          : ""
-                        }
-                        ${isCurrent
-                          ? "bg-primary/10 border-primary text-primary font-semibold scale-110 ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
-                          : ""
-                        }
-                        ${isFuture
-                          ? "border-muted-foreground/25 bg-muted/40 text-muted-foreground"
-                          : ""
-                        }
+                    {/* Fixed-height row so connector line aligns with circle center */}
+                    <div className="flex h-7 items-center justify-center sm:h-9">
+                      <div
+                        className={`
+                          relative flex items-center justify-center size-7 rounded-full border-2 transition-all duration-300 ease-out sm:size-9
+                          ${isCompleted
+                            ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                            : ""
+                          }
+                          ${isCurrent
+                            ? "bg-primary/10 border-primary text-primary font-semibold scale-110 ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
+                            : ""
+                          }
+                          ${isFuture
+                            ? "border-muted-foreground/25 bg-muted/40 text-muted-foreground"
+                            : ""
+                          }
                       `}
-                    >
-                      {isCompleted ? (
-                        <Check className="size-5 shrink-0" strokeWidth={2.5} />
-                      ) : (
-                        <span className="text-sm font-semibold">{num}</span>
-                      )}
+                      >
+                        {isCompleted ? (
+                          <Check className="size-3.5 shrink-0 sm:size-5" strokeWidth={2.5} />
+                        ) : (
+                          <span className="text-[10px] font-semibold sm:text-sm">{num}</span>
+                        )}
+                      </div>
                     </div>
                     <span
                       className={`
-                        mt-2 text-xs font-medium transition-colors duration-200 text-center whitespace-nowrap
+                        mt-1.5 hidden text-[10px] font-medium transition-colors duration-200 text-center whitespace-nowrap sm:mt-2 sm:block sm:text-xs
                         ${isCompleted ? "text-primary" : ""}
                         ${isCurrent ? "text-foreground font-semibold" : ""}
                         ${isFuture ? "text-muted-foreground" : ""}
                       `}
+                      aria-hidden
                     >
                       {label}
                     </span>
                   </div>
-                  {/* Connecting line: extends to circle edges like reference */}
                   {showConnector && (
                     <div
-                      className="shrink-0 mt-4 flex items-center px-0.5"
-                      style={{ width: 120 }}
+                      className="flex h-7 min-w-1 flex-1 max-w-[32px] shrink-0 items-center px-0.5 sm:h-9 sm:max-w-none sm:flex-none sm:w-[120px]"
                       aria-hidden
                     >
                       <div
@@ -443,6 +444,11 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
             })}
           </div>
         </div>
+
+        {/* Mobile: show current step name when stepper labels are hidden */}
+        <p className="sm:hidden text-sm font-medium text-muted-foreground mt-1 mb-2 min-w-0" aria-live="polite">
+          Step {step}: {["Basic Info", "Priority", "Behavior", "Details", "Review"][step - 1]}
+        </p>
 
         {step === 1 && (
           <div key="step-1" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">

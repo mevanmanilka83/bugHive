@@ -81,39 +81,44 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
   const memberCount = cluster.members?.length || 0
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="mb-6">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => router.push(clustersHref)}
-          className="mb-4"
+          className="mb-4 -ml-2"
         >
           <IconArrowLeft className="size-4 mr-2" />
           Back to Clusters
         </Button>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold mb-2">{cluster.name}</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-semibold mb-2 sm:text-2xl break-words">{cluster.name}</h1>
             {cluster.description && (
-              <p className="text-muted-foreground mb-2">{cluster.description}</p>
+              <div
+                className="prose prose-sm max-w-none text-muted-foreground mb-2 break-words overflow-hidden"
+                dangerouslySetInnerHTML={{ __html: cluster.description }}
+              />
             )}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <button
                 onClick={() => setMembersDialogOpen(true)}
                 className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer"
               >
-                <IconUsers className="size-4" />
+                <IconUsers className="size-4 shrink-0" />
                 {memberCount} member{memberCount !== 1 ? 's' : ''}
               </button>
               {isOwner && (
-                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded shrink-0">
                   Owner
                 </span>
               )}
             </div>
           </div>
-          <BugReportDialog clusterId={clusterId} />
+          <div className="flex w-full justify-end shrink-0 sm:w-auto">
+            <BugReportDialog clusterId={clusterId} />
+          </div>
         </div>
       </div>
 

@@ -178,11 +178,11 @@ export function BugReportStep5Review({
         </div>
       </div>
 
-      <div className="flex justify-between pt-4 border-t">
-        <Button variant="outline" onClick={onBack} className="rounded-full px-4">Back</Button>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="rounded-full px-4">Cancel</Button>
-          <Button onClick={onSubmit} disabled={isSubmitting} className="rounded-full px-4">
+      <div className="flex flex-col-reverse gap-2 pt-4 border-t sm:flex-row sm:justify-between">
+        <Button variant="outline" onClick={onBack} className="w-full rounded-full px-4 sm:w-auto">Back</Button>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="w-full rounded-full px-4 sm:w-auto">Cancel</Button>
+          <Button onClick={onSubmit} disabled={isSubmitting} className="w-full rounded-full px-4 sm:w-auto">
             {isSubmitting ? "Submitting..." : "Submit Bug Report"}
           </Button>
         </div>

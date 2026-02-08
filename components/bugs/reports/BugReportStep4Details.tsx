@@ -245,11 +245,11 @@ export function BugReportStep4Details({
         )}
       </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack} className="rounded-full px-4">Back</Button>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel} className="rounded-full px-4">Cancel</Button>
-          <Button onClick={onReview} disabled={!canNext} className="rounded-full px-4">Review</Button>
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+        <Button variant="outline" onClick={onBack} className="w-full rounded-full px-4 sm:w-auto">Back</Button>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
+          <Button variant="outline" onClick={onCancel} className="w-full rounded-full px-4 sm:w-auto">Cancel</Button>
+          <Button onClick={onReview} disabled={!canNext} className="w-full rounded-full px-4 sm:w-auto">Review</Button>
         </div>
       </div>
     </div>

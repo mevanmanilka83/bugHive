@@ -1,7 +1,9 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 import { requireAuthForPage } from "@/lib"
+import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
+import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 import { ClusterBugsPage } from "@/components/clusters/ClusterBugsPage"
 
@@ -16,7 +18,7 @@ export default async function ClusterDetailPage({
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3">
@@ -39,21 +41,17 @@ export default async function ClusterDetailPage({
           <SidebarPublicNav
             active="clusters"
             isAuthenticated
-            className="hidden md:flex"
+            className="hidden lg:flex"
           />
 
-          <section className="flex-1">
+          <section className="flex-1 min-w-0">
             <ClusterBugsPage clusterId={clusterId} userId={userId} clustersHref="/clusters" />
           </section>
         </div>
 
-        <footer className="mt-auto border-t bg-background">
-          <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>
-            <span>Built for sharing and solving real-world bugs.</span>
-          </div>
-        </footer>
+        <AppFooter />
       </div>
+      <MobileBottomNav active="clusters" isAuthenticated />
     </main>
   )
 }

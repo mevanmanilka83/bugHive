@@ -29,23 +29,9 @@ export async function POST(
     return NextResponse.json({ error: "No pending invitation found" }, { status: 400 })
   }
 
-  const updatedInvites = (cluster.invites || []).filter((id: string) => id !== userId)
-
-  const { error: updateError } = await supabase
-    .from("clusters")
-    .update({ invites: updatedInvites })
-    .eq("id", clusterId)
-
-  if (updateError) {
-    return NextResponse.json(
-      { error: updateError.message || "Failed to decline invitation" },
-      { status: 500 }
-    )
-  }
-
   await supabase
     .from("notifications")
-    .update({ read: true })
+    .delete()
     .eq("user_id", userId)
     .eq("cluster_id", clusterId)
     .eq("type", "cluster_invite")

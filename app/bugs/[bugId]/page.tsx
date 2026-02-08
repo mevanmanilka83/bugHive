@@ -4,6 +4,7 @@ import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
 import { RelatedBugsPanel } from "@/components/bugs/RelatedBugsPanel"
+import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
@@ -77,13 +78,7 @@ export default async function BugDetailsPage({
           </aside>
         </div>
 
-        {/* Footer – same as homepage */}
-        <footer className="mt-auto border-t bg-background">
-          <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>
-            <span>Built for sharing and solving real-world bugs.</span>
-          </div>
-        </footer>
+        <AppFooter />
       </div>
       <MobileBottomNav active="public" isAuthenticated={!!session} useAuthFallback />
     </main>

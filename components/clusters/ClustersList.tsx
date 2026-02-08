@@ -18,7 +18,10 @@ import {
 import { CreateClusterDialog } from "./CreateClusterDialog"
 import { InviteUserDialog } from "./InviteUserDialog"
 import { PendingInvitesDialog } from "./PendingInvitesDialog"
+import { ClusterMembersDialog } from "./ClusterMembersDialog"
 import { getClusters, deleteCluster } from "@/app/actions/cluster"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
+import { stripHtml } from "@/lib/utils-client"
 
 interface ClustersListProps {
   userId: string
@@ -38,11 +41,25 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
   const [selectedCluster, setSelectedCluster] = React.useState<any | null>(null)
   const [pendingDialogOpen, setPendingDialogOpen] = React.useState(false)
   const [pendingCluster, setPendingCluster] = React.useState<any | null>(null)
+  const [membersDialogOpen, setMembersDialogOpen] = React.useState(false)
+  const [membersCluster, setMembersCluster] = React.useState<any | null>(null)
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
   const [editName, setEditName] = React.useState("")
   const [editDescription, setEditDescription] = React.useState("")
   const [savingEdit, setSavingEdit] = React.useState(false)
+
+  const normalizeDescription = (html: string) => {
+    const trimmed = html.trim()
+    if (trimmed === "" || trimmed === "<p></p>" || trimmed === "<p><br></p>") return ""
+    return html
+  }
+
+  const previewText = (html: string, maxChars = 120) => {
+    const text = stripHtml(html).replace(/\s+/g, " ").trim()
+    if (text.length <= maxChars) return text
+    return `${text.slice(0, maxChars).trim()}...`
+  }
 
   const fetchClusters = React.useCallback(async () => {
     try {
@@ -111,6 +128,11 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
     setPendingDialogOpen(true)
   }
 
+  const handleMembersClick = (cluster: any) => {
+    setMembersCluster(cluster)
+    setMembersDialogOpen(true)
+  }
+
   const handleEditClick = (cluster: any) => {
     setClusterToEdit(cluster)
     setEditName(cluster.name || "")
@@ -122,7 +144,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
     if (!clusterToEdit) return
 
     const name = editName.trim()
-    const description = editDescription.trim()
+    const description = normalizeDescription(editDescription)
 
     if (!name) {
       toast.error("Cluster name is required")
@@ -172,7 +194,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
         </Button>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1">
         {loading ? (
           Array.from({ length: 3 }).map((_, index) => (
             <Card key={index}>
@@ -209,15 +231,17 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                 }}
               >
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <div className="min-w-0 flex-1">
                       <CardTitle className="text-lg">{cluster.name}</CardTitle>
                       {cluster.description && (
-                        <CardDescription className="mt-1">{cluster.description}</CardDescription>
+                        <CardDescription className="mt-1 line-clamp-2 text-ellipsis sm:whitespace-nowrap sm:overflow-hidden">
+                          {previewText(cluster.description)}
+                        </CardDescription>
                       )}
                     </div>
                     {isOwner && (
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 shrink-0 self-end sm:self-start">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -225,7 +249,8 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleEditClick(cluster)
                           }}
-                          className="h-8 w-8"
+                          className="h-11 min-w-[44px] w-11 sm:h-8 sm:min-w-0 sm:w-8"
+                          aria-label="Edit cluster"
                         >
                           <IconPencil className="size-4" />
                         </Button>
@@ -236,7 +261,8 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleInviteClick(cluster)
                           }}
-                          className="h-8 w-8"
+                          className="h-11 min-w-[44px] w-11 sm:h-8 sm:min-w-0 sm:w-8"
+                          aria-label="Invite to cluster"
                         >
                           <IconMail className="size-4" />
                         </Button>
@@ -247,7 +273,8 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleDeleteClick(cluster)
                           }}
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="h-11 min-w-[44px] w-11 sm:h-8 sm:min-w-0 sm:w-8 text-destructive hover:text-destructive"
+                          aria-label="Delete cluster"
                         >
                           <IconTrash className="size-4" />
                         </Button>
@@ -256,16 +283,23 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-2 justify-between text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleMembersClick(cluster)
+                        }}
+                      >
                         <IconUsers className="size-4" />
                         {memberCount} member{memberCount !== 1 ? 's' : ''}
-                      </span>
+                      </button>
                       {inviteCount > 0 && (
                         <button
                           type="button"
-                          className="flex items-center gap-1 hover:text-foreground transition-colors"
+                          className="flex items-center gap-1 hover:text-foreground transition-colors mr-2"
                           onClick={(event) => {
                             event.stopPropagation()
                             handlePendingClick(cluster)
@@ -310,6 +344,12 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
         open={pendingDialogOpen}
         onOpenChange={setPendingDialogOpen}
         cluster={pendingCluster}
+      />
+
+      <ClusterMembersDialog
+        open={membersDialogOpen}
+        onOpenChange={setMembersDialogOpen}
+        cluster={membersCluster}
       />
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -368,12 +408,15 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
               <label className="text-sm font-medium" htmlFor="cluster-description">
                 Description
               </label>
-              <textarea
-                id="cluster-description"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="min-h-[90px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              />
+              <div className="rounded-md border border-input">
+                <RichTextEditor
+                  value={editDescription}
+                  onChange={setEditDescription}
+                  placeholder="Describe this cluster..."
+                  minHeight="140px"
+                  maxHeight="220px"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -384,10 +427,11 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                 setClusterToEdit(null)
               }}
               disabled={savingEdit}
+              className="rounded-full"
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} disabled={savingEdit}>
+            <Button onClick={handleSaveEdit} disabled={savingEdit} className="rounded-full">
               {savingEdit ? "Saving..." : "Save & Exit"}
             </Button>
           </DialogFooter>

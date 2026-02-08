@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { $createTextNode, $getSelection, $isRangeSelection, $setSelection, type RangeSelection } from "lexical"
+import { $createLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link"
 import {
   createEditorSystem,
   boldExtension,
@@ -38,6 +40,14 @@ function stripEmptyParagraphs(html: string): string {
   return html
 }
 
+function ensureBlockHtml(html: string): string {
+  const trimmed = html.trim()
+  if (trimmed === "") return ""
+  const hasBlockTag = /<(p|div|h1|h2|h3|h4|h5|h6|ul|ol|li|blockquote|pre|table|section|article)[\s>]/i.test(trimmed)
+  if (hasBlockTag) return html
+  return `<p>${trimmed}</p>`
+}
+
 function EditorContent({
   value,
   onChange,
@@ -52,7 +62,7 @@ function EditorContent({
 
   // Sync initial value into editor (and when parent resets the form)
   React.useEffect(() => {
-    const normalized = stripEmptyParagraphs(value)
+    const normalized = ensureBlockHtml(stripEmptyParagraphs(value))
     if (!hasHydratedRef.current) {
       if (normalized === "") {
         lastEmittedRef.current = ""
@@ -117,6 +127,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
   const [blockOpen, setBlockOpen] = React.useState(false)
   const [linkOpen, setLinkOpen] = React.useState(false)
   const [linkUrl, setLinkUrl] = React.useState("https://ui.shadcn.com/docs")
+  const linkSelectionRef = React.useRef<RangeSelection | null>(null)
 
   const currentBlock =
     activeStates?.isQuote ? "quote" :
@@ -157,6 +168,12 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
   }
 
   const openLinkCard = () => {
+    if (editor) {
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        linkSelectionRef.current = $isRangeSelection(selection) ? selection.clone() : null
+      })
+    }
     setLinkUrl("https://ui.shadcn.com/docs")
     setLinkOpen(true)
   }
@@ -176,7 +193,26 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
     }
 
     setTimeout(() => {
-      commands.insertLink?.(url, url)
+      editor.update(() => {
+        if (linkSelectionRef.current) {
+          $setSelection(linkSelectionRef.current)
+          linkSelectionRef.current = null
+        }
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) return
+
+        if (!selection.isCollapsed()) {
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, url)
+          return
+        }
+
+        const linkNode = $createLinkNode(url)
+        linkNode.append($createTextNode(url))
+        const spaceNode = $createTextNode(" ")
+        selection.insertNodes([linkNode, spaceNode])
+        const offset = spaceNode.getTextContentSize()
+        selection.setTextNodeRange(spaceNode, offset, spaceNode, offset)
+      })
     }, 10)
   }
 
@@ -395,6 +431,7 @@ export type RichTextEditorProps = {
   className?: string
   hasError?: boolean
   minHeight?: string
+  maxHeight?: string
 }
 
 export function RichTextEditor({
@@ -404,6 +441,7 @@ export function RichTextEditor({
   className = "",
   hasError,
   minHeight = "120px",
+  maxHeight = "240px",
 }: RichTextEditorProps) {
   return (
     <Provider extensions={extensions}>
@@ -411,7 +449,7 @@ export function RichTextEditor({
         className={`rounded-md border bg-background ${hasError ? "border-red-500" : "border-input"} ${className}`}
       >
         <Toolbar hasError={hasError} />
-        <div style={{ minHeight }} className="px-3 py-2">
+        <div style={{ minHeight, maxHeight }} className="px-3 py-2 overflow-y-auto">
           <RichText
             placeholder={placeholder}
             classNames={{

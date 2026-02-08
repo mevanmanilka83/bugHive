@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { IconBell, IconCheck, IconTrash, IconUsers, IconMail, IconBug, IconX, IconUserPlus, IconBulb } from "@tabler/icons-react"
+import { IconBell, IconCheck, IconUsers, IconMail, IconBug, IconX, IconUserPlus, IconBulb } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,69 +43,22 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     return () => window.removeEventListener("notification:updated", onNotificationUpdate as EventListener)
   }, [fetchNotifications, activeTab])
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const handleMarkAllAsRead = async () => {
     try {
-      const res = await fetch(`/api/notifications/${notificationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ read: true }),
+      const res = await fetch("/api/notifications/mark-all-read", {
+        method: "POST",
       })
 
       if (!res.ok) {
-        throw new Error('Failed to mark as read')
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || "Failed to mark all as read")
       }
 
-      // Update local state
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      )
-      
-      // Trigger sidebar update
-      window.dispatchEvent(new Event("notification:updated"))
-      toast.success("Notification marked as read")
-    } catch (error) {
-      toast.error("Failed to mark notification as read")
-    }
-  }
-
-  const handleMarkAllAsRead = async () => {
-    try {
-      const unreadNotifications = notifications.filter(n => !n.read)
-      const promises = unreadNotifications.map(n => 
-        fetch(`/api/notifications/${n.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ read: true }),
-        })
-      )
-
-      await Promise.all(promises)
-
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
       window.dispatchEvent(new Event("notification:updated"))
       toast.success("All notifications marked as read")
     } catch (error) {
       toast.error("Failed to mark all as read")
-    }
-  }
-
-  const handleDelete = async (notificationId: string) => {
-    try {
-      const res = await fetch(`/api/notifications/${notificationId}`, {
-        method: 'DELETE',
-      })
-
-      if (!res.ok) {
-        throw new Error('Failed to delete notification')
-      }
-
-      setNotifications(prev => prev.filter(n => n.id !== notificationId))
-      window.dispatchEvent(new Event("notification:updated"))
-      toast.success("Notification deleted")
-    } catch (error) {
-      toast.error("Failed to delete notification")
     }
   }
 
@@ -247,8 +200,6 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                 <NotificationCard
                   key={notification.id}
                   notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onDelete={handleDelete}
                   onAcceptInvite={handleAcceptInvite}
                   onDeclineInvite={handleDeclineInvite}
                   getIcon={getNotificationIcon}
@@ -282,8 +233,6 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                 <NotificationCard
                   key={notification.id}
                   notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onDelete={handleDelete}
                   onAcceptInvite={handleAcceptInvite}
                   onDeclineInvite={handleDeclineInvite}
                   getIcon={getNotificationIcon}
@@ -300,8 +249,6 @@ export function NotificationsList({ userId }: NotificationsListProps) {
 
 interface NotificationCardProps {
   notification: any
-  onMarkAsRead: (id: string) => void
-  onDelete: (id: string) => void
   onAcceptInvite?: (notification: any) => void
   onDeclineInvite?: (notification: any) => void
   getIcon: (type: string) => React.ReactNode
@@ -310,8 +257,6 @@ interface NotificationCardProps {
 
 function NotificationCard({
   notification,
-  onMarkAsRead,
-  onDelete,
   onAcceptInvite,
   onDeclineInvite,
   getIcon,
@@ -382,15 +327,6 @@ function NotificationCard({
                 )}
               </div>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(notification.id)}
-              className="h-8 w-8 text-destructive hover:text-destructive"
-              title="Delete"
-            >
-              <IconTrash className="size-4" />
-            </Button>
           </div>
         </div>
       </CardHeader>

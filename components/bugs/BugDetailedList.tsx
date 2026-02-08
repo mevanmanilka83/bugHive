@@ -280,7 +280,7 @@ export function BugDetailedList({
               <h1 className="text-xl font-bold mb-1 sm:text-3xl">All Bugs</h1>
             </div>
             {showReportButton && (
-              <div className="w-full sm:w-auto">
+              <div className="flex w-full justify-end sm:w-auto">
                 <BugReportDialog />
               </div>
             )}
@@ -289,7 +289,7 @@ export function BugDetailedList({
 
         {/* Count, tabs, and filter – styled similar to StackOverflow */}
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 sm:flex-1">
             <p className="shrink-0 text-sm text-muted-foreground">
               {displayCount.toLocaleString()} bugs
             </p>
@@ -372,7 +372,7 @@ export function BugDetailedList({
 
           {/* Filter Button */}
           {onOpenFilters && (
-            <div>
+            <div className="flex justify-end sm:justify-end">
               <Button
                 type="button"
                 size="sm"
