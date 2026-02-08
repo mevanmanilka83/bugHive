@@ -51,9 +51,6 @@ export function AppSidebar({
     }
 
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30000) // Poll every 30 seconds
-
-    return () => clearInterval(interval)
   }, [])
 
   React.useEffect(() => {

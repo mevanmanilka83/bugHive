@@ -10,8 +10,10 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
-    const filterField = url.searchParams.get('filter_field') ?? url.searchParams.get('created_by') ? 'created_by' : undefined
-    const filterValue = url.searchParams.get('filter_value') ?? url.searchParams.get('created_by') ?? undefined
+    const createdBy = url.searchParams.get('created_by') ?? undefined
+    const clusterId = url.searchParams.get('cluster_id') ?? undefined
+    const filterField = url.searchParams.get('filter_field') ?? (createdBy ? 'created_by' : clusterId ? 'cluster_id' : undefined)
+    const filterValue = url.searchParams.get('filter_value') ?? createdBy ?? clusterId ?? undefined
     const limitParam = url.searchParams.get('limit')
 
     const records = await getMultipleRecords(

@@ -38,6 +38,7 @@ interface BugDetailedListProps {
   onBugClick?: (bugId: string) => void
   totalCount?: number
   showTitle?: boolean
+  showReportButton?: boolean
   onOpenFilters?: () => void
   filtersOpen?: boolean
   renderFiltersPanel?: () => React.ReactNode
@@ -60,6 +61,7 @@ export function BugDetailedList({
   onBugClick,
   totalCount,
   showTitle = true,
+  showReportButton = true,
   onOpenFilters,
   filtersOpen,
   renderFiltersPanel,
@@ -277,9 +279,11 @@ export function BugDetailedList({
             <div>
               <h1 className="text-xl font-bold mb-1 sm:text-3xl">All Bugs</h1>
             </div>
-            <div className="w-full sm:w-auto">
-              <BugReportDialog />
-            </div>
+            {showReportButton && (
+              <div className="w-full sm:w-auto">
+                <BugReportDialog />
+              </div>
+            )}
           </div>
         )}
 

@@ -38,8 +38,6 @@ export function NotificationsList({ userId }: NotificationsListProps) {
   React.useEffect(() => {
     const onNotificationUpdate = () => {
       fetchNotifications(activeTab === "unread")
-      // Trigger sidebar update
-      window.dispatchEvent(new Event("notification:updated"))
     }
     window.addEventListener("notification:updated", onNotificationUpdate as EventListener)
     return () => window.removeEventListener("notification:updated", onNotificationUpdate as EventListener)
@@ -142,6 +140,30 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     }
   }
 
+  const handleDeclineInvite = async (notification: any) => {
+    if (!notification.cluster_id) {
+      toast.error("Invalid invitation")
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/clusters/${notification.cluster_id}/decline`, {
+        method: "POST",
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || "Failed to decline invitation")
+      }
+
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id))
+      window.dispatchEvent(new Event("notification:updated"))
+      toast.success("Invitation declined")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to decline invitation")
+    }
+  }
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'cluster_invite':
@@ -228,6 +250,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
                   onAcceptInvite={handleAcceptInvite}
+                  onDeclineInvite={handleDeclineInvite}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -262,6 +285,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
                   onAcceptInvite={handleAcceptInvite}
+                  onDeclineInvite={handleDeclineInvite}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -279,11 +303,20 @@ interface NotificationCardProps {
   onMarkAsRead: (id: string) => void
   onDelete: (id: string) => void
   onAcceptInvite?: (notification: any) => void
+  onDeclineInvite?: (notification: any) => void
   getIcon: (type: string) => React.ReactNode
   getColor: (type: string) => string
 }
 
-function NotificationCard({ notification, onMarkAsRead, onDelete, onAcceptInvite, getIcon, getColor }: NotificationCardProps) {
+function NotificationCard({
+  notification,
+  onMarkAsRead,
+  onDelete,
+  onAcceptInvite,
+  onDeclineInvite,
+  getIcon,
+  getColor,
+}: NotificationCardProps) {
   const created = notification.created_at ? new Date(notification.created_at) : new Date()
   const timeAgo = getTimeAgo(created)
 
@@ -324,27 +357,30 @@ function NotificationCard({ notification, onMarkAsRead, onDelete, onAcceptInvite
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {notification.type === 'cluster_invite' && !notification.read && onAcceptInvite && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => onAcceptInvite(notification)}
-                className="h-8"
-                title="Accept invitation"
-              >
-                <IconUserPlus className="size-4 mr-1" />
-                Accept
-              </Button>
-            )}
-            {!notification.read && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onMarkAsRead(notification.id)}
-                className="h-8 w-8"
-                title="Mark as read"
-              >
-                <IconCheck className="size-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => onAcceptInvite(notification)}
+                  className="h-8"
+                  title="Accept invitation"
+                >
+                  <IconUserPlus className="size-4 mr-1" />
+                  Accept
+                </Button>
+                {onDeclineInvite && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeclineInvite(notification)}
+                    className="h-8"
+                    title="Decline invitation"
+                  >
+                    <IconX className="size-4 mr-1" />
+                    Decline
+                  </Button>
+                )}
+              </div>
             )}
             <Button
               variant="ghost"

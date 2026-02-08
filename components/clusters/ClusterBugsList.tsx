@@ -56,6 +56,7 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
         bugs={bugs}
         onBugClick={openBugDetails}
         totalCount={bugs.length}
+        showReportButton={false}
       />
 
     </div>

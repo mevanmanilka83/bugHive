@@ -1,3 +1,6 @@
+"use client"
+
+import * as React from "react"
 import Link from "next/link"
 import {
   IconBell,
@@ -9,6 +12,7 @@ import {
   type Icon,
 } from "@tabler/icons-react"
 import { SidebarDashboardActions } from "@/components/SidebarDashboardActions"
+import { NotificationBadge } from "@/components/NotificationBadge"
 
 type NavKey =
   | "home"
@@ -60,6 +64,49 @@ export function SidebarPublicNav({
   useAuthFallback = false,
   className,
 }: SidebarPublicNavProps) {
+  const [notificationCount, setNotificationCount] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch("/api/notifications?unread=true&limit=100")
+        if (!res.ok) return
+        const data = await res.json()
+        const unreadCount =
+          data?.notifications?.filter((n: any) => !n.read).length || 0
+        setNotificationCount(unreadCount)
+      } catch {
+        // Silently fail
+      }
+    }
+
+    fetchNotifications()
+  }, [isAuthenticated])
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return
+
+    const onNotificationUpdate = () => {
+      fetch("/api/notifications?unread=true&limit=100")
+        .then((res) => res.json())
+        .then((data) => {
+          const unreadCount =
+            data?.notifications?.filter((n: any) => !n.read).length || 0
+          setNotificationCount(unreadCount)
+        })
+        .catch(() => {})
+    }
+
+    window.addEventListener("notification:updated", onNotificationUpdate as EventListener)
+    return () =>
+      window.removeEventListener(
+        "notification:updated",
+        onNotificationUpdate as EventListener
+      )
+  }, [isAuthenticated])
+
   const primaryItems: NavItem[] = [
     {
       key: "home",
@@ -158,6 +205,9 @@ export function SidebarPublicNav({
               >
                 <item.icon className="size-4" />
                 <span>{item.title}</span>
+                {item.key === "notifications" && isAuthenticated && (
+                  <NotificationBadge count={notificationCount} />
+                )}
               </Link>
             )
           })}

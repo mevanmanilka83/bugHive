@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle } from "@tabler/icons-react"
+import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle, IconPencil } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { CreateClusterDialog } from "./CreateClusterDialog"
 import { InviteUserDialog } from "./InviteUserDialog"
+import { PendingInvitesDialog } from "./PendingInvitesDialog"
 import { getClusters, deleteCluster } from "@/app/actions/cluster"
 
 interface ClustersListProps {
@@ -35,6 +36,13 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
   const [clusterToDelete, setClusterToDelete] = React.useState<any | null>(null)
   const [deleting, setDeleting] = React.useState(false)
   const [selectedCluster, setSelectedCluster] = React.useState<any | null>(null)
+  const [pendingDialogOpen, setPendingDialogOpen] = React.useState(false)
+  const [pendingCluster, setPendingCluster] = React.useState<any | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false)
+  const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
+  const [editName, setEditName] = React.useState("")
+  const [editDescription, setEditDescription] = React.useState("")
+  const [savingEdit, setSavingEdit] = React.useState(false)
 
   const fetchClusters = React.useCallback(async () => {
     try {
@@ -96,6 +104,56 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
   const handleInviteClick = (cluster: any) => {
     setSelectedCluster(cluster)
     setInviteDialogOpen(true)
+  }
+
+  const handlePendingClick = (cluster: any) => {
+    setPendingCluster(cluster)
+    setPendingDialogOpen(true)
+  }
+
+  const handleEditClick = (cluster: any) => {
+    setClusterToEdit(cluster)
+    setEditName(cluster.name || "")
+    setEditDescription(cluster.description || "")
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!clusterToEdit) return
+
+    const name = editName.trim()
+    const description = editDescription.trim()
+
+    if (!name) {
+      toast.error("Cluster name is required")
+      return
+    }
+
+    try {
+      setSavingEdit(true)
+      const res = await fetch(`/api/clusters/${clusterToEdit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description: description.length > 0 ? description : null,
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || "Failed to update cluster")
+      }
+
+      toast.success("Cluster updated")
+      setEditDialogOpen(false)
+      setClusterToEdit(null)
+      fetchClusters()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update cluster")
+    } finally {
+      setSavingEdit(false)
+    }
   }
 
   return (
@@ -165,6 +223,17 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation()
+                            handleEditClick(cluster)
+                          }}
+                          className="h-8 w-8"
+                        >
+                          <IconPencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation()
                             handleInviteClick(cluster)
                           }}
                           className="h-8 w-8"
@@ -194,10 +263,17 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                         {memberCount} member{memberCount !== 1 ? 's' : ''}
                       </span>
                       {inviteCount > 0 && (
-                        <span className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 hover:text-foreground transition-colors"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handlePendingClick(cluster)
+                          }}
+                        >
                           <IconMail className="size-4" />
                           {inviteCount} pending
-                        </span>
+                        </button>
                       )}
                     </div>
                     {isOwner && (
@@ -230,6 +306,12 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
         }}
       />
 
+      <PendingInvitesDialog
+        open={pendingDialogOpen}
+        onOpenChange={setPendingDialogOpen}
+        cluster={pendingCluster}
+      />
+
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -258,6 +340,55 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
               disabled={deleting}
             >
               {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Cluster</DialogTitle>
+            <DialogDescription>Update the cluster name and description.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="cluster-name">
+                Name
+              </label>
+              <input
+                id="cluster-name"
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="cluster-description">
+                Description
+              </label>
+              <textarea
+                id="cluster-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="min-h-[90px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditDialogOpen(false)
+                setClusterToEdit(null)
+              }}
+              disabled={savingEdit}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={savingEdit}>
+              {savingEdit ? "Saving..." : "Save & Exit"}
             </Button>
           </DialogFooter>
         </DialogContent>
