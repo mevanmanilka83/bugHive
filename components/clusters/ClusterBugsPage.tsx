@@ -2,13 +2,15 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { IconReport, IconBulb, IconArrowLeft, IconUsers } from "@tabler/icons-react"
+import { IconReport, IconArrowLeft, IconUsers, IconPencil } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 import { ClusterBugsList } from "./ClusterBugsList"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
+import { EditClusterDialog } from "./EditClusterDialog"
 
 interface ClusterBugsPageProps {
   clusterId: string
@@ -22,6 +24,7 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
   const [cluster, setCluster] = React.useState<any | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [membersDialogOpen, setMembersDialogOpen] = React.useState(false)
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false)
 
   React.useEffect(() => {
     async function fetchCluster() {
@@ -96,10 +99,13 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-semibold mb-2 sm:text-2xl break-words">{cluster.name}</h1>
             {cluster.description && (
-              <div
-                className="prose prose-sm max-w-none text-muted-foreground mb-2 break-words overflow-hidden"
-                dangerouslySetInnerHTML={{ __html: cluster.description }}
-              />
+              <>
+                <div
+                  className="prose prose-sm max-w-none text-muted-foreground mb-2 break-words overflow-hidden"
+                  dangerouslySetInnerHTML={{ __html: cluster.description }}
+                />
+                <Separator className="my-3" />
+              </>
             )}
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <button
@@ -116,7 +122,18 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
               )}
             </div>
           </div>
-          <div className="flex w-full justify-end shrink-0 sm:w-auto">
+          <div className="flex w-full items-center justify-end gap-2 shrink-0 sm:w-auto">
+            {isOwner && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setEditDialogOpen(true)}
+                className="h-9 w-9 rounded-full shrink-0"
+                aria-label="Edit cluster"
+              >
+                <IconPencil className="size-4" />
+              </Button>
+            )}
             <BugReportDialog clusterId={clusterId} />
           </div>
         </div>
@@ -128,6 +145,15 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
         open={membersDialogOpen}
         onOpenChange={setMembersDialogOpen}
         cluster={cluster}
+      />
+
+      <EditClusterDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        cluster={cluster}
+        onSuccess={(updated) => {
+          setCluster((prev) => (prev ? { ...prev, name: updated.name, description: updated.description } : null))
+        }}
       />
     </div>
   )

@@ -274,11 +274,13 @@ export function BugDetailedList({
       {/* Page Header */}
       <div className="mb-6 space-y-2">
         {/* Title and primary actions */}
-        {showTitle && (
+        {(showTitle || showReportButton) && (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h1 className="text-xl font-bold mb-1 sm:text-3xl">All Bugs</h1>
-            </div>
+            {showTitle && (
+              <div>
+                <h1 className="text-xl font-bold mb-1 sm:text-3xl">All Bugs</h1>
+              </div>
+            )}
             {showReportButton && (
               <div className="flex w-full justify-end sm:w-auto">
                 <BugReportDialog />

@@ -93,6 +93,7 @@ export function MyBugsList({ userId, currentUserName, currentUserImage }: MyBugs
         bugs={bugs}
         onBugClick={openBugDetails}
         totalCount={bugs.length}
+        showTitle={false}
         currentUserName={currentUserName}
         currentUserImage={currentUserImage}
       />

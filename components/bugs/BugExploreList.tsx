@@ -413,7 +413,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateCreatedFrom}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateCreatedFrom: e.target.value }))}
-                className="h-8"
+                className="h-8 text-sm sm:text-base"
               />
             </div>
             <div className="space-y-1">
@@ -423,7 +423,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateCreatedTo}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateCreatedTo: e.target.value }))}
-                className="h-8"
+                className="h-8 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -440,7 +440,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateModifiedFrom}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateModifiedFrom: e.target.value }))}
-                className="h-8"
+                className="h-8 text-sm sm:text-base"
               />
             </div>
             <div className="space-y-1">
@@ -450,7 +450,7 @@ export function BugExploreList({ userId, showTitle = true, currentUserName, curr
                 type="date"
                 value={filters.dateModifiedTo}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateModifiedTo: e.target.value }))}
-                className="h-8"
+                className="h-8 text-sm sm:text-base"
               />
             </div>
           </div>

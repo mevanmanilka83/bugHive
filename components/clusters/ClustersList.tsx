@@ -16,11 +16,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { CreateClusterDialog } from "./CreateClusterDialog"
+import { EditClusterDialog } from "./EditClusterDialog"
 import { InviteUserDialog } from "./InviteUserDialog"
 import { PendingInvitesDialog } from "./PendingInvitesDialog"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
 import { getClusters, deleteCluster } from "@/app/actions/cluster"
-import { RichTextEditor } from "@/components/ui/RichTextEditor"
 import { stripHtml } from "@/lib/utils-client"
 
 interface ClustersListProps {
@@ -45,15 +45,6 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
   const [membersCluster, setMembersCluster] = React.useState<any | null>(null)
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
-  const [editName, setEditName] = React.useState("")
-  const [editDescription, setEditDescription] = React.useState("")
-  const [savingEdit, setSavingEdit] = React.useState(false)
-
-  const normalizeDescription = (html: string) => {
-    const trimmed = html.trim()
-    if (trimmed === "" || trimmed === "<p></p>" || trimmed === "<p><br></p>") return ""
-    return html
-  }
 
   const previewText = (html: string, maxChars = 120) => {
     const text = stripHtml(html).replace(/\s+/g, " ").trim()
@@ -135,47 +126,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
 
   const handleEditClick = (cluster: any) => {
     setClusterToEdit(cluster)
-    setEditName(cluster.name || "")
-    setEditDescription(cluster.description || "")
     setEditDialogOpen(true)
-  }
-
-  const handleSaveEdit = async () => {
-    if (!clusterToEdit) return
-
-    const name = editName.trim()
-    const description = normalizeDescription(editDescription)
-
-    if (!name) {
-      toast.error("Cluster name is required")
-      return
-    }
-
-    try {
-      setSavingEdit(true)
-      const res = await fetch(`/api/clusters/${clusterToEdit.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          description: description.length > 0 ? description : null,
-        }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data?.error || "Failed to update cluster")
-      }
-
-      toast.success("Cluster updated")
-      setEditDialogOpen(false)
-      setClusterToEdit(null)
-      fetchClusters()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update cluster")
-    } finally {
-      setSavingEdit(false)
-    }
   }
 
   return (
@@ -371,13 +322,14 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                 setClusterToDelete(null)
               }}
               disabled={deleting}
+              className="rounded-full"
             >
               Cancel
             </Button>
             <Button
-              variant="destructive"
               onClick={handleDeleteCluster}
               disabled={deleting}
+              className="rounded-full bg-foreground text-background hover:bg-foreground/90"
             >
               {deleting ? "Deleting..." : "Delete"}
             </Button>
@@ -385,58 +337,15 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
         </DialogContent>
       </Dialog>
 
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Cluster</DialogTitle>
-            <DialogDescription>Update the cluster name and description.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="cluster-name">
-                Name
-              </label>
-              <input
-                id="cluster-name"
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="cluster-description">
-                Description
-              </label>
-              <div className="rounded-md border border-input">
-                <RichTextEditor
-                  value={editDescription}
-                  onChange={setEditDescription}
-                  placeholder="Describe this cluster..."
-                  minHeight="140px"
-                  maxHeight="220px"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditDialogOpen(false)
-                setClusterToEdit(null)
-              }}
-              disabled={savingEdit}
-              className="rounded-full"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit} disabled={savingEdit} className="rounded-full">
-              {savingEdit ? "Saving..." : "Save & Exit"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditClusterDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        cluster={clusterToEdit}
+        onSuccess={() => {
+          setClusterToEdit(null)
+          fetchClusters()
+        }}
+      />
     </div>
   )
 }
