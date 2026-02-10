@@ -65,6 +65,7 @@ export function getAttachmentSchema() {
       return files.length <= MAX_ATTACHMENTS
     }, "Maximum 5 attachments allowed")
     .optional()
+    .nullable()
 }
 
 /**
@@ -101,8 +102,8 @@ export const STRING_VALIDATIONS = {
   },
   description: {
     min: 3,
-    max: 2000,
+    max: 10000,
     minMessage: "Description must be at least 3 characters",
-    maxMessage: "Description must be less than 2000 characters"
+    maxMessage: "Description must be less than 10000 characters"
   }
 } as const

@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 import { requireAuthForPage } from "@/lib"
-import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 import { MyBugsList } from "@/components/bugs/MyBugsList"
+import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 
 export default async function MyBugsPage() {
   const session = await requireAuthForPage()
@@ -40,21 +40,32 @@ export default async function MyBugsPage() {
           />
 
           <section className="flex-1 min-w-0">
-            <div className="mb-4">
-              <h1 className="mb-1 text-xl font-semibold sm:text-2xl">My Bugs</h1>
-              <p className="text-sm text-muted-foreground">
-                Bugs you’ve reported and can manage.
-              </p>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h1 className="mb-1 text-xl font-semibold sm:text-2xl">My Bugs</h1>
+                <p className="text-sm text-muted-foreground">
+                  Bugs you’ve reported and can manage.
+                </p>
+              </div>
+              <div className="w-full sm:w-auto">
+                <BugReportDialog />
+              </div>
             </div>
             <MyBugsList
-            userId={userId}
-            currentUserName={session.user.name ?? session.user.email ?? undefined}
-            currentUserImage={session.user.image ?? undefined}
-          />
+              userId={userId}
+              currentUserName={session.user.name ?? session.user.email ?? undefined}
+              currentUserImage={session.user.image ?? undefined}
+              showReportButton={false}
+            />
           </section>
         </div>
 
-        <AppFooter />
+        <footer className="mt-auto border-t bg-background">
+          <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>
+            <span>Built for sharing and solving real-world bugs.</span>
+          </div>
+        </footer>
       </div>
       <MobileBottomNav active="mybugs" isAuthenticated />
     </main>

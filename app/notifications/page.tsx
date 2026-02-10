@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 import { requireAuthForPage } from "@/lib"
-import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { NotificationsList } from "@/components/notifications/NotificationsList"
@@ -51,7 +50,12 @@ export default async function NotificationsPage() {
           </section>
         </div>
 
-        <AppFooter />
+        <footer className="mt-auto border-t bg-background">
+          <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>
+            <span>Built for sharing and solving real-world bugs.</span>
+          </div>
+        </footer>
       </div>
       <MobileBottomNav active="notifications" isAuthenticated />
     </main>

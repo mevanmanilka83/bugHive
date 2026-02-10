@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle, IconPencil } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -181,18 +182,42 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                   router.push(basePath === "/clusters" ? `/clusters/${cluster.id}` : `/dashboard/clusters/${cluster.id}`)
                 }}
               >
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                <CardHeader className="pb-2">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
                       <CardTitle className="text-lg leading-tight">{cluster.name}</CardTitle>
-                      {cluster.description && (
-                        <CardDescription className="mt-2 max-w-[60ch] break-words leading-relaxed text-muted-foreground line-clamp-3">
-                          {previewText(cluster.description)}
-                        </CardDescription>
-                      )}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-muted-foreground hover:text-foreground"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleMembersClick(cluster)
+                          }}
+                        >
+                          <IconUsers className="size-3.5" />
+                          {memberCount} member{memberCount !== 1 ? "s" : ""}
+                        </button>
+                        {inviteCount > 0 && (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-muted-foreground hover:text-foreground"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handlePendingClick(cluster)
+                            }}
+                          >
+                            <IconMail className="size-3.5" />
+                            {inviteCount} pending
+                          </button>
+                        )}
+                        {isOwner && (
+                          <Badge variant="secondary" className="rounded-full text-[11px]">Owner</Badge>
+                        )}
+                      </div>
                     </div>
                     {isOwner && (
-                      <div className="flex gap-1 shrink-0 self-start">
+                      <div className="flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 p-1">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -200,7 +225,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleEditClick(cluster)
                           }}
-                          className="h-10 w-10"
+                          className="h-8 w-8"
                           aria-label="Edit cluster"
                         >
                           <IconPencil className="size-4" />
@@ -212,7 +237,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleInviteClick(cluster)
                           }}
-                          className="h-10 w-10"
+                          className="h-8 w-8"
                           aria-label="Invite to cluster"
                         >
                           <IconMail className="size-4" />
@@ -224,7 +249,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                             e.stopPropagation()
                             handleDeleteClick(cluster)
                           }}
-                          className="h-10 w-10 text-destructive hover:text-destructive"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
                           aria-label="Delete cluster"
                         >
                           <IconTrash className="size-4" />
@@ -233,40 +258,12 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button
-                        type="button"
-                        className="flex items-center gap-1"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          handleMembersClick(cluster)
-                        }}
-                      >
-                        <IconUsers className="size-4" />
-                        {memberCount} member{memberCount !== 1 ? 's' : ''}
-                      </button>
-                      {inviteCount > 0 && (
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 hover:text-foreground transition-colors mr-2"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            handlePendingClick(cluster)
-                          }}
-                        >
-                          <IconMail className="size-4" />
-                          {inviteCount} pending
-                        </button>
-                      )}
-                    </div>
-                    {isOwner && (
-                      <span className="inline-flex items-center text-xs bg-primary/10 text-primary px-2 py-1 rounded leading-none">
-                        Owner
-                      </span>
-                    )}
-                  </div>
+                <CardContent className="pt-0">
+                  {cluster.description && (
+                    <CardDescription className="max-w-[52ch] break-words leading-relaxed text-muted-foreground line-clamp-3">
+                      {previewText(cluster.description, 160)}
+                    </CardDescription>
+                  )}
                 </CardContent>
               </Card>
             )

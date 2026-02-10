@@ -11,9 +11,10 @@ interface MyBugsListProps {
   userId: string
   currentUserName?: string
   currentUserImage?: string
+  showReportButton?: boolean
 }
 
-export function MyBugsList({ userId, currentUserName, currentUserImage }: MyBugsListProps) {
+export function MyBugsList({ userId, currentUserName, currentUserImage, showReportButton = true }: MyBugsListProps) {
   const router = useRouter()
   const [bugs, setBugs] = React.useState<any[]>([])
   const [graphOpen, setGraphOpen] = React.useState(false)
@@ -34,7 +35,42 @@ export function MyBugsList({ userId, currentUserName, currentUserImage }: MyBugs
       if (!res.ok) return
       const data = await res.json()
       const items: any[] = data?.bugs || []
-      setBugs(items)
+
+      const clusterIds = Array.from(
+        new Set(
+          items
+            .map((bug) => bug.cluster_id)
+            .filter((id) => typeof id === "string" && id.length > 0)
+        )
+      )
+
+      const clusterNameMap = new Map<string, string>()
+      if (clusterIds.length > 0) {
+        await Promise.all(
+          clusterIds.map(async (clusterId) => {
+            try {
+              const clusterRes = await fetch(`/api/clusters/${clusterId}`)
+              if (!clusterRes.ok) return
+              const clusterData = await clusterRes.json()
+              const name = clusterData?.cluster?.name
+              if (typeof name === "string" && name.trim()) {
+                clusterNameMap.set(clusterId, name.trim())
+              }
+            } catch {
+              // Ignore cluster lookup failures
+            }
+          })
+        )
+      }
+
+      const enriched = items.map((bug) => {
+        if (bug.cluster_id && clusterNameMap.has(bug.cluster_id)) {
+          return { ...bug, cluster_name: clusterNameMap.get(bug.cluster_id) }
+        }
+        return bug
+      })
+
+      setBugs(enriched)
 
       // Fetch solutions for bugs created by this user and build chart data
       const solutionsResult = await getSolutionsByUser(userId)
@@ -94,6 +130,7 @@ export function MyBugsList({ userId, currentUserName, currentUserImage }: MyBugs
         onBugClick={openBugDetails}
         totalCount={bugs.length}
         showTitle={false}
+        showReportButton={showReportButton}
         currentUserName={currentUserName}
         currentUserImage={currentUserImage}
       />

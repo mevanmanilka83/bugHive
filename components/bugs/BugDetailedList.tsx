@@ -408,6 +408,7 @@ export function BugDetailedList({
             ? plainDescription.substring(0, 200) + "..." 
             : plainDescription
           const tags = Array.isArray(bug.tags) ? bug.tags : []
+          const clusterName = bug.cluster_name || bug.clusterName || bug.cluster?.name
           const upvotes = bug.upvotes_count || 0
           const downvotes = bug.downvotes_count || 0
           const score = upvotes - downvotes
@@ -453,6 +454,14 @@ export function BugDetailedList({
                   </p>
                 )}
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  {clusterName && (
+                    <Badge
+                      variant="secondary"
+                      className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200"
+                    >
+                      {String(clusterName)}
+                    </Badge>
+                  )}
                   {tags.slice(0, 5).map((tag: string) => (
                     <Badge
                       key={tag}

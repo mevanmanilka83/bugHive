@@ -65,8 +65,8 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
       status: validation.data.status,
       assignee: validation.data.assignee || null,
       estimated_hours: validation.data.estimated_hours ? parseFloat(validation.data.estimated_hours) : null,
-      links: parsedLinks && parsedLinks.length > 0 ? parsedLinks : null,
-      attachment_urls: attachment_urls.length ? attachment_urls : null,
+      links: parsedLinks && parsedLinks.length > 0 ? parsedLinks : [],
+      attachment_urls: attachment_urls.length ? attachment_urls : [],
       created_by: ensureValidUUID(session.user.id),
     }
 

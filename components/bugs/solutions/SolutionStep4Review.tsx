@@ -90,13 +90,13 @@ export default function SolutionStep4Review({
       </div>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+        <Button variant="outline" onClick={onBack} className="w-full rounded-full sm:w-auto">Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
           <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="w-full rounded-full sm:w-auto">Cancel</Button>
           <Button onClick={onSubmit} disabled={isSubmitting || !title.trim() || !description.trim() || !solutionType} className="w-full rounded-full sm:w-auto">
             {isSubmitting ? "Submitting..." : "Submit Solution"}
           </Button>
         </div>
-        <Button variant="outline" onClick={onBack} className="w-full rounded-full sm:w-auto">Back</Button>
       </div>
     </div>
   )

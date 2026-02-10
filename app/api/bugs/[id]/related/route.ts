@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { extractRouteId, getSingleRecord, successResponse, errorResponse } from "@/lib"
+import { extractRouteId, getSingleRecord, getMultipleRecords, successResponse, errorResponse } from "@/lib"
 import { stripHtml } from "@/lib/utils-client"
 
 export const runtime = "nodejs"
@@ -21,7 +21,7 @@ export type RelatedResult = {
   id: string
   title: string
   url: string
-  source: "github_issue" | "github_repo"
+  source: "github_issue" | "github_repo" | "bughive_public" | "bughive_cluster"
   snippet: string
 }
 
@@ -107,6 +107,9 @@ async function generateQueries(params: {
     "You generate a GitHub search query for ISSUES only. Output valid JSON with key: issueQuery.",
     "Rules:",
     "- issueQuery must include the provided anchors (language/framework, error name, key API/function, and 1 symptom phrase when available).",
+    "- If a hard error/exception is present, it MUST be included as an exact phrase in quotes.",
+    "- If a language/framework term exists, it MUST be included.",
+    "- Include at least two anchors when available; prefer three if present.",
     "- issueQuery must find issues about the SAME language/framework AND same explicit error/exception when available.",
     "- Include: in:title,body is:issue",
     "- Keep the query under 200 characters. No markdown. Output only JSON.",
@@ -386,7 +389,7 @@ function buildSignatureQuery(signature: BugSignature): string {
 function queryIncludesAnchors(query: string, signature: BugSignature): boolean {
   if (signature.anchors.length === 0) return true
   const normalizedQuery = query.toLowerCase().replace(/"/g, "")
-  const requiredMatches = Math.min(2, signature.anchors.length)
+  const requiredMatches = Math.min(3, signature.anchors.length)
   const matchCount = signature.anchors.filter((anchor) =>
     normalizedQuery.includes(anchor.toLowerCase())
   ).length
@@ -489,6 +492,30 @@ function normalizeRepo(item: GitHubRepo): RelatedResult {
   }
 }
 
+function normalizePublicBug(item: any): RelatedResult {
+  const title = String(item.title || item.header || item.name || "").trim() || "(untitled bug)"
+  const snippet = toSnippet(item.description) || "Public BugHive report"
+  return {
+    id: `bug-${item.id}`,
+    title,
+    url: `/bugs/${item.id}`,
+    source: "bughive_public",
+    snippet,
+  }
+}
+
+function normalizeClusterBug(item: any, clusterId: string): RelatedResult {
+  const title = String(item.title || item.header || item.name || "").trim() || "(untitled bug)"
+  const snippet = toSnippet(item.description) || "BugHive cluster report"
+  return {
+    id: `cluster-bug-${item.id}`,
+    title,
+    url: `/clusters/${clusterId}/bugs/${item.id}`,
+    source: "bughive_cluster",
+    snippet,
+  }
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -503,12 +530,24 @@ export async function GET(
 
     const title = trimQueryText(String(bug.title || ""))
     const description = trimQueryText(String(bug.description || ""))
+    const environment = trimQueryText(String(bug.environment || ""))
+    const expectedBehavior = trimQueryText(String(bug.expected_behavior || ""))
+    const actualBehavior = trimQueryText(String(bug.actual_behavior || ""))
+    const stepsToReproduce = trimQueryText(String(bug.steps_to_reproduce || ""))
+    const sourcesText = Array.isArray(bug.sources) ? bug.sources.map(String).join(" ") : trimQueryText(String(bug.sources || ""))
     const tags = Array.isArray(bug.tags) ? bug.tags.map(String) : []
     const errorMessage = typeof bug.actual_behavior === "string" ? trimQueryText(bug.actual_behavior) : undefined
 
     const signature = extractBugSignature({
       title: String(bug.title || "").trim() || title,
-      description,
+      description: [
+        description,
+        environment,
+        expectedBehavior,
+        actualBehavior,
+        stepsToReproduce,
+        sourcesText,
+      ].filter(Boolean).join(" "),
       tags,
       errorMessage,
     })
@@ -533,12 +572,29 @@ export async function GET(
 
     const { terms: keyTerms } = extractKeyTerms({
       title: String(bug.title || "").trim() || title,
-      description,
+      description: [
+        description,
+        environment,
+        expectedBehavior,
+        actualBehavior,
+        stepsToReproduce,
+        sourcesText,
+      ].filter(Boolean).join(" "),
       tags,
       errorMessage,
     })
     const keyTermsLower = keyTerms.map((t) => t.toLowerCase())
-    const bugContext = [title, description, errorMessage, ...tags].join(" ").toLowerCase()
+    const bugContext = [
+      title,
+      description,
+      environment,
+      expectedBehavior,
+      actualBehavior,
+      stepsToReproduce,
+      sourcesText,
+      errorMessage,
+      ...tags,
+    ].join(" ").toLowerCase()
 
     const githubToken = process.env.GITHUB_TOKEN
     const headers: Record<string, string> = {
@@ -589,6 +645,16 @@ export async function GET(
       return text.includes(signature.hardError.toLowerCase())
     }
 
+    function matchesLanguageText(text: string): boolean {
+      if (signature.languageTerms.length === 0) return true
+      return signature.languageTerms.some((lang) => text.includes(lang))
+    }
+
+    function matchesHardErrorText(text: string): boolean {
+      if (!signature.hardError) return true
+      return text.includes(signature.hardError.toLowerCase())
+    }
+
     function softMatchCount(item: RelatedResult): number {
       if (signature.softTerms.length === 0) return 0
       const text = `${item.title} ${item.snippet}`.toLowerCase()
@@ -599,6 +665,11 @@ export async function GET(
       if (signature.apiTerms.length === 0) return true
       const text = `${item.title} ${item.snippet}`.toLowerCase()
       return signature.apiTerms.some((term) => text.includes(term.toLowerCase()))
+    }
+
+    function softMatchCountText(text: string): number {
+      if (signature.softTerms.length === 0) return 0
+      return signature.softTerms.filter((term) => text.includes(term)).length
     }
 
     function passesDomainBlocklist(item: RelatedResult): boolean {
@@ -624,7 +695,7 @@ export async function GET(
       return penalty
     }
 
-    const minSoftMatchesStrict = signature.softTerms.length > 0 ? 1 : 0
+    const minSoftMatchesStrict = signature.softTerms.length > 1 ? 2 : signature.softTerms.length > 0 ? 1 : 0
     const minSoftMatchesRelaxed = signature.softTerms.length > 0 ? 1 : 0
 
     const strictIssues = rawIssues
@@ -664,7 +735,87 @@ export async function GET(
     const chosen = strictIssues.length > 0 ? strictIssues : relaxedIssues
     const issues = chosen.slice(0, MAX_RESULTS_PER_SOURCE).map((x) => x.item)
 
-    const results = issues
+    const allBugs = await getMultipleRecords("bugs")
+    const publicBugs = allBugs.filter((record) => {
+      if (record?.id === bugId) return false
+      if (record?.cluster_id) return false
+      const visibility = String(record?.visibility || "public").toLowerCase().trim()
+      return visibility !== "private"
+    })
+
+    const clusterId = bug?.cluster_id ? String(bug.cluster_id) : ""
+    const clusterBugs = clusterId
+      ? allBugs.filter((record) => {
+          if (record?.id === bugId) return false
+          return String(record?.cluster_id || "") === clusterId
+        })
+      : []
+
+    const minPublicScore = keyTermsLower.length <= 2 ? 1 : 2
+
+    const scoredPublicBugs = publicBugs
+      .map((record) => {
+        const text = [
+          record.title || "",
+          record.description || "",
+          record.environment || "",
+          record.expected_behavior || "",
+          record.actual_behavior || "",
+          record.steps_to_reproduce || "",
+          Array.isArray(record.sources) ? record.sources.join(" ") : (record.sources || ""),
+          (record.tags || []).join(" "),
+        ].join(" ").toLowerCase()
+        const score = keyTermsLower.filter((term) => text.includes(term)).length
+        const softScore = softMatchCountText(text)
+        return { record, score, softScore, text }
+      })
+      .filter((x) => x.score >= minPublicScore)
+      .filter((x) => (signature.softTerms.length > 0 ? x.softScore >= 1 : true))
+      .filter((x) => matchesLanguageText(x.text))
+      .filter((x) => matchesHardErrorText(x.text))
+      .sort((a, b) => b.softScore - a.softScore || b.score - a.score)
+      .slice(0, MAX_RESULTS_PER_SOURCE)
+      .map((x) => normalizePublicBug(x.record))
+
+    const clusterMatchTerms = [
+      signature.hardError,
+      ...signature.languageTerms,
+      ...signature.apiTerms,
+      ...signature.symptomPhrases,
+      ...signature.softTerms,
+    ]
+      .filter(Boolean)
+      .map((term) => String(term).toLowerCase())
+
+    const minClusterScore = keyTermsLower.length <= 2 ? 1 : 2
+
+    const scoredClusterBugs = clusterBugs
+      .map((record) => {
+        const text = [
+          record.title || "",
+          record.description || "",
+          record.environment || "",
+          record.expected_behavior || "",
+          record.actual_behavior || "",
+          record.steps_to_reproduce || "",
+          Array.isArray(record.sources) ? record.sources.join(" ") : (record.sources || ""),
+          (record.tags || []).join(" "),
+        ].join(" ").toLowerCase()
+        const score = keyTermsLower.filter((term) => text.includes(term)).length
+        const softScore = softMatchCountText(text)
+        const matchCount = clusterMatchTerms.filter((term) => text.includes(term)).length
+        return { record, score, softScore, matchCount, text }
+      })
+      .filter((x) => x.matchCount >= 1)
+      .filter((x) => x.score > 0)
+      .filter((x) => (signature.softTerms.length > 0 ? x.softScore >= 1 : x.score >= minClusterScore))
+      .filter((x) => matchesLanguageText(x.text))
+      .filter((x) => matchesHardErrorText(x.text))
+      .sort((a, b) => b.softScore - a.softScore || b.score - a.score)
+      .slice(0, MAX_RESULTS_PER_SOURCE)
+      .map((x) => normalizeClusterBug(x.record, clusterId))
+
+    const results = [...scoredClusterBugs, ...scoredPublicBugs, ...issues]
 
     return successResponse({
       results,

@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
       filterField || undefined,
       filterValue || undefined
     )
-    const bugs = limitParam ? records.slice(0, parseInt(limitParam, 10) || 500) : records
+    const publicScoped = filterField ? records : records.filter((bug: any) => !bug?.cluster_id)
+    const bugs = limitParam ? publicScoped.slice(0, parseInt(limitParam, 10) || 500) : publicScoped
 
     return NextResponse.json({ bugs })
   } catch (error: any) {

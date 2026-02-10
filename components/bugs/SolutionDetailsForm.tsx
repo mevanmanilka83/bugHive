@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { BugDescriptionContent } from "@/components/bugs/BugDescriptionContent"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export interface SolutionDetailsFormProps {
   solution: {
@@ -55,6 +56,12 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
   })()
 
   const linksDisplay = links.length ? links.join(", ") : "—"
+
+  const isImageUrl = (url: string): boolean => {
+    if (!url) return false
+    const cleanUrl = url.split("?")[0].split("#")[0]
+    return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(cleanUrl)
+  }
 
   return (
     <div className="grid gap-4">
@@ -134,16 +141,44 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
                     (att as { name?: string; filename?: string })?.filename ||
                     url?.split("/").pop() ||
                     url
+              const showPreview = isImageUrl(url)
               return (
-                <a
-                  key={idx}
-                  className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {String(filename)}
-                </a>
+                <div key={idx} className="inline-flex">
+                  {showPreview ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {String(filename)}
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        sideOffset={8}
+                        className="bg-background text-foreground border border-input p-2 shadow-md max-w-[140px]"
+                      >
+                        <img
+                          src={url}
+                          alt={String(filename)}
+                          className="max-h-20 max-w-[120px] rounded-sm object-contain"
+                        />
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <a
+                      className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {String(filename)}
+                    </a>
+                  )}
+                </div>
               )
             })
           ) : (

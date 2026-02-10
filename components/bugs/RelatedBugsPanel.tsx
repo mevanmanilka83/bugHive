@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils-client"
 
 /** Normalized shape from API; extend source union when adding Reddit/Stack Overflow */
-export type RelatedBugSource = "github_issue"
+export type RelatedBugSource = "github_issue" | "bughive_public" | "bughive_cluster"
 
 export type RelatedBugItem = {
   id: string
@@ -20,11 +20,14 @@ export type RelatedBugItem = {
 
 const sourceLabels: Record<RelatedBugSource, string> = {
   github_issue: "GitHub Issue",
+  bughive_public: "BugHive",
+  bughive_cluster: "BugHive Cluster",
 }
 
 interface RelatedBugsPanelProps {
   bugId: string
   className?: string
+  context?: "public" | "cluster"
 }
 
 function renderSnippet(snippet: string) {
@@ -36,7 +39,11 @@ function renderSnippet(snippet: string) {
   )
 }
 
-export function RelatedBugsPanel({ bugId, className }: RelatedBugsPanelProps) {
+export function RelatedBugsPanel({
+  bugId,
+  className,
+  context = "public",
+}: RelatedBugsPanelProps) {
   const [items, setItems] = React.useState<RelatedBugItem[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -68,7 +75,7 @@ export function RelatedBugsPanel({ bugId, className }: RelatedBugsPanelProps) {
       }
       const data = await res.json()
       const list = Array.isArray(data?.results) ? data.results : []
-      setItems(list.filter((item: RelatedBugItem) => item.source === "github_issue"))
+      setItems(list)
       setLastChecked(new Date())
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
@@ -88,7 +95,7 @@ export function RelatedBugsPanel({ bugId, className }: RelatedBugsPanelProps) {
   return (
     <aside
       className={cn(
-        "md:sticky md:top-6 h-fit rounded-lg border bg-card p-4 md:p-5",
+        "md:sticky md:top-6 h-fit rounded-lg border bg-card p-4 md:p-5 max-h-[520px] overflow-hidden",
         className
       )}
       aria-live="polite"
@@ -96,7 +103,11 @@ export function RelatedBugsPanel({ bugId, className }: RelatedBugsPanelProps) {
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold">Related Bugs</h2>
-          <p className="text-xs text-muted-foreground">From GitHub community reports</p>
+          <p className="text-xs text-muted-foreground">
+            {context === "cluster"
+              ? "From BugHive cluster, public bugs, and GitHub issues"
+              : "From BugHive public reports and GitHub issues"}
+          </p>
           {lastChecked && (
             <p className="text-[11px] text-muted-foreground">
               Last checked {formatLastChecked(lastChecked)}
@@ -130,33 +141,35 @@ export function RelatedBugsPanel({ bugId, className }: RelatedBugsPanelProps) {
           role="status"
           aria-live="polite"
         >
-          <p>No related GitHub issues found yet.</p>
+          <p>No related public bugs or GitHub issues found yet.</p>
           {error && <p className="text-xs text-destructive">{error}</p>}
           <p className="text-xs">Use Retry to search again or refine the bug details</p>
         </div>
       ) : (
-        <ul className="space-y-3" role="list" aria-label="Related GitHub issues">
-          {items.map((item) => (
-            <li key={item.id} className="rounded-md border bg-background p-3 transition-colors hover:bg-muted/50">
-              <div className="flex items-start justify-between gap-2">
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="text-sm font-semibold text-blue-600 hover:text-blue-800 line-clamp-2 inline-flex items-start gap-1 break-words"
-                  title={`Open ${sourceLabels[item.source] ?? "link"} in new tab`}
-                >
-                  <span className="min-w-0 flex-1">{item.title}</span>
-                  <IconExternalLink className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden />
-                </a>
-                <Badge variant="outline" className="text-[10px] shrink-0">
-                  {sourceLabels[item.source] ?? "GitHub"}
-                </Badge>
-              </div>
-              <div className="mt-2">{renderSnippet(item.snippet)}</div>
-            </li>
-          ))}
-        </ul>
+        <div className="max-h-[360px] overflow-y-auto pr-1">
+          <ul className="space-y-3" role="list" aria-label="Related GitHub issues">
+            {items.map((item) => (
+              <li key={item.id} className="rounded-md border bg-background p-3 transition-colors hover:bg-muted/50">
+                <div className="flex items-start justify-between gap-2">
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 line-clamp-2 inline-flex items-start gap-1 break-words"
+                    title={`Open ${sourceLabels[item.source] ?? "link"} in new tab`}
+                  >
+                    <span className="min-w-0 flex-1">{item.title}</span>
+                    <IconExternalLink className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden />
+                  </a>
+                  <Badge variant="outline" className="text-[10px] shrink-0">
+                    {sourceLabels[item.source] ?? "GitHub"}
+                  </Badge>
+                </div>
+                <div className="mt-2">{renderSnippet(item.snippet)}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </aside>
   )

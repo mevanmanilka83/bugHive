@@ -17,9 +17,16 @@ interface ClusterBugsPageProps {
   userId: string
   /** Link for "Back to Clusters" and error redirects (e.g. "/clusters" or "/dashboard/clusters") */
   clustersHref?: string
+  /** Base href for bug details, e.g. "/bugs" or "/clusters/:id/bugs" */
+  bugDetailsBaseHref?: string
 }
 
-export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/clusters" }: ClusterBugsPageProps) {
+export function ClusterBugsPage({
+  clusterId,
+  userId,
+  clustersHref = "/dashboard/clusters",
+  bugDetailsBaseHref,
+}: ClusterBugsPageProps) {
   const router = useRouter()
   const [cluster, setCluster] = React.useState<any | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -74,7 +81,7 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
           onClick={() => router.push(clustersHref)}
         >
           <IconArrowLeft className="size-4 mr-2" />
-          Back to Clusters
+          Back to Public bugs
         </Button>
       </div>
     )
@@ -86,15 +93,6 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
   return (
     <div className="min-w-0">
       <div className="mb-4 rounded-lg border bg-background/80 p-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(clustersHref)}
-          className="mb-3 -ml-2"
-        >
-          <IconArrowLeft className="size-4 mr-2" />
-          Back to Clusters
-        </Button>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-semibold mb-1 sm:text-2xl break-words">{cluster.name}</h1>
@@ -139,7 +137,11 @@ export function ClusterBugsPage({ clusterId, userId, clustersHref = "/dashboard/
         </div>
       </div>
 
-      <ClusterBugsList clusterId={clusterId} userId={userId} />
+      <ClusterBugsList
+        clusterId={clusterId}
+        userId={userId}
+        bugDetailsBaseHref={bugDetailsBaseHref}
+      />
 
       <ClusterMembersDialog
         open={membersDialogOpen}

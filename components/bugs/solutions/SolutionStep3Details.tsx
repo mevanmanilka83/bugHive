@@ -148,11 +148,11 @@ export default function SolutionStep3Details({
       </div>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+        <Button variant="outline" onClick={onBack} className="w-full rounded-full sm:w-auto">Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
           <Button variant="outline" onClick={onCancel} className="w-full rounded-full sm:w-auto">Cancel</Button>
           <Button onClick={onNext} className="w-full rounded-full sm:w-auto">Review</Button>
         </div>
-        <Button variant="outline" onClick={onBack} className="w-full rounded-full sm:w-auto">Back</Button>
       </div>
     </div>
   )

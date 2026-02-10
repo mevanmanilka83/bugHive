@@ -7,9 +7,10 @@ import { BugDetailedList } from "@/components/bugs/BugDetailedList"
 interface ClusterBugsListProps {
   clusterId: string
   userId: string
+  bugDetailsBaseHref?: string
 }
 
-export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
+export function ClusterBugsList({ clusterId, userId, bugDetailsBaseHref = "/bugs" }: ClusterBugsListProps) {
   const router = useRouter()
   const [bugs, setBugs] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -46,7 +47,7 @@ export function ClusterBugsList({ clusterId, userId }: ClusterBugsListProps) {
   }, [fetchBugs])
 
   function openBugDetails(bugId: string) {
-    router.push(`/bugs/${bugId}`)
+    router.push(`${bugDetailsBaseHref}/${bugId}`)
   }
 
   return (

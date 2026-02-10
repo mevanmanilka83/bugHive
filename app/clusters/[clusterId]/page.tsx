@@ -45,7 +45,12 @@ export default async function ClusterDetailPage({
           />
 
           <section className="flex-1 min-w-0">
-            <ClusterBugsPage clusterId={clusterId} userId={userId} clustersHref="/clusters" />
+            <ClusterBugsPage
+              clusterId={clusterId}
+              userId={userId}
+              clustersHref="/bugs"
+              bugDetailsBaseHref={`/clusters/${clusterId}/bugs`}
+            />
           </section>
         </div>
 
