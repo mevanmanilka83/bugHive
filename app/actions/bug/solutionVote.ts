@@ -34,7 +34,7 @@ export async function voteOnSolution(
     }
     const { session } = authResult
     const userId = ensureValidUUID(session.user.id)
-    const db = getSupabaseAdmin()
+    const db = getSupabaseAdmin() as any
 
     // Validate solution exists
     const { data: solution, error: solutionError } = await db
@@ -51,12 +51,16 @@ export async function voteOnSolution(
     }
 
     // Check if user already voted
-    const { data: existingVote, error: voteError } = await db
-      .from("solution_votes")
+    const { data: existingVoteData, error: voteError } = await db
+      // Some Supabase client typings can infer `never` for table names in strict mode.
+      // We keep runtime behavior identical but provide an explicit shape for TypeScript.
+      .from("solution_votes" as any)
       .select("id, vote_type")
       .eq("solution_id", ensureValidUUID(solutionId))
       .eq("user_id", userId)
       .single()
+
+    const existingVote = existingVoteData as { id: string; vote_type: SolutionVoteType } | null
 
     if (voteError && voteError.code !== "PGRST116") {
       return handleSupabaseError(voteError, "Failed to check existing vote")
@@ -135,7 +139,7 @@ export async function getUserSolutionVote(
   userId: string
 ): Promise<ActionResponse<{ vote_type: SolutionVoteType | null }>> {
   try {
-    const db = getSupabaseAdmin()
+    const db = getSupabaseAdmin() as any
     const { data: vote, error } = await db
       .from("solution_votes")
       .select("vote_type")

@@ -35,7 +35,7 @@ export async function voteOnBug(
     }
     const { session } = authResult
     const userId = ensureValidUUID(session.user.id)
-    const db = getSupabaseAdmin()
+    const db = getSupabaseAdmin() as any
 
     // Validate bug exists
     const { data: bug, error: bugError } = await db
@@ -139,7 +139,7 @@ export async function getUserVote(
   userId: string
 ): Promise<ActionResponse<{ vote_type: VoteType | null }>> {
   try {
-    const db = getSupabaseAdmin()
+    const db = getSupabaseAdmin() as any
     const { data: vote, error } = await db
       .from('bug_votes')
       .select('vote_type')

@@ -1,21 +1,12 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
-import { auth } from "@/lib"
-import { AppFooter } from "@/components/AppFooter"
+import { requireAuthForPage } from "@/lib"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
-import { ClusterBugsPage } from "@/components/clusters/ClusterBugsPage"
 
-export default async function ClusterDetailPage({
-  params,
-}: {
-  params: Promise<{ clusterId: string }>
-}) {
-  const session = await auth()
-  const userId = session?.user?.id
-  const isAuthenticated = !!session?.user?.id
-  const { clusterId } = await params
+export default async function SavedPage() {
+  const session = await requireAuthForPage()
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
@@ -32,33 +23,37 @@ export default async function ClusterDetailPage({
                 </div>
               </Link>
             </div>
+
             <div className="flex items-center gap-2">
-              <HomeHeaderUser session={session as any} />
+              <HomeHeaderUser session={session} />
             </div>
           </div>
         </header>
 
-        <div className="flex flex-1 gap-4 py-4">
-          <SidebarPublicNav
-            active="clusters"
-            isAuthenticated={isAuthenticated}
-            className="hidden lg:flex"
-          />
+        <div className="flex flex-1 gap-6 py-6">
+          <SidebarPublicNav active="saved" isAuthenticated className="hidden md:flex" />
 
           <section className="flex-1 min-w-0">
-            <ClusterBugsPage
-              clusterId={clusterId}
-              userId={userId}
-              isAuthenticated={isAuthenticated}
-              clustersHref="/clusters"
-              bugDetailsBaseHref={`/clusters/${clusterId}/bugs`}
-            />
+            <div className="mb-4">
+              <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Saved</h1>
+              <p className="text-sm text-muted-foreground">
+                Keep track of bugs and clusters you want to revisit.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-background p-6 text-sm text-muted-foreground">
+              <p>No saved items yet.</p>
+            </div>
           </section>
         </div>
 
-        <AppFooter />
+        <footer className="mt-auto border-t bg-background">
+          <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>
+            <span>Built for sharing and solving real-world bugs.</span>
+          </div>
+        </footer>
       </div>
-      <MobileBottomNav active="clusters" isAuthenticated={isAuthenticated} />
+      <MobileBottomNav active="saved" isAuthenticated />
     </main>
   )
 }

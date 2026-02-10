@@ -23,12 +23,18 @@ export type AuthenticatedSession = Awaited<ReturnType<typeof auth>> & {
 /**
  * Standard action response type
  */
-export type ActionResponse<T = any> = {
-  success: boolean
-  error?: string
-  message?: string
-  details?: any
-} & T
+export type ActionResponse<T = any> =
+  | ({
+      success: true
+      message?: string
+      details?: any
+    } & T)
+  | ({
+      success: false
+      error: string
+      message?: string
+      details?: any
+    } & Partial<T>)
 
 /**
  * API Route Authentication Helper

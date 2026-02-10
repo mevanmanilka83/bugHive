@@ -1,18 +1,28 @@
-import { checkAuth, ensureValidUUID, addTimestamps, extractUsernameFromEmail, supabase, insertRecord } from "@/lib"
+import { auth, checkAuth, ensureValidUUID, addTimestamps, extractUsernameFromEmail, supabase, insertRecord } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  const authResult = await checkAuth()
-  if (authResult instanceof NextResponse) return authResult
+  const session = await auth()
 
-  const { user } = authResult
-  const userId = ensureValidUUID(user.id)
+  if (!session?.user?.id) {
+    const { data: publicClusters, error } = await supabase
+      .from("clusters")
+      .select("*")
+      .eq("visibility", "public")
 
-  // Get all clusters and filter where user is owner or member
-  // This is more reliable than using Supabase array operators
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ clusters: publicClusters || [] })
+  }
+
+  const userId = ensureValidUUID(session.user.id)
+
+  // Get all clusters and filter where user is owner/member or public
   const { data: allClusters, error } = await supabase
     .from('clusters')
     .select('*')
@@ -21,13 +31,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
   
-  // Filter clusters where user is owner or member
+  // Filter clusters where user is owner/member or public
   const clusters = (allClusters || []).filter((cluster: any) => {
     const isOwner = cluster.owner_id === userId
     const isMember = cluster.members && 
                      Array.isArray(cluster.members) && 
                      cluster.members.includes(userId)
-    return isOwner || isMember
+    const isPublic = (cluster.visibility || "private").toString().toLowerCase() === "public"
+    return isOwner || isMember || isPublic
   })
 
   return NextResponse.json({ clusters })
@@ -42,6 +53,7 @@ export async function POST(request: NextRequest) {
 
   const name = body.name?.trim()
   const description = body.description?.trim() || null
+  const visibility = (body.visibility || "private").toString().toLowerCase()
 
   if (!name || name.length < 3) {
     return NextResponse.json({ error: "Cluster name is required and must be at least 3 characters" }, { status: 400 })
@@ -54,6 +66,7 @@ export async function POST(request: NextRequest) {
   const clusterData = addTimestamps({
     name,
     description,
+    visibility: visibility === "public" ? "public" : "private",
     owner_id: ensureValidUUID(user.id),
     owner_username: ownerUsername,
     members: [ensureValidUUID(user.id)],

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
-import { requireAuthForPage } from "@/lib"
+import { auth } from "@/lib"
 import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
@@ -8,8 +8,9 @@ import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 import { ClustersList } from "@/components/clusters/ClustersList"
 
 export default async function ClustersPage() {
-  const session = await requireAuthForPage()
-  const userId = session.user.id
+  const session = await auth()
+  const isAuthenticated = !!session?.user?.id
+  const userId = session?.user?.id
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
@@ -28,7 +29,7 @@ export default async function ClustersPage() {
               </Link>
             </div>
             <div className="flex items-center gap-2">
-              <HomeHeaderUser session={session} />
+              <HomeHeaderUser session={session as any} />
             </div>
           </div>
         </header>
@@ -37,7 +38,7 @@ export default async function ClustersPage() {
         <div className="flex flex-1 gap-6 py-6">
           <SidebarPublicNav
             active="clusters"
-            isAuthenticated
+            isAuthenticated={isAuthenticated}
             className="hidden lg:flex"
           />
 
@@ -48,13 +49,13 @@ export default async function ClustersPage() {
                 Create and manage teams to collaborate on bugs.
               </p>
             </div>
-            <ClustersList userId={userId} basePath="/clusters" />
+            <ClustersList userId={userId} isAuthenticated={isAuthenticated} basePath="/clusters" />
           </section>
         </div>
 
         <AppFooter />
       </div>
-      <MobileBottomNav active="clusters" isAuthenticated />
+      <MobileBottomNav active="clusters" isAuthenticated={isAuthenticated} />
     </main>
   )
 }

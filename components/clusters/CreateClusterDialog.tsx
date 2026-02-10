@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
 import { toast } from "sonner"
 
 interface CreateClusterDialogProps {
@@ -27,7 +28,11 @@ interface CreateClusterDialogProps {
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <Button type="submit" disabled={pending} className="rounded-full px-4">
+    <Button
+      type="submit"
+      disabled={pending}
+      className="w-full max-w-full rounded-full px-5 sm:w-auto"
+    >
       {pending ? "Creating..." : "Create Cluster"}
     </Button>
   )
@@ -35,6 +40,7 @@ function SubmitButton() {
 
 export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClusterDialogProps) {
   const [state, formAction] = useActionState(createCluster, null)
+  const [description, setDescription] = React.useState("")
   const hasProcessedRef = React.useRef<string | null>(null)
   const onSuccessRef = React.useRef(onSuccess)
 
@@ -47,6 +53,7 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
   React.useEffect(() => {
     if (!open) {
       hasProcessedRef.current = null
+      setDescription("")
     }
   }, [open])
 
@@ -68,15 +75,15 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <form action={formAction}>
-          <DialogHeader>
+      <DialogContent className="max-h-[85vh] overflow-hidden p-4 sm:p-6">
+        <form action={formAction} className="flex h-full max-h-[85vh] flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Create New Cluster</DialogTitle>
             <DialogDescription>
               Create a new team cluster to collaborate on bugs and projects.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid flex-1 min-h-0 gap-4 overflow-y-auto py-3 pr-1 sm:py-5">
             <div className="grid gap-2">
               <Label htmlFor="name">Cluster Name *</Label>
               <Input
@@ -88,22 +95,62 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
                 maxLength={100}
               />
             </div>
+            <div className="grid gap-2 rounded-lg border bg-muted/20 p-2 sm:gap-3 sm:p-3">
+              <div className="flex items-center justify-between">
+                <Label>Visibility</Label>
+                <span className="text-xs text-muted-foreground">Required</span>
+              </div>
+              <RadioGroup name="visibility" defaultValue="private" className="grid gap-2">
+                <label className="flex items-start gap-3 rounded-md border bg-background p-2 hover:border-primary/40">
+                  <RadioGroupItem value="private" className="mt-0.5" />
+                  <span className="grid gap-1">
+                    <span className="text-sm font-medium">Private</span>
+                    <span className="text-xs text-muted-foreground">
+                      Invite-only. Members must be invited by the owner.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 rounded-md border bg-background p-2 hover:border-primary/40">
+                  <RadioGroupItem value="public" className="mt-0.5" />
+                  <span className="grid gap-1">
+                    <span className="text-sm font-medium">Public</span>
+                    <span className="text-xs text-muted-foreground">
+                      Anyone can request to join. Owner approves or declines.
+                    </span>
+                  </span>
+                </label>
+              </RadioGroup>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                placeholder="Optional description for this cluster"
-                rows={3}
-                maxLength={500}
-              />
+              <div className="rounded-md border border-input">
+                <RichTextEditor
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Optional description for this cluster"
+                  minHeight="120px"
+                  maxHeight="120px"
+                  className="h-[220px] max-h-[220px] overflow-hidden"
+                />
+              </div>
+              <input type="hidden" name="description" value={description} />
+              <p className="text-xs text-muted-foreground">
+                You can format text and add links. Keep it concise.
+              </p>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-full px-4">
+          <DialogFooter className="shrink-0 flex flex-wrap gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full max-w-full rounded-full px-4 sm:w-auto"
+            >
               Cancel
             </Button>
-            <SubmitButton />
+            <div className="w-full max-w-full sm:w-auto">
+              <SubmitButton />
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

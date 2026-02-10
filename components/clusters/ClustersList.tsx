@@ -1,13 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
-import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle, IconPencil } from "@tabler/icons-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle, IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggleGroup"
 import {
   Dialog,
   DialogContent,
@@ -21,17 +22,24 @@ import { EditClusterDialog } from "./EditClusterDialog"
 import { InviteUserDialog } from "./InviteUserDialog"
 import { PendingInvitesDialog } from "./PendingInvitesDialog"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
-import { getClusters, deleteCluster } from "@/app/actions/cluster"
+import { deleteCluster } from "@/app/actions/cluster"
 import { stripHtml } from "@/lib/utils-client"
 
 interface ClustersListProps {
-  userId: string
+  userId?: string
+  isAuthenticated: boolean
   /** Base path for cluster links (e.g. "/clusters" for homepage UI, "/dashboard" for dashboard) */
   basePath?: string
 }
 
-export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListProps) {
+export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard" }: ClustersListProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const returnTo = React.useMemo(() => {
+    const qs = searchParams?.toString()
+    return qs ? `${pathname}?${qs}` : pathname
+  }, [pathname, searchParams])
   const [clusters, setClusters] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(false)
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
@@ -46,6 +54,14 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
   const [membersCluster, setMembersCluster] = React.useState<any | null>(null)
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
+  const [visibilityFilter, setVisibilityFilter] = React.useState<"private" | "public">("private")
+  const [requestingClusterId, setRequestingClusterId] = React.useState<string | null>(null)
+  const [requestedClusters, setRequestedClusters] = React.useState<Set<string>>(new Set())
+
+  const normalizeVisibility = React.useCallback((value: any) => {
+    const normalized = (value ?? "private").toString().toLowerCase().trim()
+    return normalized === "public" ? "public" : "private"
+  }, [])
 
   const previewText = (html: string, maxChars = 120) => {
     const text = stripHtml(html).replace(/\s+/g, " ").trim()
@@ -56,10 +72,10 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
   const fetchClusters = React.useCallback(async () => {
     try {
       setLoading(true)
-      const result = await getClusters()
-      if (result.success) {
-        setClusters(result.clusters || [])
-      }
+      const res = await fetch("/api/clusters")
+      if (!res.ok) return
+      const data = await res.json()
+      setClusters(data?.clusters || [])
     } catch (error) {
       // Handle error silently
     } finally {
@@ -76,6 +92,13 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
   React.useEffect(() => {
     fetchClusters()
   }, [fetchClusters])
+
+  React.useEffect(() => {
+    const hasPrivate = clusters.some((cluster) => normalizeVisibility(cluster.visibility) === "private")
+    const hasPublic = clusters.some((cluster) => normalizeVisibility(cluster.visibility) === "public")
+    if (!hasPrivate && hasPublic) setVisibilityFilter("public")
+    if (!hasPublic && hasPrivate) setVisibilityFilter("private")
+  }, [clusters, normalizeVisibility])
 
   React.useEffect(() => {
     const onCreated = () => fetchClusters()
@@ -130,17 +153,79 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
     setEditDialogOpen(true)
   }
 
+  const handleRequestJoin = async (clusterId: string) => {
+    if (!isAuthenticated) {
+      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`)
+      return
+    }
+
+    setRequestingClusterId(clusterId)
+    try {
+      const res = await fetch(`/api/clusters/${clusterId}/request-join`, { method: "POST" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to send request")
+      }
+      setRequestedClusters((prev) => new Set(prev).add(clusterId))
+      toast.success("Join request sent")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send request")
+    } finally {
+      setRequestingClusterId(null)
+    }
+  }
+
+  const filteredClusters = React.useMemo(() => {
+    return clusters.filter((cluster) => {
+      return normalizeVisibility(cluster.visibility) === visibilityFilter
+    })
+  }, [clusters, visibilityFilter, normalizeVisibility])
+
   return (
     <div>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {loading ? (
-          <Skeleton className="h-5 w-24" />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {clusters.length} cluster{clusters.length !== 1 ? 's' : ''}
-          </p>
-        )}
-        <Button onClick={() => setCreateDialogOpen(true)} className="w-full rounded-full px-4 sm:w-auto">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          {loading ? (
+            <Skeleton className="h-5 w-24" />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {filteredClusters.length} {visibilityFilter} cluster{filteredClusters.length !== 1 ? "s" : ""}
+            </p>
+          )}
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={visibilityFilter}
+            onValueChange={(value) => {
+              if (value === "public" || value === "private") setVisibilityFilter(value)
+            }}
+            className="w-full sm:w-auto"
+          >
+            <ToggleGroupItem
+              value="private"
+              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+            >
+              Private
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="public"
+              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+            >
+              Public
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        <Button
+          onClick={() => {
+            if (!isAuthenticated) {
+              router.push(`/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`)
+              return
+            }
+            setCreateDialogOpen(true)
+          }}
+          className="w-full rounded-full px-4 sm:w-auto h-10"
+        >
           <IconPlus className="size-4 mr-2" />
           Create Cluster
         </Button>
@@ -159,14 +244,19 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
               </CardContent>
             </Card>
           ))
-        ) : clusters.length === 0 ? (
+        ) : filteredClusters.length === 0 ? (
           <div className="col-span-full text-center py-12 text-muted-foreground">
             <IconUsers className="size-12 mx-auto mb-4 opacity-50" />
-            <p>No clusters found. Create your first cluster!</p>
+            <p>No {visibilityFilter} clusters found.</p>
           </div>
         ) : (
-          clusters.map((cluster) => {
-            const isOwner = cluster.owner_id === userId
+          filteredClusters.map((cluster) => {
+            const isOwner = isAuthenticated && userId && cluster.owner_id === userId
+            const isMember = Boolean(userId) && Array.isArray(cluster.members) && cluster.members.includes(userId)
+            const isPublic = normalizeVisibility(cluster.visibility) === "public"
+            const canRequestJoin = isPublic && !isOwner && !isMember
+            const isRequesting = requestingClusterId === cluster.id
+            const isRequested = requestedClusters.has(cluster.id)
             const memberCount = cluster.members?.length || 0
             const inviteCount = cluster.invites?.length || 0
 
@@ -217,7 +307,7 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                       </div>
                     </div>
                     {isOwner && (
-                      <div className="flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 p-1">
+                      <div className="flex w-fit shrink-0 items-center gap-0.5 rounded-full border bg-muted/40 p-1">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -256,6 +346,21 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
                         </Button>
                       </div>
                     )}
+                    {canRequestJoin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleRequestJoin(cluster.id)
+                        }}
+                        disabled={isRequesting || isRequested}
+                      >
+                        <IconUserPlus className="size-4 mr-1" />
+                        {isRequested ? "Request sent" : isRequesting ? "Sending..." : "Request to join"}
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -271,28 +376,34 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
         )}
       </div>
 
-      <CreateClusterDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={handleClusterCreated}
-      />
+      {isAuthenticated && (
+        <CreateClusterDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onSuccess={handleClusterCreated}
+        />
+      )}
 
-      <InviteUserDialog
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-        cluster={selectedCluster}
-        onSuccess={() => {
-          setInviteDialogOpen(false)
-          fetchClusters()
-          toast.success("Invitation sent successfully")
-        }}
-      />
+      {isAuthenticated && (
+        <InviteUserDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+          cluster={selectedCluster}
+          onSuccess={() => {
+            setInviteDialogOpen(false)
+            fetchClusters()
+            toast.success("Invitation sent successfully")
+          }}
+        />
+      )}
 
-      <PendingInvitesDialog
-        open={pendingDialogOpen}
-        onOpenChange={setPendingDialogOpen}
-        cluster={pendingCluster}
-      />
+      {isAuthenticated && (
+        <PendingInvitesDialog
+          open={pendingDialogOpen}
+          onOpenChange={setPendingDialogOpen}
+          cluster={pendingCluster}
+        />
+      )}
 
       <ClusterMembersDialog
         open={membersDialogOpen}
@@ -300,49 +411,53 @@ export function ClustersList({ userId, basePath = "/dashboard" }: ClustersListPr
         cluster={membersCluster}
       />
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <IconAlertTriangle className="size-5 text-destructive" />
-              Delete Cluster
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{clusterToDelete?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeleteDialogOpen(false)
-                setClusterToDelete(null)
-              }}
-              disabled={deleting}
-              className="rounded-full"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDeleteCluster}
-              disabled={deleting}
-              className="rounded-full bg-foreground text-background hover:bg-foreground/90"
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isAuthenticated && (
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <IconAlertTriangle className="size-5 text-destructive" />
+                Delete Cluster
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{clusterToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false)
+                  setClusterToDelete(null)
+                }}
+                disabled={deleting}
+                className="rounded-full"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteCluster}
+                disabled={deleting}
+                className="rounded-full bg-foreground text-background hover:bg-foreground/90"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
-      <EditClusterDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        cluster={clusterToEdit}
-        onSuccess={() => {
-          setClusterToEdit(null)
-          fetchClusters()
-        }}
-      />
+      {isAuthenticated && (
+        <EditClusterDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          cluster={clusterToEdit}
+          onSuccess={() => {
+            setClusterToEdit(null)
+            fetchClusters()
+          }}
+        />
+      )}
     </div>
   )
 }

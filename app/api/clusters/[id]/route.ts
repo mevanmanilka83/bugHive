@@ -1,4 +1,4 @@
-import { checkAuth, addTimestamps, ensureValidUUID, getSingleRecord, updateRecord, deleteRecord } from "@/lib"
+import { auth, checkAuth, addTimestamps, ensureValidUUID, getSingleRecord, updateRecord, deleteRecord, supabase } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'
@@ -8,10 +8,24 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await checkAuth()
-  if (authResult instanceof NextResponse) return authResult
-
   const { id } = await context.params
+  const session = await auth()
+
+  if (!session?.user?.id) {
+    const { data: cluster, error } = await supabase
+      .from("clusters")
+      .select("*")
+      .eq("id", id)
+      .eq("visibility", "public")
+      .single()
+
+    if (error || !cluster) {
+      return NextResponse.json({ error: "Cluster not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ cluster })
+  }
+
   const cluster = await getSingleRecord('clusters', id)
   return NextResponse.json({ cluster })
 }
@@ -33,7 +47,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Only cluster owners can update clusters" }, { status: 403 })
   }
 
-  const allowedFields = ['name', 'description']
+  const allowedFields = ['name', 'description', 'visibility']
   const updateData: any = {}
   
   for (const field of allowedFields) {

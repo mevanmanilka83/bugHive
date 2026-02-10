@@ -24,10 +24,12 @@ import { toast } from "sonner"
 
 export function LoginForm({
   className,
+  callbackUrl = "/",
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { callbackUrl?: string }) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const safeCallbackUrl = callbackUrl.startsWith("/") ? callbackUrl : "/"
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -42,13 +44,14 @@ export function LoginForm({
         email,
         password,
         redirect: false,
+        callbackUrl: safeCallbackUrl,
       })
 
       if (result?.error) {
         toast.error("Invalid email or password")
       } else {
         toast("Welcome back! ")
-        router.push("/")
+        router.replace(result?.url || safeCallbackUrl)
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.")
@@ -59,7 +62,7 @@ export function LoginForm({
 
   const handleGitHubSignIn = () => {
     toast.loading("Signing in with GitHub...")
-    signIn("github", { callbackUrl: "/" })
+    signIn("github", { callbackUrl: safeCallbackUrl })
   }
 
   return (
@@ -129,7 +132,7 @@ export function LoginForm({
                   {isLoading ? "Signing in..." : "Login"}
                 </Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="/auth/signup">Sign up</a>
+                  Don&apos;t have an account? <a href={`/auth/signup?callbackUrl=${encodeURIComponent(safeCallbackUrl)}`}>Sign up</a>
                 </FieldDescription>
               </Field>
             </FieldGroup>

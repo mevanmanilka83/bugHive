@@ -1,9 +1,11 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   IconBell,
+  IconBookmark,
   IconBug,
   IconHome2,
   IconLogin,
@@ -11,7 +13,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react"
 
-type NavKey = "home" | "public" | "mybugs" | "clusters" | "notifications" | "settings"
+type NavKey = "home" | "public" | "mybugs" | "clusters" | "notifications" | "saved" | "settings"
 
 type NavItem = {
   key: NavKey
@@ -31,10 +33,11 @@ function resolveHref(
   href: string,
   requiresAuth: boolean | undefined,
   isAuthenticated: boolean,
-  useAuthFallback: boolean
+  useAuthFallback: boolean,
+  authFallbackHref: string,
 ) {
   if (requiresAuth && useAuthFallback && !isAuthenticated) {
-    return "/auth/signin"
+    return authFallbackHref
   }
   return href
 }
@@ -45,6 +48,12 @@ export function MobileBottomNav({
   useAuthFallback = false,
 }: MobileBottomNavProps) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const returnTo = React.useMemo(() => {
+    const qs = searchParams?.toString()
+    return qs ? `${pathname}?${qs}` : pathname
+  }, [pathname, searchParams])
+  const authFallbackHref = `/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`
 
   const items: NavItem[] = [
     { key: "home", title: "Home", href: "/", icon: IconHome2 },
@@ -60,13 +69,19 @@ export function MobileBottomNav({
       title: "Clusters",
       href: "/clusters",
       icon: IconUsersGroup,
-      requiresAuth: true,
     },
     {
       key: "notifications",
       title: "Alerts",
       href: "/notifications",
       icon: IconBell,
+      requiresAuth: true,
+    },
+    {
+      key: "saved",
+      title: "Saved",
+      href: "/saved",
+      icon: IconBookmark,
       requiresAuth: true,
     },
     {
@@ -92,7 +107,8 @@ export function MobileBottomNav({
           item.href,
           item.requiresAuth,
           isAuthenticated,
-          useAuthFallback
+          useAuthFallback,
+          authFallbackHref,
         )
         const isActive =
           item.key === active ||
@@ -100,6 +116,7 @@ export function MobileBottomNav({
           (item.key === "mybugs" && pathname.startsWith("/mybugs")) ||
           (item.key === "clusters" && pathname.startsWith("/clusters")) ||
           (item.key === "notifications" && pathname.startsWith("/notifications")) ||
+          (item.key === "saved" && pathname.startsWith("/saved")) ||
           (item.key === "settings" && pathname.startsWith("/settings"))
 
         return (
@@ -121,7 +138,7 @@ export function MobileBottomNav({
       })}
       {!isAuthenticated && (
         <Link
-          href="/auth/signin"
+          href={authFallbackHref}
           className="flex flex-col items-center gap-0.5 py-2 px-2 min-w-0 flex-1 text-center text-muted-foreground"
         >
           <IconLogin className="size-5 shrink-0" />

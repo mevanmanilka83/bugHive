@@ -62,6 +62,24 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     }
   }
 
+  const markNotificationRead = async (notificationId: string) => {
+    // Best-effort: we also update local state so UI feels instant.
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+    )
+    try {
+      await fetch(`/api/notifications/${notificationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ read: true }),
+      })
+    } catch {
+      // ignore
+    } finally {
+      window.dispatchEvent(new Event("notification:updated"))
+    }
+  }
+
   const handleAcceptInvite = async (notification: any) => {
     if (!notification.cluster_id) {
       toast.error("Invalid invitation")
@@ -76,12 +94,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
         throw new Error(result.error || 'Failed to accept invitation')
       }
 
-      // Update notification to read
-      setNotifications(prev => 
-        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-      )
-
-      window.dispatchEvent(new Event("notification:updated"))
+      await markNotificationRead(notification.id)
       toast.success(result.message || "Invitation accepted! You are now a member of the cluster.")
       
       // Refresh after a short delay to show the cluster
@@ -117,12 +130,41 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     }
   }
 
+  const handleRespondJoinRequest = async (notification: any, action: "accept" | "decline") => {
+    if (!notification.cluster_id || !notification.bug_id) {
+      toast.error("Invalid join request")
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/clusters/${notification.cluster_id}/join-requests/${notification.bug_id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || "Failed to update request")
+      }
+
+      await markNotificationRead(notification.id)
+      toast.success(action === "accept" ? "Request accepted" : "Request declined")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update request")
+    }
+  }
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'cluster_invite':
         return <IconUsers className="size-5" />
+      case 'cluster_join_request':
+        return <IconUserPlus className="size-5" />
       case 'cluster_joined':
         return <IconUsers className="size-5" />
+      case 'cluster_join_declined':
+        return <IconX className="size-5" />
       case 'cluster_removed':
         return <IconUsers className="size-5" />
       case 'bug_assigned':
@@ -139,8 +181,12 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     switch (type) {
       case 'cluster_invite':
         return 'bg-blue-500'
+      case 'cluster_join_request':
+        return 'bg-indigo-500'
       case 'cluster_joined':
         return 'bg-green-500'
+      case 'cluster_join_declined':
+        return 'bg-red-500'
       case 'cluster_removed':
         return 'bg-red-500'
       case 'bug_assigned':
@@ -202,6 +248,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                   notification={notification}
                   onAcceptInvite={handleAcceptInvite}
                   onDeclineInvite={handleDeclineInvite}
+                  onRespondJoinRequest={handleRespondJoinRequest}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -235,6 +282,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                   notification={notification}
                   onAcceptInvite={handleAcceptInvite}
                   onDeclineInvite={handleDeclineInvite}
+                  onRespondJoinRequest={handleRespondJoinRequest}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -251,6 +299,7 @@ interface NotificationCardProps {
   notification: any
   onAcceptInvite?: (notification: any) => void
   onDeclineInvite?: (notification: any) => void
+  onRespondJoinRequest?: (notification: any, action: "accept" | "decline") => void
   getIcon: (type: string) => React.ReactNode
   getColor: (type: string) => string
 }
@@ -259,6 +308,7 @@ function NotificationCard({
   notification,
   onAcceptInvite,
   onDeclineInvite,
+  onRespondJoinRequest,
   getIcon,
   getColor,
 }: NotificationCardProps) {
@@ -288,10 +338,16 @@ function NotificationCard({
                 {notification.cluster_id && (
                   <span className="flex items-center gap-1">
                     <IconUsers className="size-3" />
-                    Cluster
+                    {notification.cluster_name ? (
+                      <Badge variant="secondary" className="h-5 px-2 text-[10px]">
+                        {notification.cluster_name}
+                      </Badge>
+                    ) : (
+                      "Cluster"
+                    )}
                   </span>
                 )}
-                {notification.bug_id && (
+                {notification.bug_id && notification.type !== "cluster_join_request" && (
                   <span className="flex items-center gap-1">
                     <IconBug className="size-3" />
                     Bug
@@ -325,6 +381,30 @@ function NotificationCard({
                     Decline
                   </Button>
                 )}
+              </div>
+            )}
+            {notification.type === 'cluster_join_request' && !notification.read && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => onRespondJoinRequest?.(notification, "accept")}
+                  className="h-8"
+                  title="Accept request"
+                >
+                  <IconCheck className="size-4 mr-1" />
+                  Accept
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRespondJoinRequest?.(notification, "decline")}
+                  className="h-8"
+                  title="Decline request"
+                >
+                  <IconX className="size-4 mr-1" />
+                  Decline
+                </Button>
               </div>
             )}
           </div>

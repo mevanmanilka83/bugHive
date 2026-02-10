@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { BugDetailedList } from "@/components/bugs/BugDetailedList"
 import { GraphDialog } from "@/components/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggleGroup"
 import { getSolutionsByUser } from "@/app/actions/bug/BugSolution"
 
 interface MyBugsListProps {
@@ -20,6 +21,7 @@ export function MyBugsList({ userId, currentUserName, currentUserImage, showRepo
   const [graphOpen, setGraphOpen] = React.useState(false)
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
   const [loading, setLoading] = React.useState(false)
+  const [visibilityFilter, setVisibilityFilter] = React.useState<"private" | "public">("private")
 
   const chartConfig: ChartConfig = {
     count: {
@@ -122,13 +124,53 @@ export function MyBugsList({ userId, currentUserName, currentUserImage, showRepo
     router.push(`/bugs/${bugId}`)
   }
 
+  const filteredBugs = React.useMemo(() => {
+    return bugs.filter((bug) => {
+      const rawVisibility = (bug.visibility || "").toString().toLowerCase()
+      const visibility = rawVisibility === "public" || rawVisibility === "private"
+        ? rawVisibility
+        : bug.cluster_id
+          ? "private"
+          : "public"
+      return visibility === visibilityFilter
+    })
+  }, [bugs, visibilityFilter])
+
   return (
     <div>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          {filteredBugs.length} {visibilityFilter} bug{filteredBugs.length !== 1 ? "s" : ""}
+        </p>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="sm"
+          value={visibilityFilter}
+          onValueChange={(value) => {
+            if (value === "public" || value === "private") setVisibilityFilter(value)
+          }}
+          className="w-full sm:w-auto"
+        >
+          <ToggleGroupItem
+            value="private"
+            className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+          >
+            Private
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="public"
+            className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+          >
+            Public
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
       <BugDetailedList
         userId={userId}
-        bugs={bugs}
+        bugs={filteredBugs}
         onBugClick={openBugDetails}
-        totalCount={bugs.length}
+        totalCount={filteredBugs.length}
         showTitle={false}
         showReportButton={showReportButton}
         currentUserName={currentUserName}

@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
 import { RichTextEditor } from "@/components/ui/RichTextEditor"
 
 function normalizeDescription(html: string) {
@@ -23,18 +24,22 @@ interface EditClusterDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   cluster: any | null
-  onSuccess?: (updated: { name: string; description: string | null }) => void
+  onSuccess?: (updated: {
+    visibility: "private" | "public"; name: string; description: string | null 
+  }) => void
 }
 
 export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: EditClusterDialogProps) {
   const [name, setName] = React.useState("")
   const [description, setDescription] = React.useState("")
+  const [visibility, setVisibility] = React.useState<"private" | "public">("private")
   const [saving, setSaving] = React.useState(false)
 
   React.useEffect(() => {
     if (open && cluster) {
       setName(cluster.name || "")
       setDescription(cluster.description || "")
+      setVisibility((cluster.visibility || "private").toLowerCase() === "public" ? "public" : "private")
     }
   }, [open, cluster])
 
@@ -57,6 +62,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
         body: JSON.stringify({
           name: trimmedName,
           description: normalizedDesc.length > 0 ? normalizedDesc : null,
+          visibility,
         }),
       })
 
@@ -67,7 +73,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
 
       toast.success("Cluster updated")
       onOpenChange(false)
-      onSuccess?.({ name: trimmedName, description: normalizedDesc.length > 0 ? normalizedDesc : null })
+      onSuccess?.({ visibility, name: trimmedName, description: normalizedDesc.length > 0 ? normalizedDesc : null })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update cluster")
     } finally {
@@ -84,7 +90,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
           <DialogTitle>Edit Cluster</DialogTitle>
           <DialogDescription>Update the cluster name and description.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="edit-cluster-name">
               Name
@@ -96,6 +102,33 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
               onChange={(e) => setName(e.target.value)}
               className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
             />
+          </div>
+          <div className="space-y-2 pt-1">
+            <label className="text-sm font-medium">Visibility</label>
+            <RadioGroup
+              value={visibility}
+              onValueChange={(value) => setVisibility(value === "public" ? "public" : "private")}
+              className="grid gap-2"
+            >
+              <label className="flex items-start gap-3 rounded-md border bg-background p-3 hover:border-primary/40">
+                <RadioGroupItem value="private" className="mt-0.5" />
+                <span className="grid gap-1">
+                  <span className="text-sm font-medium">Private</span>
+                  <span className="text-xs text-muted-foreground">
+                    Invite-only. Members must be invited by the owner.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border bg-background p-3 hover:border-primary/40">
+                <RadioGroupItem value="public" className="mt-0.5" />
+                <span className="grid gap-1">
+                  <span className="text-sm font-medium">Public</span>
+                  <span className="text-xs text-muted-foreground">
+                    Anyone can request to join. Owner approves or declines.
+                  </span>
+                </span>
+              </label>
+            </RadioGroup>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium" htmlFor="edit-cluster-description">
@@ -110,6 +143,9 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
                 maxHeight="220px"
               />
             </div>
+            <p className="text-xs text-muted-foreground">
+              You can format text and add links. Keep it concise.
+            </p>
           </div>
         </div>
         <DialogFooter>

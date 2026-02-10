@@ -2,7 +2,16 @@ import { z } from "zod"
 
 export function getNotificationSchema() {
   return z.object({
-    type: z.enum(["cluster_invite", "cluster_joined", "cluster_removed", "bug_assigned", "bug_updated", "solution_created"]),
+    type: z.enum([
+      "cluster_invite",
+      "cluster_join_request",
+      "cluster_joined",
+      "cluster_join_declined",
+      "cluster_removed",
+      "bug_assigned",
+      "bug_updated",
+      "solution_created",
+    ]),
     title: z.string()
       .min(3, "Title must be at least 3 characters")
       .max(200, "Title must be less than 200 characters"),

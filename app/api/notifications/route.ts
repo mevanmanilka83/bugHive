@@ -35,7 +35,32 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ notifications: notifications || [] })
+  const baseNotifications = notifications || []
+
+  // Attach cluster name for nicer UI badges.
+  const clusterIds = [
+    ...new Set(baseNotifications.map((n: any) => n.cluster_id).filter(Boolean)),
+  ] as string[]
+
+  let clusterNameMap: Record<string, string> = {}
+  if (clusterIds.length > 0) {
+    const { data: clusters } = await supabase
+      .from("clusters")
+      .select("id, name")
+      .in("id", clusterIds)
+
+    clusterNameMap = (clusters || []).reduce((acc: Record<string, string>, c: any) => {
+      acc[c.id] = c.name
+      return acc
+    }, {})
+  }
+
+  const enriched = baseNotifications.map((n: any) => ({
+    ...n,
+    cluster_name: n.cluster_id ? clusterNameMap[n.cluster_id] || null : null,
+  }))
+
+  return NextResponse.json({ notifications: enriched })
 }
 
 export async function POST(request: NextRequest) {

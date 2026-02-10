@@ -32,13 +32,14 @@ export async function createCluster(
     const rawData = {
       name: (formData.get('name') as string) || '',
       description: (formData.get('description') as string) || '',
+      visibility: (formData.get('visibility') as string) || 'private',
     }
 
     const validation = validateWithSchema(getClusterSchema(), rawData)
     if (!validation.success) {
       return validation
     }
-    const { name, description } = validation.data
+    const { name, description, visibility } = validation.data
 
     // Get owner username
     const ownerUsername = getUsernameFromSession(session)
@@ -47,6 +48,7 @@ export async function createCluster(
     const clusterData = {
       name,
       description: description || null,
+      visibility,
       owner_id: userId,
       owner_username: ownerUsername,
       members: [userId], // Owner is automatically a member

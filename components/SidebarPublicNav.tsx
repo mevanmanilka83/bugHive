@@ -2,8 +2,10 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   IconBell,
+  IconBookmark,
   IconBug,
   IconHome2,
   IconSettings,
@@ -21,6 +23,7 @@ type NavKey =
   | "tags"
   | "clusters"
   | "notifications"
+  | "saved"
   | "settings"
 
 type NavItem = {
@@ -43,9 +46,10 @@ function resolveHref(
   requiresAuth: boolean | undefined,
   isAuthenticated: boolean,
   useAuthFallback: boolean,
+  authFallbackHref: string,
 ) {
   if (requiresAuth && useAuthFallback && !isAuthenticated) {
-    return "/auth/signin"
+    return authFallbackHref
   }
 
   return href
@@ -64,6 +68,14 @@ export function SidebarPublicNav({
   useAuthFallback = false,
   className,
 }: SidebarPublicNavProps) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const returnTo = React.useMemo(() => {
+    const qs = searchParams?.toString()
+    return qs ? `${pathname}?${qs}` : pathname
+  }, [pathname, searchParams])
+  const authFallbackHref = `/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`
+
   const [notificationCount, setNotificationCount] = React.useState(0)
 
   React.useEffect(() => {
@@ -139,7 +151,6 @@ export function SidebarPublicNav({
       title: "Teams & clusters",
       href: "/clusters",
       icon: IconUsersGroup,
-      requiresAuth: true,
     },
   ]
 
@@ -149,6 +160,13 @@ export function SidebarPublicNav({
       title: "Notifications",
       href: "/notifications",
       icon: IconBell,
+      requiresAuth: true,
+    },
+    {
+      key: "saved",
+      title: "Saved",
+      href: "/saved",
+      icon: IconBookmark,
       requiresAuth: true,
     },
     {
@@ -177,6 +195,7 @@ export function SidebarPublicNav({
             item.requiresAuth,
             isAuthenticated,
             useAuthFallback,
+            authFallbackHref,
           )
 
           return (
@@ -195,6 +214,7 @@ export function SidebarPublicNav({
               item.requiresAuth,
               isAuthenticated,
               useAuthFallback,
+              authFallbackHref,
             )
 
             return (
