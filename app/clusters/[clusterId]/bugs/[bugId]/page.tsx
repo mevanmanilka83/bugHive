@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
-import { requireAuthForPage, getSingleRecord, ensureValidUUID } from "@/lib"
+import { auth, getSingleRecord, ensureValidUUID, supabase } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
 import { RelatedBugsPanel } from "@/components/bugs/RelatedBugsPanel"
@@ -8,14 +8,14 @@ import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 export default async function ClusterBugDetailsPage({
   params,
 }: {
   params: Promise<{ clusterId: string; bugId: string }>
 }) {
-  const session = await requireAuthForPage()
+  const session = await auth()
   const { clusterId, bugId } = await params
   const validatedBugId = ensureValidUUID(bugId)
 
@@ -30,6 +30,32 @@ export default async function ClusterBugDetailsPage({
     await incrementViewCount("bugs", validatedBugId)
   } catch {
     notFound()
+  }
+
+  // Allow unauthenticated access only for public clusters.
+  // For private clusters, require the user to be owner or member.
+  const { data: cluster, error } = await supabase
+    .from("clusters")
+    .select("id, owner_id, members, visibility")
+    .eq("id", clusterId)
+    .single()
+
+  if (error || !cluster) {
+    notFound()
+  }
+
+  const visibility = String(cluster.visibility || "private").toLowerCase()
+  const userId = session?.user?.id ? ensureValidUUID(session.user.id) : null
+  const isMember =
+    !!userId && Array.isArray(cluster.members) && cluster.members.includes(userId)
+  const isOwner = !!userId && cluster.owner_id === userId
+
+  if (visibility !== "public" && !isOwner && !isMember) {
+    redirect(
+      `/auth/signin?callbackUrl=${encodeURIComponent(
+        `/clusters/${clusterId}/bugs/${bugId}`,
+      )}`,
+    )
   }
 
   return (
@@ -56,7 +82,7 @@ export default async function ClusterBugDetailsPage({
         <div className="flex flex-1 flex-col gap-6 py-6 md:grid md:grid-cols-[200px_minmax(0,1fr)_320px] md:items-start lg:grid-cols-[220px_minmax(0,1fr)_360px] xl:grid-cols-[240px_minmax(0,1fr)_380px]">
           <SidebarPublicNav
             active="clusters"
-            isAuthenticated
+            isAuthenticated={!!session}
             className="hidden md:flex"
           />
 
@@ -67,7 +93,7 @@ export default async function ClusterBugDetailsPage({
             >
               &larr; Back to Cluster
             </Link>
-            <BugDetailsView bug={bug} userId={session.user.id} />
+            <BugDetailsView bug={bug} userId={session?.user?.id} />
           </section>
 
           <aside className="w-full min-w-0">
@@ -77,7 +103,7 @@ export default async function ClusterBugDetailsPage({
 
         <AppFooter />
       </div>
-      <MobileBottomNav active="clusters" isAuthenticated />
+      <MobileBottomNav active="clusters" isAuthenticated={!!session} />
     </main>
   )
 }

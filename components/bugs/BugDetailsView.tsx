@@ -248,20 +248,15 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                 </span>
               )}
             </h2>
-            {!isBugClosedOrResolved &&
-              (isLoggedIn ? (
-                <Button
-                  type="button"
-                  className="rounded-full"
-                  onClick={() => setSolutionOpen(true)}
-                >
-                  Add solution
-                </Button>
-              ) : (
-                <Button asChild className="rounded-full">
-                  <Link href="/auth/signin">Add solution</Link>
-                </Button>
-              ))}
+            {!isBugClosedOrResolved && isLoggedIn && (
+              <Button
+                type="button"
+                className="rounded-full"
+                onClick={() => setSolutionOpen(true)}
+              >
+                Add solution
+              </Button>
+            )}
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">

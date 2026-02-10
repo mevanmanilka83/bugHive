@@ -13,15 +13,26 @@ interface MyBugsListProps {
   currentUserName?: string
   currentUserImage?: string
   showReportButton?: boolean
+  visibilityFilter?: "private" | "public"
+  onVisibilityChange?: (value: "private" | "public") => void
+  showVisibilityToggle?: boolean
 }
 
-export function MyBugsList({ userId, currentUserName, currentUserImage, showReportButton = true }: MyBugsListProps) {
+export function MyBugsList({
+  userId,
+  currentUserName,
+  currentUserImage,
+  showReportButton = true,
+  visibilityFilter,
+  onVisibilityChange,
+  showVisibilityToggle = true,
+}: MyBugsListProps) {
   const router = useRouter()
   const [bugs, setBugs] = React.useState<any[]>([])
   const [graphOpen, setGraphOpen] = React.useState(false)
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
   const [loading, setLoading] = React.useState(false)
-  const [visibilityFilter, setVisibilityFilter] = React.useState<"private" | "public">("private")
+  const [internalVisibilityFilter, setInternalVisibilityFilter] = React.useState<"private" | "public">("private")
 
   const chartConfig: ChartConfig = {
     count: {
@@ -124,6 +135,8 @@ export function MyBugsList({ userId, currentUserName, currentUserImage, showRepo
     router.push(`/bugs/${bugId}`)
   }
 
+  const activeVisibilityFilter = visibilityFilter ?? internalVisibilityFilter
+
   const filteredBugs = React.useMemo(() => {
     return bugs.filter((bug) => {
       const rawVisibility = (bug.visibility || "").toString().toLowerCase()
@@ -132,39 +145,49 @@ export function MyBugsList({ userId, currentUserName, currentUserImage, showRepo
         : bug.cluster_id
           ? "private"
           : "public"
-      return visibility === visibilityFilter
+      return visibility === activeVisibilityFilter
     })
-  }, [bugs, visibilityFilter])
+  }, [bugs, activeVisibilityFilter])
+
+  const handleVisibilityChange = React.useCallback((value: "private" | "public") => {
+    if (onVisibilityChange) {
+      onVisibilityChange(value)
+      return
+    }
+    setInternalVisibilityFilter(value)
+  }, [onVisibilityChange])
 
   return (
     <div>
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          {filteredBugs.length} {visibilityFilter} bug{filteredBugs.length !== 1 ? "s" : ""}
+          {filteredBugs.length} {activeVisibilityFilter} bug{filteredBugs.length !== 1 ? "s" : ""}
         </p>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          size="sm"
-          value={visibilityFilter}
-          onValueChange={(value) => {
-            if (value === "public" || value === "private") setVisibilityFilter(value)
-          }}
-          className="w-full sm:w-auto"
-        >
-          <ToggleGroupItem
-            value="private"
-            className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+        {showVisibilityToggle && (
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={activeVisibilityFilter}
+            onValueChange={(value) => {
+              if (value === "public" || value === "private") handleVisibilityChange(value)
+            }}
+            className="w-full sm:w-auto"
           >
-            Private
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="public"
-            className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
-          >
-            Public
-          </ToggleGroupItem>
-        </ToggleGroup>
+            <ToggleGroupItem
+              value="private"
+              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+            >
+              Private
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="public"
+              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+            >
+              Public
+            </ToggleGroupItem>
+          </ToggleGroup>
+        )}
       </div>
       <BugDetailedList
         userId={userId}

@@ -7,6 +7,8 @@ import {
   IconFilter,
   IconMessageCircle,
   IconShare3,
+  IconBookmark,
+  IconBookmarkFilled,
 } from "@tabler/icons-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -74,6 +76,7 @@ export function BugDetailedList({
   const [userInfo, setUserInfo] = React.useState<Record<string, { name?: string; image?: string; reputation?: number }>>({})
   const [pageSize, setPageSize] = React.useState(15)
   const [currentPage, setCurrentPage] = React.useState(1)
+  const [savedBugIds, setSavedBugIds] = React.useState<Set<string>>(new Set())
 
   const copyToClipboard = React.useCallback(async (text: string) => {
     try {
@@ -268,6 +271,22 @@ export function BugDetailedList({
 
     return pages
   }, [totalPages, currentPage])
+
+  const toggleSaved = React.useCallback((bugId: string) => {
+    if (!userId) {
+      toast.error("Please sign in to save bugs")
+      return
+    }
+    setSavedBugIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(bugId)) {
+        next.delete(bugId)
+      } else {
+        next.add(bugId)
+      }
+      return next
+    })
+  }, [userId])
 
   return (
     <div className="w-full">
@@ -498,6 +517,30 @@ export function BugDetailedList({
                     </span>
                     <span>{views === 1 ? "view" : "views"}</span>
                   </div>
+                  <button
+                    type="button"
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-full px-3 py-1",
+                      savedBugIds.has(bug.id)
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleSaved(bug.id)
+                    }}
+                    aria-pressed={savedBugIds.has(bug.id)}
+                    aria-label={savedBugIds.has(bug.id) ? "Unsave bug" : "Save bug"}
+                  >
+                    {savedBugIds.has(bug.id) ? (
+                      <IconBookmarkFilled className="size-3" />
+                    ) : (
+                      <IconBookmark className="size-3" />
+                    )}
+                    <span className="font-medium text-foreground">
+                      {savedBugIds.has(bug.id) ? "Saved" : "Save"}
+                    </span>
+                  </button>
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
