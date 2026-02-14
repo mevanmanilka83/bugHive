@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle, IconPencil, IconUserPlus } from "@tabler/icons-react"
+import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle, IconPencil, IconUserPlus, IconLayoutGrid, IconList, IconLayoutRows } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -30,9 +30,11 @@ interface ClustersListProps {
   isAuthenticated: boolean
   /** Base path for cluster links (e.g. "/clusters" for homepage UI, "/dashboard" for dashboard) */
   basePath?: string
+  title?: string
+  description?: string
 }
 
-export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard" }: ClustersListProps) {
+export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard", title, description }: ClustersListProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -55,6 +57,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard" 
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
   const [visibilityFilter, setVisibilityFilter] = React.useState<"private" | "public">("private")
+  const [viewMode, setViewMode] = React.useState<"grid" | "list" | "compact">("list")
   const [requestingClusterId, setRequestingClusterId] = React.useState<string | null>(null)
   const [requestedClusters, setRequestedClusters] = React.useState<Set<string>>(new Set())
 
@@ -183,55 +186,107 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard" 
 
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-          {loading ? (
-            <Skeleton className="h-5 w-24" />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {filteredClusters.length} {visibilityFilter} cluster{filteredClusters.length !== 1 ? "s" : ""}
-            </p>
-          )}
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={visibilityFilter}
-            onValueChange={(value) => {
-              if (value === "public" || value === "private") setVisibilityFilter(value)
+      <div className="mb-4 rounded-lg border bg-background p-4">
+        {(title || description) && (
+          <div className="mb-3">
+            {title && <h1 className="mb-1 text-xl font-semibold sm:text-2xl">{title}</h1>}
+            {description && (
+              <p className="text-sm text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            {loading ? (
+              <Skeleton className="h-5 w-24" />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {filteredClusters.length} {visibilityFilter} cluster{filteredClusters.length !== 1 ? "s" : ""}
+              </p>
+            )}
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={visibilityFilter}
+              onValueChange={(value) => {
+                if (value === "public" || value === "private") setVisibilityFilter(value)
+              }}
+              className="w-full sm:w-auto"
+            >
+              <ToggleGroupItem
+                value="private"
+                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+              >
+                Private
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="public"
+                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+              >
+                Public
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={viewMode}
+              onValueChange={(value) => {
+                if (value === "grid" || value === "list" || value === "compact") setViewMode(value)
+              }}
+              className="w-full sm:w-auto"
+            >
+              <ToggleGroupItem
+                value="grid"
+                className="px-2 py-1 data-[state=on]:bg-foreground data-[state=on]:text-background"
+                aria-label="Grid view"
+              >
+                <IconLayoutGrid className="size-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="list"
+                className="px-2 py-1 data-[state=on]:bg-foreground data-[state=on]:text-background"
+                aria-label="List view"
+              >
+                <IconList className="size-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="compact"
+                className="px-2 py-1 data-[state=on]:bg-foreground data-[state=on]:text-background"
+                aria-label="Compact view"
+              >
+                <IconLayoutRows className="size-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <Button
+            onClick={() => {
+              if (!isAuthenticated) {
+                router.push(`/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`)
+                return
+              }
+              setCreateDialogOpen(true)
             }}
-            className="w-full sm:w-auto"
+            className="w-full rounded-full px-4 sm:w-auto h-10"
           >
-            <ToggleGroupItem
-              value="private"
-              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
-            >
-              Private
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="public"
-              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
-            >
-              Public
-            </ToggleGroupItem>
-          </ToggleGroup>
+            <IconPlus className="size-4 mr-2" />
+            Create Cluster
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            if (!isAuthenticated) {
-              router.push(`/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`)
-              return
-            }
-            setCreateDialogOpen(true)
-          }}
-          className="w-full rounded-full px-4 sm:w-auto h-10"
-        >
-          <IconPlus className="size-4 mr-2" />
-          Create Cluster
-        </Button>
       </div>
 
-      <div className="grid gap-4 grid-cols-1">
+      <div
+        className={
+          viewMode === "grid"
+            ? "grid gap-4 grid-cols-1 md:grid-cols-2"
+            : viewMode === "compact"
+              ? "grid gap-3 grid-cols-1"
+              : "grid gap-4 grid-cols-1"
+        }
+      >
         {loading ? (
           Array.from({ length: 3 }).map((_, index) => (
             <Card key={index}>
@@ -260,10 +315,12 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard" 
             const memberCount = cluster.members?.length || 0
             const inviteCount = cluster.invites?.length || 0
 
+            const isCompact = viewMode === "compact"
+
             return (
               <Card
                 key={cluster.id}
-                className="cursor-pointer hover:bg-accent/50 transition-colors"
+                className={`cursor-pointer hover:bg-accent/50 transition-colors ${isCompact ? "" : ""}`}
                 onClick={(e) => {
                   // Don't navigate if clicking on action buttons
                   if ((e.target as HTMLElement).closest('button')) {
@@ -272,10 +329,10 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard" 
                   router.push(basePath === "/clusters" ? `/clusters/${cluster.id}` : `/dashboard/clusters/${cluster.id}`)
                 }}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <CardHeader className={isCompact ? "pb-2 pt-3" : "pb-2"}>
+                  <div className={isCompact ? "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between" : "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"}>
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="text-lg leading-tight">{cluster.name}</CardTitle>
+                      <CardTitle className={isCompact ? "text-base leading-tight" : "text-lg leading-tight"}>{cluster.name}</CardTitle>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                         <button
                           type="button"
@@ -363,13 +420,15 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard" 
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  {cluster.description && (
-                    <CardDescription className="max-w-[52ch] break-words leading-relaxed text-muted-foreground line-clamp-3">
-                      {previewText(cluster.description, 160)}
-                    </CardDescription>
-                  )}
-                </CardContent>
+                {!isCompact && (
+                  <CardContent className="pt-0">
+                    {cluster.description && (
+                      <CardDescription className="max-w-[52ch] break-words leading-relaxed text-muted-foreground line-clamp-3">
+                        {previewText(cluster.description, 160)}
+                      </CardDescription>
+                    )}
+                  </CardContent>
+                )}
               </Card>
             )
           })

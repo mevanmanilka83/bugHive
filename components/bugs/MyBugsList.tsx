@@ -13,8 +13,8 @@ interface MyBugsListProps {
   currentUserName?: string
   currentUserImage?: string
   showReportButton?: boolean
-  visibilityFilter?: "private" | "public"
-  onVisibilityChange?: (value: "private" | "public") => void
+  visibilityFilter?: "private" | "public" | "cluster-private" | "cluster-public"
+  onVisibilityChange?: (value: "private" | "public" | "cluster-private" | "cluster-public") => void
   showVisibilityToggle?: boolean
 }
 
@@ -32,7 +32,7 @@ export function MyBugsList({
   const [graphOpen, setGraphOpen] = React.useState(false)
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
   const [loading, setLoading] = React.useState(false)
-  const [internalVisibilityFilter, setInternalVisibilityFilter] = React.useState<"private" | "public">("private")
+  const [internalVisibilityFilter, setInternalVisibilityFilter] = React.useState<"private" | "public" | "cluster-private" | "cluster-public">("private")
 
   const chartConfig: ChartConfig = {
     count: {
@@ -57,7 +57,7 @@ export function MyBugsList({
         )
       )
 
-      const clusterNameMap = new Map<string, string>()
+      const clusterMetaMap = new Map<string, { name?: string; visibility?: string }>()
       if (clusterIds.length > 0) {
         await Promise.all(
           clusterIds.map(async (clusterId) => {
@@ -66,9 +66,12 @@ export function MyBugsList({
               if (!clusterRes.ok) return
               const clusterData = await clusterRes.json()
               const name = clusterData?.cluster?.name
-              if (typeof name === "string" && name.trim()) {
-                clusterNameMap.set(clusterId, name.trim())
-              }
+              const visibility = (clusterData?.cluster?.visibility || "").toString().toLowerCase()
+              const trimmedName = typeof name === "string" ? name.trim() : ""
+              const meta: { name?: string; visibility?: string } = {}
+              if (trimmedName) meta.name = trimmedName
+              if (visibility === "public" || visibility === "private") meta.visibility = visibility
+              if (meta.name || meta.visibility) clusterMetaMap.set(clusterId, meta)
             } catch {
               // Ignore cluster lookup failures
             }
@@ -77,8 +80,9 @@ export function MyBugsList({
       }
 
       const enriched = items.map((bug) => {
-        if (bug.cluster_id && clusterNameMap.has(bug.cluster_id)) {
-          return { ...bug, cluster_name: clusterNameMap.get(bug.cluster_id) }
+        if (bug.cluster_id && clusterMetaMap.has(bug.cluster_id)) {
+          const meta = clusterMetaMap.get(bug.cluster_id)
+          return { ...bug, cluster_name: meta?.name, cluster_visibility: meta?.visibility }
         }
         return bug
       })
@@ -139,17 +143,21 @@ export function MyBugsList({
 
   const filteredBugs = React.useMemo(() => {
     return bugs.filter((bug) => {
+      if (bug.cluster_id) {
+        const rawClusterVisibility = (bug.cluster_visibility || "").toString().toLowerCase()
+        const clusterVisibility = rawClusterVisibility === "public" ? "cluster-public" : "cluster-private"
+        return clusterVisibility === activeVisibilityFilter
+      }
+
       const rawVisibility = (bug.visibility || "").toString().toLowerCase()
       const visibility = rawVisibility === "public" || rawVisibility === "private"
         ? rawVisibility
-        : bug.cluster_id
-          ? "private"
-          : "public"
+        : "public"
       return visibility === activeVisibilityFilter
     })
   }, [bugs, activeVisibilityFilter])
 
-  const handleVisibilityChange = React.useCallback((value: "private" | "public") => {
+  const handleVisibilityChange = React.useCallback((value: "private" | "public" | "cluster-private" | "cluster-public") => {
     if (onVisibilityChange) {
       onVisibilityChange(value)
       return
@@ -157,36 +165,78 @@ export function MyBugsList({
     setInternalVisibilityFilter(value)
   }, [onVisibilityChange])
 
+  const visibilityLabelMap: Record<"private" | "public" | "cluster-private" | "cluster-public", string> = {
+    private: "private",
+    public: "public",
+    "cluster-private": "cluster private",
+    "cluster-public": "cluster public",
+  }
+
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col gap-2 sm:items-start">
         <p className="text-sm text-muted-foreground">
-          {filteredBugs.length} {activeVisibilityFilter} bug{filteredBugs.length !== 1 ? "s" : ""}
+          {filteredBugs.length} {visibilityLabelMap[activeVisibilityFilter]} bug{filteredBugs.length !== 1 ? "s" : ""}
         </p>
         {showVisibilityToggle && (
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={activeVisibilityFilter}
-            onValueChange={(value) => {
-              if (value === "public" || value === "private") handleVisibilityChange(value)
-            }}
-            className="w-full sm:w-auto"
-          >
-            <ToggleGroupItem
-              value="private"
-              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
-            >
-              Private
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="public"
-              className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
-            >
-              Public
-            </ToggleGroupItem>
-          </ToggleGroup>
+          <div className="grid w-full gap-2 sm:max-w-xl">
+            <div className="rounded-md border border-muted/60 bg-muted/30 p-2">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                View Filters
+              </div>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                value={activeVisibilityFilter}
+                onValueChange={(value) => {
+                  if (value === "public" || value === "private") handleVisibilityChange(value)
+                }}
+                className="flex w-full"
+              >
+                <ToggleGroupItem
+                  value="private"
+                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                >
+                  Private
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="public"
+                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                >
+                  Public
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <div className="rounded-md border border-muted/60 bg-muted/30 p-2">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Cluster Actions
+              </div>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                value={activeVisibilityFilter}
+                onValueChange={(value) => {
+                  if (value === "cluster-public" || value === "cluster-private") handleVisibilityChange(value)
+                }}
+                className="flex w-full"
+              >
+                <ToggleGroupItem
+                  value="cluster-private"
+                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                >
+                  Cluster Private
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="cluster-public"
+                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                >
+                  Cluster Public
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          </div>
         )}
       </div>
       <BugDetailedList

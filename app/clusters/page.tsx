@@ -43,13 +43,13 @@ export default async function ClustersPage() {
           />
 
           <section className="flex-1 min-w-0">
-            <div className="mb-4">
-              <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Team Clusters</h1>
-              <p className="text-sm text-muted-foreground">
-                Create and manage teams to collaborate on bugs.
-              </p>
-            </div>
-            <ClustersList userId={userId} isAuthenticated={isAuthenticated} basePath="/clusters" />
+            <ClustersList
+              userId={userId}
+              isAuthenticated={isAuthenticated}
+              basePath="/clusters"
+              title="Team Clusters"
+              description="Create and manage teams to collaborate on bugs."
+            />
           </section>
         </div>
 
