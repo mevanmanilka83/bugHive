@@ -5,7 +5,11 @@ import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 
-export default async function SavedPage() {
+export default async function ActivityLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const session = await requireAuthForPage()
 
   return (
@@ -23,7 +27,6 @@ export default async function SavedPage() {
                 </div>
               </Link>
             </div>
-
             <div className="flex items-center gap-2">
               <HomeHeaderUser session={session} />
             </div>
@@ -31,18 +34,14 @@ export default async function SavedPage() {
         </header>
 
         <div className="flex flex-1 gap-6 py-6">
-          <SidebarPublicNav active="saved" isAuthenticated className="hidden md:flex" />
+          <SidebarPublicNav
+            active="activity"
+            isAuthenticated
+            className="hidden md:flex"
+          />
 
           <section className="flex-1 min-w-0">
-            <div className="rounded-lg border border-border/40 bg-card p-6 mb-6">
-              <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Saved</h1>
-              <p className="text-sm text-muted-foreground">
-                Keep track of bugs and clusters you want to revisit.
-              </p>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <p>No saved items yet.</p>
-            </div>
+            {children}
           </section>
         </div>
 
@@ -53,7 +52,7 @@ export default async function SavedPage() {
           </div>
         </footer>
       </div>
-      <MobileBottomNav active="saved" isAuthenticated />
+      <MobileBottomNav active="activity" isAuthenticated />
     </main>
   )
 }

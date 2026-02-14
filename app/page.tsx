@@ -54,11 +54,11 @@ export default async function Home() {
                   Discover real bugs reported by the BugHive community.
                 </p>
               </div>
-              <div className="w-full sm:w-auto">
+              <div className="flex w-full justify-end sm:w-auto">
                 {session ? (
                   <BugReportDialog />
                 ) : (
-                  <Button asChild className="w-full rounded-full px-4 sm:w-auto">
+                  <Button asChild className="rounded-full px-4 sm:w-auto">
                     <Link href="/auth/signin">
                       Report Bug
                     </Link>
@@ -67,6 +67,7 @@ export default async function Home() {
               </div>
             </div>
 
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
             <BugExploreList
               userId={userId}
               showTitle={false}
@@ -74,6 +75,7 @@ export default async function Home() {
               currentUserName={session?.user?.name ?? session?.user?.email ?? undefined}
               currentUserImage={session?.user?.image ?? undefined}
             />
+            </div>
           </section>
         </div>
 

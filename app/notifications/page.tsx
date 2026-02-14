@@ -40,7 +40,7 @@ export default async function NotificationsPage() {
           />
 
           <section className="flex-1 min-w-0">
-            <div className="mb-4">
+            <div className="rounded-lg border border-border/40 bg-card p-6 mb-6">
               <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Notifications</h1>
               <p className="text-sm text-muted-foreground">
                 Stay up to date with bug activity and team updates.

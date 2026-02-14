@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
+  IconActivity,
   IconBell,
   IconBookmark,
   IconBug,
@@ -13,7 +14,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react"
 
-type NavKey = "home" | "public" | "mybugs" | "clusters" | "notifications" | "saved" | "settings"
+type NavKey = "home" | "public" | "mybugs" | "clusters" | "notifications" | "saved" | "activity" | "settings"
 
 type NavItem = {
   key: NavKey
@@ -85,6 +86,13 @@ export function MobileBottomNav({
       requiresAuth: true,
     },
     {
+      key: "activity",
+      title: "Activity",
+      href: "/activity",
+      icon: IconActivity,
+      requiresAuth: true,
+    },
+    {
       key: "settings",
       title: "Settings",
       href: "/settings",
@@ -117,6 +125,7 @@ export function MobileBottomNav({
           (item.key === "clusters" && pathname.startsWith("/clusters")) ||
           (item.key === "notifications" && pathname.startsWith("/notifications")) ||
           (item.key === "saved" && pathname.startsWith("/saved")) ||
+          (item.key === "activity" && pathname.startsWith("/activity")) ||
           (item.key === "settings" && pathname.startsWith("/settings"))
 
         return (

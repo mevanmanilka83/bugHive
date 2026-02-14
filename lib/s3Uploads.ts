@@ -144,6 +144,43 @@ export async function handleFileUploads(formData: any, folder: string = 'bugs'):
   }
 }
 
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024 // 2MB
+const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+
+/**
+ * Upload a single avatar image to S3 and return its public URL.
+ * Used for profile pictures; overwrites previous avatar by using a stable path with timestamp.
+ */
+export async function uploadAvatarFile(
+  file: File | Blob,
+  userId: string
+): Promise<string> {
+  if (!env.awsS3Bucket || !env.awsRegion) {
+    throw new Error("S3 bucket configuration is missing. Please check your .env file.")
+  }
+  const buffer = await (file instanceof Blob ? file.arrayBuffer() : file.arrayBuffer())
+  const size = buffer.byteLength
+  if (size > AVATAR_MAX_BYTES) {
+    throw new Error("Image must be 2MB or smaller.")
+  }
+  const type = file instanceof File ? file.type : "application/octet-stream"
+  if (!AVATAR_TYPES.includes(type)) {
+    throw new Error("Please use a JPEG, PNG, WebP, or GIF image.")
+  }
+  const ext = type === "image/jpeg" ? "jpg" : type.split("/")[1] || "jpg"
+  const key = `avatars/${userId}_${Date.now()}.${ext}`
+  const client = getS3Client()
+  await client.send(
+    new PutObjectCommand({
+      Bucket: env.awsS3Bucket,
+      Key: key,
+      Body: Buffer.from(buffer),
+      ContentType: type,
+    })
+  )
+  return `https://${env.awsS3Bucket}.s3.${env.awsRegion}.amazonaws.com/${key}`
+}
+
 /**
  * Processes form data and uploads any file attachments
  * 

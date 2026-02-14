@@ -11,6 +11,9 @@ export * from "./shared"
 // Auth schemas
 export * from "./login"
 export * from "./signup"
+export * from "./updateProfile"
+export * from "./changePassword"
+export * from "./privacy"
 
 // Bug schemas  
 export * from "./bugReport"

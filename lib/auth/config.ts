@@ -8,6 +8,7 @@ import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
 import { env } from "../env"
+import { getSupabaseAdmin } from "../config"
 import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "../utils"
 import { getLoginValidationSchema } from "../schemas/zod"
 
@@ -105,8 +106,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           session.user.email = token.email as string
         }
 
-        // Note: User data saving is handled via server action in Node.js runtime
-        // The userDataToSave flag is stored in token and will be processed by server components
+        // Use name and image from database so uploaded avatar and profile name show everywhere (header, dropdown, etc.)
+        if (session?.user?.id) {
+          try {
+            const db = getSupabaseAdmin()
+            const { data } = await db
+              .from("users")
+              .select("name, image")
+              .eq("id", session.user.id)
+              .single()
+            if (data) {
+              if (data.name != null) session.user.name = data.name
+              if (data.image != null) session.user.image = data.image
+            }
+          } catch {
+            // Keep session.user.name/image from token if DB fetch fails
+          }
+        }
       }
       return session
     },

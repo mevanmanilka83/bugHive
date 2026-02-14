@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils-client"
 
 const SECTION_HEADING =
-  "text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-8 mb-3 first:mt-0"
+  "text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-8 first:mt-0 mb-5"
 
 const VIEW_MODE_LABELS: Record<ClusterViewMode, string> = {
   grid: "Grid",
@@ -134,12 +134,12 @@ export function SettingsContent() {
         <SettingsRow
           label="Profile"
           description="Name, email, avatar"
-          onClick={() => {}}
+          href="/settings/profile"
         />
         <SettingsRow
           label="Password"
           description="Change your password"
-          onClick={() => {}}
+          href="/settings/password"
         />
       </SettingsSection>
 
@@ -147,12 +147,12 @@ export function SettingsContent() {
         <SettingsRow
           label="Profile visibility"
           description="Who can see your profile"
-          onClick={() => {}}
+          href="/settings/profile-visibility"
         />
         <SettingsRow
           label="Activity visibility"
           description="Show your activity on bugs and clusters"
-          onClick={() => {}}
+          href="/settings/activity-visibility"
         />
       </SettingsSection>
 
@@ -178,6 +178,19 @@ export function SettingsContent() {
         <SettingsRow
           label="Invitation defaults"
           description="How you receive cluster invites"
+          onClick={() => {}}
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Interface Preferences">
+        <SettingsRow
+          label="Theme"
+          description="Light, dark, or system"
+          onClick={() => {}}
+        />
+        <SettingsRow
+          label="Language"
+          description="App language and locale"
           onClick={() => {}}
         />
       </SettingsSection>

@@ -144,5 +144,6 @@ export { createApiHandler, createBugHandler, createSolutionHandler } from "./han
 export { parseFormData } from "./formParser"
 export {
   handleFileUploads,
-  processFormDataWithUploads
+  processFormDataWithUploads,
+  uploadAvatarFile
 } from "./s3Uploads"

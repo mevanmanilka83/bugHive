@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
+  IconActivity,
   IconBell,
   IconBookmark,
   IconBug,
@@ -24,6 +25,7 @@ type NavKey =
   | "clusters"
   | "notifications"
   | "saved"
+  | "activity"
   | "settings"
 
 type NavItem = {
@@ -167,6 +169,13 @@ export function SidebarPublicNav({
       title: "Saved",
       href: "/saved",
       icon: IconBookmark,
+      requiresAuth: true,
+    },
+    {
+      key: "activity",
+      title: "Activity",
+      href: "/activity",
+      icon: IconActivity,
       requiresAuth: true,
     },
     {

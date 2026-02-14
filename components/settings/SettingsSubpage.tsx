@@ -1,0 +1,42 @@
+import Link from "next/link"
+import { cn } from "@/lib/utils-client"
+
+interface SettingsSubpageProps {
+  /** Link text and destination for back navigation */
+  backHref?: string
+  backLabel?: string
+  /** Page title (e.g. "Profile", "Password") */
+  title: string
+  /** Short description under the title */
+  description: string
+  children: React.ReactNode
+}
+
+const defaultBack = { href: "/settings", label: "Settings" }
+
+export function SettingsSubpage({
+  backHref = defaultBack.href,
+  backLabel = defaultBack.label,
+  title,
+  description,
+  children,
+}: SettingsSubpageProps) {
+  return (
+    <div className="max-w-2xl">
+      <nav className="mb-8">
+        <Link
+          href={backHref}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span aria-hidden>←</span>
+          <span>Back to {backLabel}</span>
+        </Link>
+      </nav>
+      <header className="mb-14">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+      </header>
+      {children}
+    </div>
+  )
+}
