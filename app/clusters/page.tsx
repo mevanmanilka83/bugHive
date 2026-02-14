@@ -14,7 +14,7 @@ export default async function ClustersPage() {
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         {/* Top navigation – same as homepage */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
@@ -35,14 +35,14 @@ export default async function ClustersPage() {
         </header>
 
         {/* Main content – same sidebar as homepage, clusters in main area */}
-        <div className="flex flex-1 gap-6 py-6">
+        <div className="flex flex-1 gap-0 py-6 md:gap-6">
           <SidebarPublicNav
             active="clusters"
             isAuthenticated={isAuthenticated}
-            className="hidden lg:flex"
+            className="hidden md:flex md:shrink-0"
           />
 
-          <section className="flex-1 min-w-0">
+          <section className="min-w-0 flex-1 basis-0">
             <ClustersList
               userId={userId}
               isAuthenticated={isAuthenticated}

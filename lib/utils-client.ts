@@ -261,3 +261,35 @@ export function setAppLocale(locale: AppLocale): void {
 export function getLocaleLabel(locale: AppLocale): string {
   return LOCALE_LABELS[locale]
 }
+
+// ============================================================================
+// RECENTLY VIEWED BUGS (localStorage)
+// ============================================================================
+
+export const RECENTLY_VIEWED_BUGS_KEY = "bugHive.recentlyViewedBugs"
+const RECENTLY_VIEWED_MAX = 5
+
+export type RecentlyViewedBug = { id: string; title: string }
+
+export function getRecentlyViewedBugs(): RecentlyViewedBug[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = window.localStorage.getItem(RECENTLY_VIEWED_BUGS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((x): x is RecentlyViewedBug => x && typeof x.id === "string" && typeof x.title === "string")
+      .slice(0, RECENTLY_VIEWED_MAX)
+  } catch {
+    return []
+  }
+}
+
+export function addRecentlyViewedBug(bug: RecentlyViewedBug): void {
+  if (typeof window === "undefined") return
+  const list = getRecentlyViewedBugs().filter((b) => b.id !== bug.id)
+  const next = [bug, ...list].slice(0, RECENTLY_VIEWED_MAX)
+  window.localStorage.setItem(RECENTLY_VIEWED_BUGS_KEY, JSON.stringify(next))
+  window.dispatchEvent(new Event("recentlyViewed:changed"))
+}

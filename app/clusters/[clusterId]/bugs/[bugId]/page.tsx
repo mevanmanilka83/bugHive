@@ -79,14 +79,14 @@ export default async function ClusterBugDetailsPage({
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-6 py-6 md:grid md:grid-cols-[200px_minmax(0,1fr)_320px] md:items-start lg:grid-cols-[220px_minmax(0,1fr)_360px] xl:grid-cols-[240px_minmax(0,1fr)_380px]">
+        <div className="flex flex-1 gap-0 py-6 md:gap-6">
           <SidebarPublicNav
             active="clusters"
             isAuthenticated={!!session}
-            className="hidden md:flex"
+            className="hidden md:flex md:shrink-0"
           />
 
-          <section className="min-w-0">
+          <section className="min-w-0 flex-1 basis-0">
             <Link
               href={`/clusters/${clusterId}`}
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
@@ -96,8 +96,10 @@ export default async function ClusterBugDetailsPage({
             <BugDetailsView bug={bug} userId={session?.user?.id} />
           </section>
 
-          <aside className="w-full min-w-0">
-            <RelatedBugsPanel bugId={bug.id} context="cluster" />
+          <aside className="hidden md:block md:w-[152px] lg:w-[164px] xl:w-[176px] shrink-0 border-l border-border/60 bg-muted/20 pl-3">
+            <div className="sticky top-6">
+              <RelatedBugsPanel bugId={bug.id} context="cluster" />
+            </div>
           </aside>
         </div>
 

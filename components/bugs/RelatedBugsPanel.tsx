@@ -93,84 +93,58 @@ export function RelatedBugsPanel({
   }, [fetchRelated])
 
   return (
-    <aside
-      className={cn(
-        "md:sticky md:top-6 h-fit rounded-lg border bg-card p-4 md:p-5 max-h-[520px] overflow-hidden",
-        className
-      )}
-      aria-live="polite"
-    >
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold">Related Bugs</h2>
-          <p className="text-xs text-muted-foreground">
-            {context === "cluster"
-              ? "From BugHive cluster, public bugs, and GitHub issues"
-              : "From BugHive public reports and GitHub issues"}
-          </p>
-          {lastChecked && (
-            <p className="text-[11px] text-muted-foreground">
-              Last checked {formatLastChecked(lastChecked)}
-            </p>
-          )}
+    <div className="flex flex-col gap-2">
+      <div className="rounded-md border border-border/50 bg-card p-2 shadow-[0_1px_2px_rgba(0,0,0,.05)]">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <div>
+            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Related Bugs
+            </h3>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={fetchRelated}
+            disabled={loading}
+            className="h-5 w-5 p-0 hover:bg-muted"
+            title="Retry loading related bugs"
+          >
+            <span className="text-xs">↻</span>
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={fetchRelated}
-          disabled={loading}
-        >
-          Retry
-        </Button>
-      </div>
 
       {loading ? (
-        <div className="space-y-3" role="status" aria-label="Loading related bugs">
+        <div className="space-y-1.5" role="status" aria-label="Loading related bugs">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-md border bg-background p-3 space-y-2">
-              <Skeleton className="h-4 w-4/5" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-2/3" />
+            <div key={i} className="space-y-0.5">
+              <Skeleton className="h-2.5 w-full" />
+              <Skeleton className="h-2 w-3/4" />
             </div>
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div
-          className="space-y-2 text-sm text-muted-foreground"
-          role="status"
-          aria-live="polite"
-        >
-          <p>No related public bugs or GitHub issues found yet.</p>
-          {error && <p className="text-xs text-destructive">{error}</p>}
-          <p className="text-xs">Use Retry to search again or refine the bug details</p>
-        </div>
+        <p className="text-[11px] text-muted-foreground">
+          No related bugs found yet.
+        </p>
       ) : (
-        <div className="max-h-[360px] overflow-y-auto pr-1">
-          <ul className="space-y-3" role="list" aria-label="Related GitHub issues">
-            {items.map((item) => (
-              <li key={item.id} className="rounded-md border bg-background p-3 transition-colors hover:bg-muted/50">
-                <div className="flex items-start justify-between gap-2">
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 line-clamp-2 inline-flex items-start gap-1 break-words"
-                    title={`Open ${sourceLabels[item.source] ?? "link"} in new tab`}
-                  >
-                    <span className="min-w-0 flex-1">{item.title}</span>
-                    <IconExternalLink className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden />
-                  </a>
-                  <Badge variant="outline" className="text-[10px] shrink-0">
-                    {sourceLabels[item.source] ?? "GitHub"}
-                  </Badge>
-                </div>
-                <div className="mt-2">{renderSnippet(item.snippet)}</div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="space-y-1" role="list" aria-label="Related bugs">
+          {items.slice(0, 5).map((item) => (
+            <li key={item.id}>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-[11px] text-foreground hover:text-primary hover:underline line-clamp-2 block"
+                title={item.title}
+              >
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ul>
       )}
-    </aside>
+      </div>
+    </div>
   )
 }
