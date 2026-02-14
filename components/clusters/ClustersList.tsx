@@ -23,7 +23,7 @@ import { InviteUserDialog } from "./InviteUserDialog"
 import { PendingInvitesDialog } from "./PendingInvitesDialog"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
 import { deleteCluster } from "@/app/actions/cluster"
-import { stripHtml } from "@/lib/utils-client"
+import { stripHtml, getClusterViewMode, setClusterViewMode } from "@/lib/utils-client"
 
 interface ClustersListProps {
   userId?: string
@@ -57,7 +57,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
   const [visibilityFilter, setVisibilityFilter] = React.useState<"private" | "public">("private")
-  const [viewMode, setViewMode] = React.useState<"grid" | "list" | "compact">("list")
+  const [viewMode, setViewMode] = React.useState<"grid" | "list" | "compact">(() => getClusterViewMode())
   const [requestingClusterId, setRequestingClusterId] = React.useState<string | null>(null)
   const [requestedClusters, setRequestedClusters] = React.useState<Set<string>>(new Set())
 
@@ -108,6 +108,12 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
     window.addEventListener("cluster:created", onCreated as EventListener)
     return () => window.removeEventListener("cluster:created", onCreated as EventListener)
   }, [fetchClusters])
+
+  React.useEffect(() => {
+    const onViewModeSync = () => setViewMode(getClusterViewMode())
+    window.addEventListener("settings:clusterViewMode", onViewModeSync as EventListener)
+    return () => window.removeEventListener("settings:clusterViewMode", onViewModeSync as EventListener)
+  }, [])
 
   const handleDeleteClick = (cluster: any) => {
     setClusterToDelete(cluster)
@@ -235,7 +241,10 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
               size="sm"
               value={viewMode}
               onValueChange={(value) => {
-                if (value === "grid" || value === "list" || value === "compact") setViewMode(value)
+                if (value === "grid" || value === "list" || value === "compact") {
+                  setViewMode(value)
+                  setClusterViewMode(value)
+                }
               }}
               className="w-full sm:w-auto"
             >

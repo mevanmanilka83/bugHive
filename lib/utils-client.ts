@@ -111,3 +111,23 @@ export function isHtmlContent(s: string): boolean {
   const t = s.trim()
   return t.startsWith("<") && t.endsWith(">")
 }
+
+// ============================================================================
+// CLIENT PREFERENCES (localStorage)
+// ============================================================================
+
+export const CLUSTER_VIEW_MODE_KEY = "bugHive.clusterViewMode"
+export type ClusterViewMode = "grid" | "list" | "compact"
+
+export function getClusterViewMode(): ClusterViewMode {
+  if (typeof window === "undefined") return "list"
+  const raw = window.localStorage.getItem(CLUSTER_VIEW_MODE_KEY)
+  if (raw === "grid" || raw === "list" || raw === "compact") return raw
+  return "list"
+}
+
+export function setClusterViewMode(mode: ClusterViewMode): void {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CLUSTER_VIEW_MODE_KEY, mode)
+  window.dispatchEvent(new Event("settings:clusterViewMode"))
+}
