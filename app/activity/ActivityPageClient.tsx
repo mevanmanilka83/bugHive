@@ -26,7 +26,11 @@ export function ActivityPageClient({ initialSummary }: ActivityPageClientProps) 
           Your contributions and activity on bugs and clusters.
         </p>
       </div>
-      <ActivitySummary data={summaryData} error={summaryError} />
+      <div className="rounded-lg border border-border/40 bg-card">
+        <div className="p-6">
+          <ActivitySummary data={summaryData} error={summaryError} />
+        </div>
+      </div>
     </div>
   )
 }

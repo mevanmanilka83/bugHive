@@ -40,7 +40,7 @@ export default async function SavedPage() {
                 Keep track of bugs and clusters you want to revisit.
               </p>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="rounded-lg border border-border/40 bg-card p-6 text-sm text-muted-foreground">
               <p>No saved items yet.</p>
             </div>
           </section>

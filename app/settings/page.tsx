@@ -9,7 +9,9 @@ export default async function SettingsPage() {
           Account, privacy, notifications, and display preferences.
         </p>
       </div>
-      <SettingsContent />
+      <div className="rounded-lg border border-border/40 bg-card">
+        <SettingsContent />
+      </div>
     </>
   )
 }

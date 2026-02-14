@@ -46,7 +46,11 @@ export default async function NotificationsPage() {
                 Stay up to date with bug activity and team updates.
               </p>
             </div>
-            <NotificationsList userId={userId} />
+            <div className="rounded-lg border border-border/40 bg-card">
+              <div className="p-6">
+                <NotificationsList userId={userId} />
+              </div>
+            </div>
           </section>
         </div>
 

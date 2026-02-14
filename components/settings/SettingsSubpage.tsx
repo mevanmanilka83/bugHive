@@ -23,7 +23,7 @@ export function SettingsSubpage({
 }: SettingsSubpageProps) {
   return (
     <div className="max-w-2xl">
-      <nav className="mb-8">
+      <nav className="mb-6">
         <Link
           href={backHref}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -32,11 +32,13 @@ export function SettingsSubpage({
           <span>Back to {backLabel}</span>
         </Link>
       </nav>
-      <header className="mb-14">
+      <header className="rounded-lg border border-border/40 bg-card p-6 mb-6">
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       </header>
-      {children}
+      <div className="rounded-lg border border-border/40 bg-card p-6">
+        {children}
+      </div>
     </div>
   )
 }

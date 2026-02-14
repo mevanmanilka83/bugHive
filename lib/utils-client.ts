@@ -131,3 +131,93 @@ export function setClusterViewMode(mode: ClusterViewMode): void {
   window.localStorage.setItem(CLUSTER_VIEW_MODE_KEY, mode)
   window.dispatchEvent(new Event("settings:clusterViewMode"))
 }
+
+// ============================================================================
+// NOTIFICATION PREFERENCES (localStorage)
+// ============================================================================
+
+export const NOTIFICATION_EMAIL_INVITES_KEY = "bugHive.notifications.emailInvites"
+export const NOTIFICATION_EMAIL_JOIN_REQUESTS_KEY = "bugHive.notifications.emailJoinRequests"
+export const NOTIFICATION_EMAIL_MENTIONS_KEY = "bugHive.notifications.emailMentions"
+export const NOTIFICATION_INAPP_BADGE_KEY = "bugHive.notifications.inAppBadge"
+export const NOTIFICATION_INAPP_CENTER_KEY = "bugHive.notifications.inAppCenter"
+
+function getBool(key: string, defaultValue: boolean): boolean {
+  if (typeof window === "undefined") return defaultValue
+  const raw = window.localStorage.getItem(key)
+  if (raw === "true") return true
+  if (raw === "false") return false
+  return defaultValue
+}
+
+function setBool(key: string, value: boolean): void {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(key, String(value))
+  window.dispatchEvent(new Event("settings:notifications"))
+}
+
+export function getEmailInvitesEnabled(): boolean {
+  return getBool(NOTIFICATION_EMAIL_INVITES_KEY, true)
+}
+export function setEmailInvitesEnabled(value: boolean): void {
+  setBool(NOTIFICATION_EMAIL_INVITES_KEY, value)
+}
+
+export function getEmailJoinRequestsEnabled(): boolean {
+  return getBool(NOTIFICATION_EMAIL_JOIN_REQUESTS_KEY, true)
+}
+export function setEmailJoinRequestsEnabled(value: boolean): void {
+  setBool(NOTIFICATION_EMAIL_JOIN_REQUESTS_KEY, value)
+}
+
+export function getEmailMentionsEnabled(): boolean {
+  return getBool(NOTIFICATION_EMAIL_MENTIONS_KEY, true)
+}
+export function setEmailMentionsEnabled(value: boolean): void {
+  setBool(NOTIFICATION_EMAIL_MENTIONS_KEY, value)
+}
+
+export function getInAppBadgeEnabled(): boolean {
+  return getBool(NOTIFICATION_INAPP_BADGE_KEY, true)
+}
+export function setInAppBadgeEnabled(value: boolean): void {
+  setBool(NOTIFICATION_INAPP_BADGE_KEY, value)
+}
+
+export function getInAppCenterEnabled(): boolean {
+  return getBool(NOTIFICATION_INAPP_CENTER_KEY, true)
+}
+export function setInAppCenterEnabled(value: boolean): void {
+  setBool(NOTIFICATION_INAPP_CENTER_KEY, value)
+}
+
+// ============================================================================
+// LANGUAGE / LOCALE (localStorage)
+// ============================================================================
+
+export const LOCALE_KEY = "bugHive.locale"
+export type AppLocale = "en" | "es" | "fr" | "de"
+
+const LOCALE_LABELS: Record<AppLocale, string> = {
+  en: "English",
+  es: "Español",
+  fr: "Français",
+  de: "Deutsch",
+}
+
+export function getAppLocale(): AppLocale {
+  if (typeof window === "undefined") return "en"
+  const raw = window.localStorage.getItem(LOCALE_KEY)
+  if (raw === "en" || raw === "es" || raw === "fr" || raw === "de") return raw
+  return "en"
+}
+
+export function setAppLocale(locale: AppLocale): void {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(LOCALE_KEY, locale)
+  window.dispatchEvent(new Event("settings:locale"))
+}
+
+export function getLocaleLabel(locale: AppLocale): string {
+  return LOCALE_LABELS[locale]
+}

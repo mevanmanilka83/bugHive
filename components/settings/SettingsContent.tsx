@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils-client"
 
 const SECTION_HEADING =
-  "text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-8 first:mt-0 mb-5"
+  "text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-12 first:mt-0 mb-5"
 
 const VIEW_MODE_LABELS: Record<ClusterViewMode, string> = {
   grid: "Grid",
@@ -129,7 +129,7 @@ export function SettingsContent() {
   }, [])
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl p-6">
       <SettingsSection title="Account Settings">
         <SettingsRow
           label="Profile"
@@ -149,24 +149,28 @@ export function SettingsContent() {
           description="Who can see your profile"
           href="/settings/profile-visibility"
         />
-        <SettingsRow
-          label="Activity visibility"
-          description="Show your activity on bugs and clusters"
-          href="/settings/activity-visibility"
-        />
+        <div className="mb-6">
+          <SettingsRow
+            label="Activity visibility"
+            description="Show your activity on bugs and clusters"
+            href="/settings/activity-visibility"
+          />
+        </div>
       </SettingsSection>
 
       <SettingsSection title="Notification Preferences">
         <SettingsRow
           label="Email notifications"
           description="Cluster invites, join requests, mentions"
-          onClick={() => {}}
+          href="/settings/notifications/email"
         />
-        <SettingsRow
-          label="In-app notifications"
-          description="Badge and notification center"
-          onClick={() => {}}
-        />
+        <div className="mb-6">
+          <SettingsRow
+            label="In-app notifications"
+            description="Badge and notification center"
+            href="/settings/notifications/in-app"
+          />
+        </div>
       </SettingsSection>
 
       <SettingsSection title="Cluster Preferences">
@@ -186,13 +190,15 @@ export function SettingsContent() {
         <SettingsRow
           label="Theme"
           description="Light, dark, or system"
-          onClick={() => {}}
+          href="/settings/theme"
         />
-        <SettingsRow
-          label="Language"
-          description="App language and locale"
-          onClick={() => {}}
-        />
+        <div className="mb-6">
+          <SettingsRow
+            label="Language"
+            description="App language and locale"
+            href="/settings/language"
+          />
+        </div>
       </SettingsSection>
 
       <SettingsSection title="Display Preferences">

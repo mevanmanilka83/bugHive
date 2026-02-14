@@ -47,7 +47,7 @@ export default async function Home() {
 
           {/* Main list column */}
           <section className="flex-1 min-w-0">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="rounded-lg border border-border/40 bg-card p-6 mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Newest Bugs</h1>
                 <p className="text-sm text-muted-foreground">
@@ -67,7 +67,6 @@ export default async function Home() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
             <BugExploreList
               userId={userId}
               showTitle={false}
@@ -75,7 +74,6 @@ export default async function Home() {
               currentUserName={session?.user?.name ?? session?.user?.email ?? undefined}
               currentUserImage={session?.user?.image ?? undefined}
             />
-            </div>
           </section>
         </div>
 

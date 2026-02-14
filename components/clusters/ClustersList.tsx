@@ -57,9 +57,14 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
   const [visibilityFilter, setVisibilityFilter] = React.useState<"private" | "public">("private")
-  const [viewMode, setViewMode] = React.useState<"grid" | "list" | "compact">(() => getClusterViewMode())
+  const [viewMode, setViewMode] = React.useState<"grid" | "list" | "compact">("list")
   const [requestingClusterId, setRequestingClusterId] = React.useState<string | null>(null)
   const [requestedClusters, setRequestedClusters] = React.useState<Set<string>>(new Set())
+
+  // Hydrate view mode from localStorage after mount
+  React.useEffect(() => {
+    setViewMode(getClusterViewMode())
+  }, [])
 
   const normalizeVisibility = React.useCallback((value: any) => {
     const normalized = (value ?? "private").toString().toLowerCase().trim()
