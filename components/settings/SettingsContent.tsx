@@ -177,12 +177,12 @@ export function SettingsContent() {
         <SettingsRow
           label="Default cluster visibility"
           description="When creating a new cluster"
-          onClick={() => {}}
+          href="/settings/clusters/visibility"
         />
         <SettingsRow
           label="Invitation defaults"
           description="How you receive cluster invites"
-          onClick={() => {}}
+          href="/settings/clusters/invitations"
         />
       </SettingsSection>
 

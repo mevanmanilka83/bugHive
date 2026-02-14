@@ -133,6 +133,28 @@ export function setClusterViewMode(mode: ClusterViewMode): void {
 }
 
 // ============================================================================
+// CLUSTER PREFERENCES (localStorage)
+// ============================================================================
+
+export const CLUSTER_DEFAULT_VISIBILITY_KEY = "bugHive.clusterDefaults.visibility"
+export const CLUSTER_INVITE_ALLOW_ANYONE_KEY = "bugHive.clusterDefaults.inviteAllowAnyone"
+export const CLUSTER_INVITE_AUTO_ACCEPT_KEY = "bugHive.clusterDefaults.inviteAutoAccept"
+export type ClusterVisibility = "private" | "public"
+
+export function getClusterDefaultVisibility(): ClusterVisibility {
+  if (typeof window === "undefined") return "private"
+  const raw = window.localStorage.getItem(CLUSTER_DEFAULT_VISIBILITY_KEY)
+  if (raw === "public" || raw === "private") return raw
+  return "private"
+}
+
+export function setClusterDefaultVisibility(value: ClusterVisibility): void {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CLUSTER_DEFAULT_VISIBILITY_KEY, value)
+  window.dispatchEvent(new Event("settings:clusters"))
+}
+
+// ============================================================================
 // NOTIFICATION PREFERENCES (localStorage)
 // ============================================================================
 
@@ -189,6 +211,24 @@ export function getInAppCenterEnabled(): boolean {
 }
 export function setInAppCenterEnabled(value: boolean): void {
   setBool(NOTIFICATION_INAPP_CENTER_KEY, value)
+}
+
+export function getClusterInviteAllowAnyone(): boolean {
+  return getBool(CLUSTER_INVITE_ALLOW_ANYONE_KEY, true)
+}
+export function setClusterInviteAllowAnyone(value: boolean): void {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CLUSTER_INVITE_ALLOW_ANYONE_KEY, String(value))
+  window.dispatchEvent(new Event("settings:clusters"))
+}
+
+export function getClusterInviteAutoAccept(): boolean {
+  return getBool(CLUSTER_INVITE_AUTO_ACCEPT_KEY, false)
+}
+export function setClusterInviteAutoAccept(value: boolean): void {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(CLUSTER_INVITE_AUTO_ACCEPT_KEY, String(value))
+  window.dispatchEvent(new Event("settings:clusters"))
 }
 
 // ============================================================================

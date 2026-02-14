@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
 import { RichTextEditor } from "@/components/ui/RichTextEditor"
 import { toast } from "sonner"
+import { getClusterDefaultVisibility, type ClusterVisibility } from "@/lib/utils-client"
 
 interface CreateClusterDialogProps {
   open: boolean
@@ -41,6 +42,7 @@ function SubmitButton() {
 export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClusterDialogProps) {
   const [state, formAction] = useActionState(createCluster, null)
   const [description, setDescription] = React.useState("")
+  const [visibility, setVisibility] = React.useState<ClusterVisibility>("private")
   const hasProcessedRef = React.useRef<string | null>(null)
   const onSuccessRef = React.useRef(onSuccess)
 
@@ -73,6 +75,10 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
     }
   }, [state])
 
+  React.useEffect(() => {
+    setVisibility(getClusterDefaultVisibility())
+  }, [])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-hidden p-4 sm:p-6">
@@ -100,7 +106,16 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
                 <Label>Visibility</Label>
                 <span className="text-xs text-muted-foreground">Required</span>
               </div>
-              <RadioGroup name="visibility" defaultValue="private" className="grid gap-2">
+              <RadioGroup
+                name="visibility"
+                value={visibility}
+                onValueChange={(value) => {
+                  if (value === "public" || value === "private") {
+                    setVisibility(value)
+                  }
+                }}
+                className="grid gap-2"
+              >
                 <label className="flex items-start gap-3 rounded-md border bg-background p-2 hover:border-primary/40">
                   <RadioGroupItem value="private" className="mt-0.5" />
                   <span className="grid gap-1">
