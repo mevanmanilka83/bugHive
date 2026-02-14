@@ -31,7 +31,7 @@ export default async function BugDetailsPage({
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         {/* Top navigation – same as homepage */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
@@ -51,16 +51,16 @@ export default async function BugDetailsPage({
           </div>
         </header>
 
-        {/* Main content – sidebar | main | related panel; stacks on mobile */}
-        <div className="flex flex-1 flex-col gap-6 py-6 md:grid md:grid-cols-[200px_minmax(0,1fr)_320px] md:items-start lg:grid-cols-[220px_minmax(0,1fr)_360px] xl:grid-cols-[240px_minmax(0,1fr)_380px]">
+        {/* Main content – same layout as home: left nav | main content | related (when md) */}
+        <div className="flex flex-1 gap-6 py-6">
           <SidebarPublicNav
             active="public"
             isAuthenticated={!!session}
             useAuthFallback
-            className="hidden md:flex"
+            className="hidden md:flex md:shrink-0"
           />
 
-          <section className="min-w-0">
+          <section className="flex-1 min-w-0">
             <Link
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
@@ -73,8 +73,10 @@ export default async function BugDetailsPage({
             />
           </section>
 
-          <aside className="w-full min-w-0">
-            <RelatedBugsPanel bugId={bug.id} />
+          <aside className="hidden w-72 shrink-0 md:block">
+            <div className="sticky top-6">
+              <RelatedBugsPanel bugId={bug.id} />
+            </div>
           </aside>
         </div>
 

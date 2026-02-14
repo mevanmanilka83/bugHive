@@ -1,8 +1,17 @@
 "use client"
 
 import Link from "next/link"
+import { Info } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +52,61 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
+      {/* Info icon: opens dialog with user/account details */}
+      <Dialog>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label="Account details"
+          >
+            <Info className="h-4 w-4" />
+          </button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Account details</DialogTitle>
+            <DialogDescription>
+              Your profile and session information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 pt-2">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={image} alt={name} />
+                <AvatarFallback className="text-lg">
+                  {name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium">{name}</span>
+                {email && (
+                  <span className="text-sm text-muted-foreground">{email}</span>
+                )}
+              </div>
+            </div>
+            <dl className="grid gap-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Display name</dt>
+                <dd className="font-medium">{name}</dd>
+              </div>
+              {email && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Email</dt>
+                  <dd className="font-medium truncate max-w-[200px]">{email}</dd>
+                </div>
+              )}
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Profile image</dt>
+                <dd className="font-medium">
+                  {image ? "Set" : "Not set"}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Mobile: avatar dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild className="sm:hidden">

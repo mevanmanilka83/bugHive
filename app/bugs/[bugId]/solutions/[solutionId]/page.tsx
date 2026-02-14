@@ -5,6 +5,7 @@ import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
 import { SolutionDetailsForm } from "@/components/bugs/SolutionDetailsForm"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
+import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 import { notFound } from "next/navigation"
 
@@ -48,7 +49,7 @@ export default async function BugSolutionDetailsPage({
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         {/* Top navigation – same as bug details page */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
@@ -75,7 +76,7 @@ export default async function BugSolutionDetailsPage({
             active="public"
             isAuthenticated={!!session}
             useAuthFallback
-            className="hidden md:flex"
+            className="hidden md:flex md:shrink-0"
           />
 
           {/* Main content column */}
@@ -111,6 +112,7 @@ export default async function BugSolutionDetailsPage({
           </div>
         </footer>
       </div>
+      <MobileBottomNav active="public" isAuthenticated={!!session} useAuthFallback />
     </main>
   )
 }

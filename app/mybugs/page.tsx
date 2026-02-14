@@ -12,7 +12,7 @@ export default async function MyBugsPage() {
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3">
@@ -31,14 +31,14 @@ export default async function MyBugsPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 gap-0 py-6 md:gap-6">
+        <div className="flex flex-1 gap-6 py-6">
           <SidebarPublicNav
             active="mybugs"
             isAuthenticated
             className="hidden md:flex md:shrink-0"
           />
 
-          <section className="min-w-0 flex-1 basis-0">
+          <section className="flex-1 min-w-0">
             <MyBugsPageContent
               userId={userId}
               currentUserName={session.user.name ?? session.user.email ?? undefined}

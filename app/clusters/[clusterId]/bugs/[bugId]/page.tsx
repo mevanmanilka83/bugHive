@@ -60,7 +60,7 @@ export default async function ClusterBugDetailsPage({
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
             <div className="flex items-center gap-3">
@@ -79,14 +79,14 @@ export default async function ClusterBugDetailsPage({
           </div>
         </header>
 
-        <div className="flex flex-1 gap-0 py-6 md:gap-6">
+        <div className="flex flex-1 gap-6 py-6">
           <SidebarPublicNav
             active="clusters"
             isAuthenticated={!!session}
             className="hidden md:flex md:shrink-0"
           />
 
-          <section className="min-w-0 flex-1 basis-0">
+          <section className="flex-1 min-w-0">
             <Link
               href={`/clusters/${clusterId}`}
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
@@ -96,7 +96,7 @@ export default async function ClusterBugDetailsPage({
             <BugDetailsView bug={bug} userId={session?.user?.id} />
           </section>
 
-          <aside className="hidden md:block md:w-[180px] lg:w-[200px] xl:w-[220px] shrink-0 border-l border-border/60 bg-muted/20 pl-3">
+          <aside className="hidden w-72 shrink-0 md:block">
             <div className="sticky top-6">
               <RelatedBugsPanel bugId={bug.id} context="cluster" />
             </div>
