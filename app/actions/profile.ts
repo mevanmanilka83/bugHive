@@ -127,6 +127,14 @@ export async function changePassword(formData: FormData): Promise<ActionResponse
     if (!session?.user?.id) {
       return { success: false, error: "Not authenticated" }
     }
+    const provider = (session.user as { provider?: string }).provider
+    const oauthProviders = ["github", "google", "apple", "facebook", "twitter", "discord"]
+    if (provider && oauthProviders.includes(provider.toLowerCase())) {
+      return {
+        success: false,
+        error: "You signed in with an OAuth provider. Password change is only available when you sign in with email and password.",
+      }
+    }
 
     const data = {
       currentPassword: formData.get("currentPassword"),

@@ -10,7 +10,14 @@ import { toast } from "sonner"
 import { changePassword } from "@/app/actions/profile"
 import { cn } from "@/lib/utils-client"
 
-export function PasswordForm() {
+interface PasswordFormProps {
+  /** Auth provider from session: "credentials" = email/password; "github" etc. = OAuth */
+  authProvider?: string
+}
+
+const OAUTH_PROVIDERS = ["github", "google", "apple", "facebook", "twitter", "discord"]
+
+export function PasswordForm({ authProvider }: PasswordFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
@@ -18,8 +25,13 @@ export function PasswordForm() {
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
+  /** If not logged in with an OAuth provider, user can change password (credentials or legacy session). */
+  const isOAuth = authProvider && OAUTH_PROVIDERS.includes(authProvider.toLowerCase())
+  const canChangePassword = !isOAuth
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!canChangePassword) return
     setIsSubmitting(true)
     setErrors({})
 
@@ -30,12 +42,10 @@ export function PasswordForm() {
 
     if (result.success) {
       toast.success(result.message || "Password changed successfully")
-      // Reset form
       e.currentTarget.reset()
       router.refresh()
     } else {
       toast.error(result.error || "Failed to change password")
-      // Parse error for specific fields
       if (result.error?.includes("Current password")) {
         setErrors({ currentPassword: result.error })
       } else if (result.error?.includes("New password")) {
@@ -48,125 +58,130 @@ export function PasswordForm() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-lg border border-border/60 bg-muted/30 px-5 py-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground mb-5">Password management</p>
-        <p>This app uses OAuth (e.g. GitHub) for sign-in. Changing a password for credentials-based
-        accounts would require backend support. We recommend using an OAuth provider for authentication.</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-        {/* Current Password */}
-        <div className="space-y-2.5">
-          <Label htmlFor="currentPassword" className="flex items-center gap-2">
-            <IconLock className="size-4 text-muted-foreground" />
-            Current Password
-          </Label>
-          <div className="relative">
-            <Input
-              id="currentPassword"
-              name="currentPassword"
-              type={showCurrentPassword ? "text" : "password"}
-              placeholder="Enter current password"
-              required
-              disabled
-              className={cn("pr-10 bg-muted/50", errors.currentPassword && "border-destructive")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              disabled
-            >
-              {showCurrentPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
-            </button>
-          </div>
-          {errors.currentPassword && (
-            <p className="text-xs text-destructive">{errors.currentPassword}</p>
-          )}
-        </div>
-
-        {/* New Password */}
-        <div className="space-y-2.5">
-          <Label htmlFor="newPassword" className="flex items-center gap-2">
-            <IconLock className="size-4 text-muted-foreground" />
-            New Password
-          </Label>
-          <div className="relative">
-            <Input
-              id="newPassword"
-              name="newPassword"
-              type={showNewPassword ? "text" : "password"}
-              placeholder="Enter new password"
-              required
-              disabled
-              className={cn("pr-10 bg-muted/50", errors.newPassword && "border-destructive")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              disabled
-            >
-              {showNewPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
-            </button>
-          </div>
-          {errors.newPassword && (
-            <p className="text-xs text-destructive">{errors.newPassword}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            Password must be at least 6 characters long.
+      {!canChangePassword ? (
+        <div className="rounded-lg border border-border/60 bg-muted/30 px-5 py-4 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground mb-2">Signed in with an OAuth provider</p>
+          <p>
+            You signed in with {authProvider === "github" ? "GitHub" : "an OAuth provider"}. Password changes are not available for this account. Use your provider to manage your account and security.
           </p>
         </div>
+      ) : (
+        <div className="rounded-lg border border-border/60 bg-muted/30 px-5 py-4 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground mb-2">Change your password</p>
+          <p>
+            You did not sign in with an OAuth provider, so you can change your password below. Once backend support is enabled, your new password will be saved.
+          </p>
+        </div>
+      )}
 
-        {/* Confirm New Password */}
-        <div className="space-y-2.5">
-          <Label htmlFor="confirmPassword" className="flex items-center gap-2">
-            <IconLock className="size-4 text-muted-foreground" />
-            Confirm New Password
-          </Label>
-          <div className="relative">
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm new password"
-              required
-              disabled
-              className={cn("pr-10 bg-muted/50", errors.confirmPassword && "border-destructive")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              disabled
-            >
-              {showConfirmPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
-            </button>
+      {canChangePassword && (
+        <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+          {/* Current Password */}
+          <div className="space-y-2.5">
+            <Label htmlFor="currentPassword" className="flex items-center gap-2">
+              <IconLock className="size-4 text-muted-foreground" />
+              Current Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="currentPassword"
+                name="currentPassword"
+                type={showCurrentPassword ? "text" : "password"}
+                placeholder="Enter current password"
+                required
+                className={cn("pr-10", errors.currentPassword && "border-destructive")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showCurrentPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
+              </button>
+            </div>
+            {errors.currentPassword && (
+              <p className="text-xs text-destructive">{errors.currentPassword}</p>
+            )}
           </div>
-          {errors.confirmPassword && (
-            <p className="text-xs text-destructive">{errors.confirmPassword}</p>
-          )}
-        </div>
 
-        {/* Action Buttons — same gap as content-to-divider for clean rhythm */}
-        <div className="flex flex-wrap items-center gap-3 pt-10">
-          <Button type="submit" disabled className="rounded-full">
-            {isSubmitting && <IconLoader2 className="size-4 mr-2 animate-spin" />}
-            Change password
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/settings")}
-            disabled={isSubmitting}
-            className="rounded-full font-semibold bg-background border-border hover:bg-muted/50"
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
+          {/* New Password */}
+          <div className="space-y-2.5">
+            <Label htmlFor="newPassword" className="flex items-center gap-2">
+              <IconLock className="size-4 text-muted-foreground" />
+              New Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type={showNewPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                required
+                className={cn("pr-10", errors.newPassword && "border-destructive")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showNewPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
+              </button>
+            </div>
+            {errors.newPassword && (
+              <p className="text-xs text-destructive">{errors.newPassword}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Password must be at least 6 characters long.
+            </p>
+          </div>
 
-      {/* Security Tips — divider then section gap */}
+          {/* Confirm New Password */}
+          <div className="space-y-2.5">
+            <Label htmlFor="confirmPassword" className="flex items-center gap-2">
+              <IconLock className="size-4 text-muted-foreground" />
+              Confirm New Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm new password"
+                required
+                className={cn("pr-10", errors.confirmPassword && "border-destructive")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showConfirmPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 pt-10">
+            <Button type="submit" disabled={isSubmitting} className="rounded-full">
+              {isSubmitting && <IconLoader2 className="size-4 mr-2 animate-spin" />}
+              Change password
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/settings")}
+              disabled={isSubmitting}
+              className="rounded-full font-semibold bg-background border-border hover:bg-muted/50"
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {canChangePassword && (
       <div className="border-t border-border/60 pt-10">
         <h3 className="text-sm font-medium text-foreground mb-5">Password security tips</h3>
         <ul className="space-y-2.5 text-xs text-muted-foreground">
@@ -188,6 +203,7 @@ export function PasswordForm() {
           </li>
         </ul>
       </div>
+      )}
     </div>
   )
 }

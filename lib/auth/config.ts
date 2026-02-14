@@ -83,6 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email_verified: account?.provider === 'github' ? new Date().toISOString() : null,
           }
         }
+        token.provider = account?.provider ?? 'credentials'
       } else if (token.email && !token.id) {
         // On token refresh, if we have email but no id, regenerate from email
         token.id = generateUUIDFromEmailSync(token.email as string)
@@ -104,6 +105,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Ensure email is in session for debugging
         if (token.email) {
           session.user.email = token.email as string
+        }
+        if (token.provider) {
+          (session.user as { provider?: string }).provider = token.provider as string
         }
 
         // Use name and image from database so uploaded avatar and profile name show everywhere (header, dropdown, etc.)

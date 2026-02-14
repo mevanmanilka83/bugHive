@@ -78,6 +78,37 @@ export function BugDetailedList({
   const [currentPage, setCurrentPage] = React.useState(1)
   const [savedBugIds, setSavedBugIds] = React.useState<Set<string>>(new Set())
 
+  React.useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    fetch("/api/saved")
+      .then((res) => (res.ok ? res.json() : { savedBugIds: [] }))
+      .then((data) => {
+        if (cancelled) return
+        const ids = Array.isArray(data?.savedBugIds) ? data.savedBugIds : []
+        setSavedBugIds(new Set(ids))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
+  React.useEffect(() => {
+    const onSavedChange = () => {
+      if (!userId) return
+      fetch("/api/saved")
+        .then((res) => (res.ok ? res.json() : { savedBugIds: [] }))
+        .then((data) => {
+          const ids = Array.isArray(data?.savedBugIds) ? data.savedBugIds : []
+          setSavedBugIds(new Set(ids))
+        })
+        .catch(() => {})
+    }
+    window.addEventListener("saved:changed", onSavedChange)
+    return () => window.removeEventListener("saved:changed", onSavedChange)
+  }, [userId])
+
   const copyToClipboard = React.useCallback(async (text: string) => {
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -272,21 +303,46 @@ export function BugDetailedList({
     return pages
   }, [totalPages, currentPage])
 
-  const toggleSaved = React.useCallback((bugId: string) => {
-    if (!userId) {
-      toast.error("Please sign in to save bugs")
-      return
-    }
-    setSavedBugIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(bugId)) {
-        next.delete(bugId)
-      } else {
-        next.add(bugId)
+  const toggleSaved = React.useCallback(
+    async (bugId: string) => {
+      if (!userId) {
+        toast.error("Please sign in to save bugs")
+        return
       }
-      return next
-    })
-  }, [userId])
+      const isCurrentlySaved = savedBugIds.has(bugId)
+      setSavedBugIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(bugId)) next.delete(bugId)
+        else next.add(bugId)
+        return next
+      })
+      try {
+        if (isCurrentlySaved) {
+          const res = await fetch(`/api/saved?bug_id=${encodeURIComponent(bugId)}`, {
+            method: "DELETE",
+          })
+          if (!res.ok) throw new Error("Failed to unsave")
+        } else {
+          const res = await fetch("/api/saved", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bug_id: bugId }),
+          })
+          if (!res.ok) throw new Error("Failed to save")
+        }
+        window.dispatchEvent(new Event("saved:changed"))
+      } catch {
+        setSavedBugIds((prev) => {
+          const next = new Set(prev)
+          if (isCurrentlySaved) next.add(bugId)
+          else next.delete(bugId)
+          return next
+        })
+        toast.error(isCurrentlySaved ? "Failed to unsave bug" : "Failed to save bug")
+      }
+    },
+    [userId, savedBugIds]
+  )
 
   return (
     <div className="w-full">

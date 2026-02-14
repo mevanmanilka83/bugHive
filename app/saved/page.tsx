@@ -4,9 +4,11 @@ import { requireAuthForPage } from "@/lib"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
+import { SavedBugsList } from "@/components/saved/SavedBugsList"
 
 export default async function SavedPage() {
   const session = await requireAuthForPage()
+  const userId = session.user.id
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
@@ -37,11 +39,11 @@ export default async function SavedPage() {
             <div className="rounded-lg border border-border/40 bg-card p-6 mb-6">
               <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Saved</h1>
               <p className="text-sm text-muted-foreground">
-                Keep track of bugs and clusters you want to revisit.
+                Keep track of bugs you want to revisit.
               </p>
             </div>
-            <div className="rounded-lg border border-border/40 bg-card p-6 text-sm text-muted-foreground">
-              <p>No saved items yet.</p>
+            <div className="rounded-lg bg-card">
+              <SavedBugsList userId={userId} />
             </div>
           </section>
         </div>
