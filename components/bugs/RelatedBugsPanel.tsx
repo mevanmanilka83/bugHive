@@ -93,21 +93,19 @@ export function RelatedBugsPanel({
   }, [fetchRelated])
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="rounded-md border border-border/50 bg-card p-2 shadow-[0_1px_2px_rgba(0,0,0,.05)]">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <div>
-            <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Related Bugs
-            </h3>
-          </div>
+    <div className="flex flex-col gap-1">
+      <div className="rounded-md border border-border/30 bg-muted/20 px-1.5 py-1 shadow-none">
+        <div className="flex items-start justify-between gap-1.5 mb-0.5">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-foreground/70">
+            Related Bugs
+          </h3>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={fetchRelated}
             disabled={loading}
-            className="h-5 w-5 p-0 hover:bg-muted"
+            className="h-5 w-5 p-0 hover:bg-muted -mt-0.5"
             title="Retry loading related bugs"
           >
             <span className="text-xs">↻</span>
@@ -115,7 +113,7 @@ export function RelatedBugsPanel({
         </div>
 
       {loading ? (
-        <div className="space-y-1.5" role="status" aria-label="Loading related bugs">
+        <div className="space-y-1" role="status" aria-label="Loading related bugs">
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-0.5">
               <Skeleton className="h-2.5 w-full" />
@@ -124,18 +122,18 @@ export function RelatedBugsPanel({
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground leading-tight">
           No related bugs found yet.
         </p>
       ) : (
-        <ul className="space-y-1" role="list" aria-label="Related bugs">
+        <ul className="space-y-0.5" role="list" aria-label="Related bugs">
           {items.slice(0, 5).map((item) => (
             <li key={item.id}>
               <a
                 href={item.url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="text-[11px] text-foreground hover:text-primary hover:underline line-clamp-2 block"
+                className="text-sm text-foreground hover:text-primary hover:underline line-clamp-2 block leading-tight"
                 title={item.title}
               >
                 {item.title}

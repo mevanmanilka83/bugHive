@@ -14,7 +14,7 @@ export default async function ClustersPage() {
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         {/* Top navigation – same as homepage */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">

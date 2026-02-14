@@ -4,7 +4,6 @@ import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
 import { RelatedBugsPanel } from "@/components/bugs/RelatedBugsPanel"
-import { RecentlyViewedTracker } from "@/components/bugs/RecentlyViewedTracker"
 import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
@@ -53,16 +52,15 @@ export default async function BugDetailsPage({
         </header>
 
         {/* Main content – sidebar | main | related panel; stacks on mobile */}
-        <div className="flex flex-1 gap-0 py-6 md:gap-6">
+        <div className="flex flex-1 flex-col gap-6 py-6 md:grid md:grid-cols-[200px_minmax(0,1fr)_320px] md:items-start lg:grid-cols-[220px_minmax(0,1fr)_360px] xl:grid-cols-[240px_minmax(0,1fr)_380px]">
           <SidebarPublicNav
             active="public"
             isAuthenticated={!!session}
             useAuthFallback
-            className="hidden md:flex md:shrink-0"
+            className="hidden md:flex"
           />
 
-          <section className="min-w-0 flex-1 basis-0">
-            <RecentlyViewedTracker bugId={bug.id} bugTitle={bug.title ?? ""} />
+          <section className="min-w-0">
             <Link
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
@@ -75,10 +73,8 @@ export default async function BugDetailsPage({
             />
           </section>
 
-          <aside className="hidden md:block md:w-[152px] lg:w-[164px] xl:w-[176px] shrink-0 border-l border-border/60 bg-muted/20 pl-3">
-            <div className="sticky top-6">
-              <RelatedBugsPanel bugId={bug.id} />
-            </div>
+          <aside className="w-full min-w-0">
+            <RelatedBugsPanel bugId={bug.id} />
           </aside>
         </div>
 

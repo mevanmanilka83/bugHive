@@ -5,7 +5,6 @@ import { BugExploreList } from "@/components/bugs/BugExploreList"
 import { Button } from "@/components/ui/button"
 import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
-import { HomeRightSidebar } from "@/components/home/HomeRightSidebar"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 
@@ -15,7 +14,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
         {/* Top navigation – simple, public-friendly */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
@@ -36,19 +35,19 @@ export default async function Home() {
           </div>
         </header>
 
-        {/* Main content – three columns: left nav | primary content | right rail */}
-        <div className="flex flex-1 gap-0 py-6 md:gap-6">
+        {/* Main content – StackOverflow-like public bug list with left sidebar */}
+        <div className="flex flex-1 gap-6 py-6">
           {/* Left sidebar (public navigation) */}
           <SidebarPublicNav
             active="public"
             isAuthenticated={!!session}
             useAuthFallback
-            className="hidden md:flex md:shrink-0"
+            className="hidden md:flex"
           />
 
-          {/* Primary content – main column, uses full available space */}
-          <section className="min-w-0 flex-1 basis-0">
-            <div className="rounded-lg border border-border/50 bg-card p-4 mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between shadow-none">
+          {/* Main list column */}
+          <section className="flex-1 min-w-0">
+            <div className="rounded-lg border border-border/40 bg-card p-6 mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Newest Bugs</h1>
                 <p className="text-sm text-muted-foreground">
@@ -76,9 +75,6 @@ export default async function Home() {
               currentUserImage={session?.user?.image ?? undefined}
             />
           </section>
-
-          {/* Right rail – supplementary widgets, visually subordinate */}
-          <HomeRightSidebar />
         </div>
 
         {/* Footer */}

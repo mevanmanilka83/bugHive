@@ -190,7 +190,7 @@ export function SidebarPublicNav({
   return (
     <aside
       className={[
-        "w-44 shrink-0 flex-col text-sm text-muted-foreground flex",
+        "w-52 shrink-0 flex-col text-sm text-muted-foreground flex",
         "h-[calc(100vh-7rem)] min-h-0 overflow-y-auto pr-2",
         className,
       ]

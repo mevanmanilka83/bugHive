@@ -96,7 +96,7 @@ export default async function ClusterBugDetailsPage({
             <BugDetailsView bug={bug} userId={session?.user?.id} />
           </section>
 
-          <aside className="hidden md:block md:w-[152px] lg:w-[164px] xl:w-[176px] shrink-0 border-l border-border/60 bg-muted/20 pl-3">
+          <aside className="hidden md:block md:w-[180px] lg:w-[200px] xl:w-[220px] shrink-0 border-l border-border/60 bg-muted/20 pl-3">
             <div className="sticky top-6">
               <RelatedBugsPanel bugId={bug.id} context="cluster" />
             </div>

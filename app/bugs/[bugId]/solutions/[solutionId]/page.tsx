@@ -48,7 +48,7 @@ export default async function BugSolutionDetailsPage({
 
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4">
         {/* Top navigation – same as bug details page */}
         <header className="border-b bg-background">
           <div className="flex items-center justify-between gap-4 py-3">
