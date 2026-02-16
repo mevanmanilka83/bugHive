@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Info } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { HomeHeaderStatsDialog } from "@/components/HomeHeaderStatsDialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -35,11 +36,12 @@ interface HomeHeaderUserProps {
 export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
   if (!session) {
     return (
-      <>
+      <div className="flex items-center gap-2">
+        <HomeHeaderStatsDialog />
         <Button asChild size="sm" className="rounded-full px-4">
           <Link href="/auth/signup">Sign up</Link>
         </Button>
-      </>
+      </div>
     )
   }
 
@@ -53,6 +55,8 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
 
   return (
     <div className="flex items-center gap-2">
+      {/* Fire icon: community stats and quick links */}
+      <HomeHeaderStatsDialog />
       {/* Info icon: opens dialog with user/account details */}
       <Dialog>
         <DialogTrigger asChild>

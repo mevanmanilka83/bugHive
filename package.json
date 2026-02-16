@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "db:push": "supabase db push"
   },
   "dependencies": {
     "@auth/supabase-adapter": "^1.11.0",

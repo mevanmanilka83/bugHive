@@ -86,7 +86,7 @@ export default async function ClusterBugDetailsPage({
             className="hidden md:flex md:shrink-0"
           />
 
-          <section className="flex-1 min-w-0">
+          <section className="flex-1 min-w-0 min-h-0 overflow-y-auto">
             <Link
               href={`/clusters/${clusterId}`}
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"

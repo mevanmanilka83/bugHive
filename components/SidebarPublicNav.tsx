@@ -8,6 +8,7 @@ import {
   IconBell,
   IconBookmark,
   IconBug,
+  IconHelpCircle,
   IconHome2,
   IconSettings,
   IconTag,
@@ -27,6 +28,7 @@ type NavKey =
   | "saved"
   | "activity"
   | "settings"
+  | "faq"
 
 type NavItem = {
   key: NavKey
@@ -185,7 +187,17 @@ export function SidebarPublicNav({
       icon: IconSettings,
       requiresAuth: true,
     },
+    {
+      key: "faq",
+      title: "FAQ",
+      href: "/settings/faq",
+      icon: IconHelpCircle,
+      requiresAuth: true,
+    },
   ]
+
+  const isFaqPage = pathname === "/settings/faq"
+  const isSettingsRoot = pathname === "/settings" || pathname === "/settings/"
 
   return (
     <aside
@@ -230,7 +242,11 @@ export function SidebarPublicNav({
               <Link
                 key={item.key}
                 href={href}
-                className={navLinkClass(item.key === active)}
+                className={navLinkClass(
+                  (item.key === "settings" && isSettingsRoot) ||
+                    (item.key === "faq" && isFaqPage) ||
+                    (item.key !== "settings" && item.key !== "faq" && item.key === active)
+                )}
               >
                 <item.icon className="size-4" />
                 <span>{item.title}</span>

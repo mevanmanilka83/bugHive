@@ -60,7 +60,7 @@ export default async function BugDetailsPage({
             className="hidden md:flex md:shrink-0"
           />
 
-          <section className="flex-1 min-w-0">
+          <section className="flex-1 min-w-0 min-h-0 overflow-y-auto">
             <Link
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
