@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { BugDetailedList } from "@/components/bugs/BugDetailedList"
+import { SavedBugsListSkeleton } from "@/components/skeletons/SavedBugsListSkeleton"
 
 interface SavedBugsListProps {
   userId: string
@@ -48,11 +49,7 @@ export function SavedBugsList({ userId }: SavedBugsListProps) {
   )
 
   if (loading) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        Loading saved bugs...
-      </div>
-    )
+    return <SavedBugsListSkeleton />
   }
 
   if (bugs.length === 0) {

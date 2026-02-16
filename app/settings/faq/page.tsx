@@ -1,7 +1,7 @@
 import { requireAuthForPage } from "@/lib"
 import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
 import { FAQ_ITEMS } from "@/lib/faq"
-import { FAQ } from "@/components/faq"
+import { FAQClient } from "@/components/FAQClient"
 
 export default async function SettingsFaqPage() {
   await requireAuthForPage()
@@ -12,7 +12,7 @@ export default async function SettingsFaqPage() {
       description="Frequently asked questions about BugHive."
       showBackLink={false}
     >
-      <FAQ faqItems={FAQ_ITEMS} />
+      <FAQClient initialItems={FAQ_ITEMS} />
     </SettingsSubpage>
   )
 }

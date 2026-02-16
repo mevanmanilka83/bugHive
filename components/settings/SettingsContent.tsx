@@ -8,6 +8,7 @@ import {
   type ClusterViewMode,
 } from "@/lib/utils-client"
 import { cn } from "@/lib/utils-client"
+import { SettingsContentSkeleton } from "@/components/skeletons/SettingsContentSkeleton"
 
 const SECTION_HEADING =
   "text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-12 first:mt-0 mb-5"
@@ -117,9 +118,11 @@ function SettingsRow({
 
 export function SettingsContent() {
   const [clusterViewMode, setStateViewMode] = React.useState<ClusterViewMode>("list")
+  const [isLoading, setIsLoading] = React.useState(true)
 
   React.useEffect(() => {
     setStateViewMode(getClusterViewMode())
+    setIsLoading(false)
   }, [])
 
   React.useEffect(() => {
@@ -127,6 +130,10 @@ export function SettingsContent() {
     window.addEventListener("settings:clusterViewMode", onSync)
     return () => window.removeEventListener("settings:clusterViewMode", onSync)
   }, [])
+
+  if (isLoading) {
+    return <SettingsContentSkeleton />
+  }
 
   return (
     <div className="max-w-2xl p-6">
