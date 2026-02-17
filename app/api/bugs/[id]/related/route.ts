@@ -21,9 +21,63 @@ export type RelatedResult = {
   id: string
   title: string
   url: string
-  source: "github_issue" | "github_repo" | "bughive_public" | "bughive_cluster"
+  source:
+  | "github_issue"
+  | "github_repo"
+  | "stack_overflow_question"
+  | "bugzilla_bug"
+  | "bughive_public"
+  | "bughive_cluster"
   snippet: string
 }
+
+type StackOverflowQuestion = {
+  question_id: number
+  title: string
+  link: string
+  body_markdown?: string
+  score: number
+  answer_count: number
+  is_answered: boolean
+  tags: string[]
+}
+
+type BugzillaBug = {
+  id: number
+  summary: string
+  whiteboard?: string
+}
+
+// ... (Add normalizeStackOverflowQuestion)
+function normalizeStackOverflowQuestion(item: StackOverflowQuestion): RelatedResult {
+  const tagStr = item.tags && item.tags.length > 0 ? `Tags: ${item.tags.join(", ")}` : ""
+  const bodySnippet = toSnippet(item.body_markdown)
+  const snippet = [tagStr, bodySnippet].filter(Boolean).join(". ") || `Stack Overflow question (Score: ${item.score})`
+
+  return {
+    id: `so-${item.question_id}`,
+    title: stripHtml(item.title),
+    url: item.link,
+    source: "stack_overflow_question",
+    snippet,
+  }
+}
+
+function normalizeBugzillaBug(baseUrl: string, item: BugzillaBug): RelatedResult {
+  const cleanBase = (baseUrl || "").replace(/\/+$/, "")
+  const url = cleanBase ? `${cleanBase}/show_bug.cgi?id=${item.id}` : ""
+  const extra = item.whiteboard ? ` (${item.whiteboard})` : ""
+  const snippet = toSnippet(item.whiteboard) || "Bugzilla bug"
+
+  return {
+    id: `bz-${item.id}`,
+    title: `${item.summary}${extra}`,
+    url,
+    source: "bugzilla_bug",
+    snippet,
+  }
+}
+
 
 type GeminiQueries = {
   issueQuery: string
@@ -597,6 +651,9 @@ export async function GET(
     ].join(" ").toLowerCase()
 
     const githubToken = process.env.GITHUB_TOKEN
+    const stackExchangeKey = process.env.STACK_EXCHANGE_API
+    const bugzillaBaseUrl = process.env.BUGZILLA_BASE_URL || ""
+    const bugzillaApiKey = process.env.BUGZILLA_API_KEY
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
@@ -617,16 +674,209 @@ export async function GET(
     try {
       const issuesRes = await fetch(issuesUrl.toString(), { headers })
       const issuesData = issuesRes.ok ? await issuesRes.json() : { items: [] }
-      issueItems = Array.isArray(issuesData?.items) ? (issuesData.items as GitHubIssue[]) : []
+      issueItems = Array.isArray(issuesData?.items)
+        ? (issuesData.items as GitHubIssue[])
+        : []
       // Fail closed: no generic fallback query to avoid irrelevant results.
     } catch {
       issueItems = []
     }
 
-    const issuesWithDiscussion = issueItems.filter((item: GitHubIssue) => (item.comments || 0) > 0)
-    const rawIssues = (issuesWithDiscussion.length > 0 ? issuesWithDiscussion : issueItems)
+    const issuesWithDiscussion = issueItems.filter(
+      (item: GitHubIssue) => (item.comments || 0) > 0
+    )
+    const githubIssues = (issuesWithDiscussion.length > 0
+      ? issuesWithDiscussion
+      : issueItems
+    )
       .slice(0, GITHUB_PAGE_SIZE)
       .map(normalizeIssue)
+
+    // Stack Overflow fetch
+    let stackItems: StackOverflowQuestion[] = []
+
+    if (issueQuery) {
+      try {
+        const stackQuery = issueQuery
+          .replace(/in:title,body/g, "")
+          .replace(/is:issue/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+
+        if (stackQuery) {
+          const soUrl = new URL(
+            "https://api.stackexchange.com/2.3/search/advanced"
+          )
+          soUrl.searchParams.set("order", "desc")
+          soUrl.searchParams.set("sort", "relevance")
+          soUrl.searchParams.set("site", "stackoverflow")
+          soUrl.searchParams.set("pagesize", String(MAX_RESULTS_PER_SOURCE))
+          if (stackExchangeKey) {
+            soUrl.searchParams.set("key", stackExchangeKey)
+          }
+
+          // Primary fetch
+          soUrl.searchParams.set("q", stackQuery)
+          const soRes = await fetch(soUrl.toString())
+
+          if (soRes.ok) {
+            const soData = await soRes.json()
+            stackItems = Array.isArray(soData?.items)
+              ? (soData.items as StackOverflowQuestion[])
+              : []
+          } else {
+            console.error(`Stack Overflow API Error: ${soRes.status}`, await soRes.text())
+          }
+
+          // Fallback 1: Signature-based (Language + Error/Symptom)
+          if (stackItems.length === 0) {
+            const fallbackTerms = [
+              signature.languageTerms[0],
+              signature.hardError || signature.symptomPhrases[0]
+            ].filter(Boolean)
+
+            if (fallbackTerms.length > 0) {
+              const fallbackQ = fallbackTerms.join(" ")
+              if (fallbackQ && fallbackQ !== stackQuery) {
+                soUrl.searchParams.set("q", fallbackQ)
+                soUrl.searchParams.delete("key") // Try without key to ensure it works even if key is invalid
+                try {
+                  const fbRes = await fetch(soUrl.toString())
+                  if (fbRes.ok) {
+                    const fbData = await fbRes.json()
+                    stackItems = Array.isArray(fbData?.items)
+                      ? (fbData.items as StackOverflowQuestion[])
+                      : []
+                  }
+                } catch (e) { console.error("SO Fallback 1 failed", e) }
+              }
+            }
+          }
+
+          // Fallback 2: Title-based (Simple keywords)
+          if (stackItems.length === 0 && title) {
+            const cleanTitle = title
+              .replace(/bug|issue|problem|error|fail|failure|crash/gi, "")
+              .replace(/\s+/g, " ")
+              .trim()
+
+            if (cleanTitle && cleanTitle !== stackQuery) {
+              soUrl.searchParams.set("q", cleanTitle)
+              soUrl.searchParams.delete("key")
+              try {
+                const fb2Res = await fetch(soUrl.toString())
+                if (fb2Res.ok) {
+                  const fb2Data = await fb2Res.json()
+                  stackItems = Array.isArray(fb2Data?.items)
+                    ? (fb2Data.items as StackOverflowQuestion[])
+                    : []
+                }
+              } catch (e) { console.error("SO Fallback 2 failed", e) }
+            }
+          }
+        }
+      } catch {
+        stackItems = []
+      }
+    }
+
+    const stackQuestions = stackItems.map(normalizeStackOverflowQuestion)
+
+    // Bugzilla fetch
+    let bugzillaItems: BugzillaBug[] = []
+    if (bugzillaBaseUrl) {
+      try {
+        const cleanBase = bugzillaBaseUrl.replace(/\/+$/, "")
+        const bzUrl = new URL(`${cleanBase}/rest/bug`)
+        const quickSearch = truncateQuery(
+          [
+            signature.hardError,
+            signature.languageTerms[0],
+            title,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        )
+
+        if (quickSearch) {
+          bzUrl.searchParams.set("quicksearch", quickSearch)
+          if (bugzillaApiKey) {
+            bzUrl.searchParams.set("api_key", bugzillaApiKey)
+          }
+
+          // console.log(`Bugzilla Query: "${quickSearch}"`)
+          const bzRes = await fetch(bzUrl.toString())
+          if (bzRes.ok) {
+            const bzData = await bzRes.json()
+            bugzillaItems = Array.isArray(bzData?.bugs)
+              ? (bzData.bugs as BugzillaBug[])
+              : []
+            // console.log(`Bugzilla Items found: ${bugzillaItems.length}`)
+          } else {
+            console.error(`Bugzilla API Error: ${bzRes.status}`, await bzRes.text())
+            bugzillaItems = []
+          }
+
+          // Fallback 1: Signature-based (Language + Error)
+          if (bugzillaItems.length === 0) {
+            const fallbackTerms = [
+              signature.languageTerms[0],
+              signature.hardError
+            ].filter(Boolean)
+
+            if (fallbackTerms.length > 0) {
+              const fallbackQ = fallbackTerms.join(" ")
+              if (fallbackQ && fallbackQ !== quickSearch) {
+                bzUrl.searchParams.set("quicksearch", fallbackQ)
+                try {
+                  const fbRes = await fetch(bzUrl.toString())
+                  if (fbRes.ok) {
+                    const fbData = await fbRes.json()
+                    bugzillaItems = Array.isArray(fbData?.bugs)
+                      ? (fbData.bugs as BugzillaBug[])
+                      : []
+                  }
+                } catch (e) { console.error("Bugzilla Fallback 1 failed", e) }
+              }
+            }
+          }
+
+          // Fallback 2: Title-based keyword search
+          if (bugzillaItems.length === 0 && title) {
+            const cleanTitle = title
+              .replace(/bug|issue|problem|error|fail|failure|crash/gi, "")
+              .replace(/\s+/g, " ")
+              .trim()
+
+            if (cleanTitle && cleanTitle !== quickSearch) {
+              bzUrl.searchParams.set("quicksearch", cleanTitle)
+              try {
+                const fb2Res = await fetch(bzUrl.toString())
+                if (fb2Res.ok) {
+                  const fb2Data = await fb2Res.json()
+                  bugzillaItems = Array.isArray(fb2Data?.bugs)
+                    ? (fb2Data.bugs as BugzillaBug[])
+                    : []
+                }
+              } catch (e) { console.error("Bugzilla Fallback 2 failed", e) }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Bugzilla fetch error:", error)
+        bugzillaItems = []
+      }
+    }
+
+    const bugzillaResults =
+      bugzillaBaseUrl && bugzillaItems.length > 0
+        ? bugzillaItems.map((bug) =>
+          normalizeBugzillaBug(bugzillaBaseUrl, bug)
+        )
+        : []
+
+    const rawIssues = [...githubIssues, ...stackQuestions, ...bugzillaResults]
+
 
     function relevanceScore(item: RelatedResult): number {
       const text = `${item.title} ${item.snippet}`.toLowerCase()
@@ -640,10 +890,12 @@ export async function GET(
     }
 
     function matchesHardError(item: RelatedResult): boolean {
+      if (item.source === "stack_overflow_question" || item.source === "bugzilla_bug") return true
       if (!signature.hardError) return true
       const text = `${item.title} ${item.snippet}`.toLowerCase()
       return text.includes(signature.hardError.toLowerCase())
     }
+
 
     function matchesLanguageText(text: string): boolean {
       if (signature.languageTerms.length === 0) return true
@@ -707,9 +959,9 @@ export async function GET(
       .filter(
         (x) =>
           matchesLanguage(x.item) &&
-            matchesHardError(x.item) &&
-            passesDomainBlocklist(x.item) &&
-            matchesApiTerm(x.item) &&
+          matchesHardError(x.item) &&
+          passesDomainBlocklist(x.item) &&
+          matchesApiTerm(x.item) &&
           x.softScore >= minSoftMatchesStrict
       )
       .sort((a, b) => b.softScore - a.softScore || b.score - a.score)
@@ -724,9 +976,9 @@ export async function GET(
       .filter(
         (x) =>
           matchesLanguage(x.item) &&
-            matchesHardError(x.item) &&
-            matchesApiTerm(x.item) &&
-            x.softScore >= minSoftMatchesRelaxed
+          matchesHardError(x.item) &&
+          matchesApiTerm(x.item) &&
+          x.softScore >= minSoftMatchesRelaxed
       )
       .sort((a, b) =>
         (b.softScore - b.penalty) - (a.softScore - a.penalty) || b.score - a.score
@@ -734,6 +986,33 @@ export async function GET(
 
     const chosen = strictIssues.length > 0 ? strictIssues : relaxedIssues
     const issues = chosen.slice(0, MAX_RESULTS_PER_SOURCE).map((x) => x.item)
+
+    // Ensure we surface at least some Stack Overflow results when available,
+    // even if the strict relevance filters are too aggressive.
+    const hasStackInIssues = issues.some(
+      (item) => item.source === "stack_overflow_question"
+    )
+    const extraStack =
+      !hasStackInIssues && stackQuestions.length > 0
+        ? stackQuestions.slice(
+          0,
+          Math.max(1, MAX_RESULTS_PER_SOURCE - issues.length)
+        )
+        : []
+
+    // Ensure Bugzilla results are surfaced
+    const hasBugzillaInIssues = issues.some(
+      (item) => item.source === "bugzilla_bug"
+    )
+    const extraBugzilla =
+      !hasBugzillaInIssues && bugzillaResults.length > 0
+        ? bugzillaResults.slice(
+          0,
+          Math.max(1, MAX_RESULTS_PER_SOURCE - issues.length)
+        )
+        : []
+
+    const finalIssues = [...issues, ...extraStack, ...extraBugzilla]
 
     const allBugs = await getMultipleRecords("bugs")
     const publicBugs = allBugs.filter((record) => {
@@ -746,9 +1025,9 @@ export async function GET(
     const clusterId = bug?.cluster_id ? String(bug.cluster_id) : ""
     const clusterBugs = clusterId
       ? allBugs.filter((record) => {
-          if (record?.id === bugId) return false
-          return String(record?.cluster_id || "") === clusterId
-        })
+        if (record?.id === bugId) return false
+        return String(record?.cluster_id || "") === clusterId
+      })
       : []
 
     const minPublicScore = keyTermsLower.length <= 2 ? 1 : 2
@@ -815,11 +1094,14 @@ export async function GET(
       .slice(0, MAX_RESULTS_PER_SOURCE)
       .map((x) => normalizeClusterBug(x.record, clusterId))
 
-    const results = [...scoredClusterBugs, ...scoredPublicBugs, ...issues]
+    const results = [...scoredClusterBugs, ...scoredPublicBugs, ...finalIssues]
 
     return successResponse({
       results,
-      message: results.length === 0 ? "No related GitHub issues found for this bug." : undefined,
+      message:
+        results.length === 0
+          ? "No related external issues found for this bug."
+          : undefined,
     })
   } catch (error) {
     return errorResponse(error instanceof Error ? error.message : "Failed to load related bugs")

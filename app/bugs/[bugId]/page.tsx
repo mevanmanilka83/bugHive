@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { GalleryVerticalEnd } from "lucide-react"
+import { GalleryVerticalEnd, BarChart3 } from "lucide-react"
 import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
@@ -61,12 +61,22 @@ export default async function BugDetailsPage({
           />
 
           <section className="flex-1 min-w-0 min-h-0 overflow-y-auto">
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
-            >
-              ← Back to Public bugs
-            </Link>
+            <div className="flex items-center justify-between mb-6">
+              <Link
+                href="/"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← Back to Public bugs
+              </Link>
+              <Link
+                href={`/bugs/${bug.id}`}
+                className="inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 h-8 w-8"
+                title="View bug graph"
+                aria-label="View bug graph"
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Link>
+            </div>
             <BugDetailsView
               bug={bug}
               userId={session?.user?.id ?? undefined}
