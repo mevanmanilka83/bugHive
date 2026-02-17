@@ -76,49 +76,49 @@ export function HomeHeaderStatsDialog() {
           {loading ? (
             <HomeHeaderStatsDialogSkeleton />
           ) : data ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left column: Community stats + Teams & clusters */}
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-6">
                 {/* Community Stats Section */}
                 <section>
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-3 flex items-center gap-2">
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
                     <div className="size-1 rounded-full bg-primary" />
                     Community stats
                   </h2>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
+                    <div className="flex flex-col gap-0.5 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
                       <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-medium">Questions</span>
-                        <HelpCircle className="size-3.5" />
+                        <HelpCircle className="size-3.5 opacity-70" />
                       </div>
-                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight mt-1">
+                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight">
                         {data.stats.questions}
                       </p>
                     </div>
-                    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
+                    <div className="flex flex-col gap-0.5 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
                       <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-medium">Answers</span>
-                        <MessageCircle className="size-3.5" />
+                        <MessageCircle className="size-3.5 opacity-70" />
                       </div>
-                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight mt-1">
+                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight">
                         {data.stats.answers}
                       </p>
                     </div>
-                    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
+                    <div className="flex flex-col gap-0.5 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
                       <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-medium">Comments</span>
-                        <MessageCircle className="size-3.5" />
+                        <MessageCircle className="size-3.5 opacity-70" />
                       </div>
-                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight mt-1">
+                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight">
                         {data.stats.comments}
                       </p>
                     </div>
-                    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
+                    <div className="flex flex-col gap-0.5 p-3 rounded-lg bg-muted/30 border border-border/30 hover:border-border/60 transition-colors">
                       <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-medium">Upvotes</span>
-                        <ArrowUp className="size-3.5" />
+                        <ArrowUp className="size-3.5 opacity-70" />
                       </div>
-                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight mt-1">
+                      <p className="text-2xl font-bold text-foreground leading-none tracking-tight">
                         {data.stats.upvotes}
                       </p>
                     </div>
@@ -127,24 +127,24 @@ export function HomeHeaderStatsDialog() {
 
                 {/* Teams & Clusters Section */}
                 <section>
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-3 flex items-center gap-2">
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
                     <div className="size-1 rounded-full bg-primary" />
                     Teams & clusters
                   </h2>
                   {data.clusters.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-2 italic text-center bg-muted/20 rounded-md">No clusters active.</p>
                   ) : (
-                    <ul className="space-y-1">
+                    <ul className="space-y-0.5">
                       {data.clusters.slice(0, 5).map((c) => (
                         <li key={c.id}>
                           <Link
                             href={`/clusters/${c.id}`}
-                            className="group flex items-center justify-between rounded-md border border-transparent px-3 py-2 hover:bg-muted/50 hover:border-border/40 transition-all"
+                            className="group flex items-center justify-between rounded-md border border-transparent px-2.5 py-1.5 hover:bg-muted/50 hover:border-border/40 transition-all"
                             onClick={() => setOpen(false)}
                           >
-                            <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
                               <span className="truncate text-sm text-foreground/90 group-hover:text-primary transition-colors">{c.name}</span>
-                              <span className="text-[10px] uppercase font-semibold text-primary/70 bg-primary/5 px-1.5 py-0.5 rounded-sm opacity-70 group-hover:opacity-100 transition-opacity">Open</span>
+                              <span className="text-[10px] uppercase font-semibold text-primary/70 bg-primary/5 px-1.5 py-px rounded-sm opacity-70 group-hover:opacity-100 transition-opacity">Open</span>
                             </div>
                             <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
                           </Link>
@@ -154,7 +154,7 @@ export function HomeHeaderStatsDialog() {
                   )}
                   <Link
                     href="/clusters"
-                    className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-2 inline-flex items-center gap-1 px-1"
+                    className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
                     onClick={() => setOpen(false)}
                   >
                     View all clusters <ArrowRight className="size-3" />
@@ -163,25 +163,25 @@ export function HomeHeaderStatsDialog() {
               </div>
 
               {/* Right column: Popular Unanswered + Recently viewed */}
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-6">
                 {/* Popular Unanswered Section */}
                 <section>
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-3 flex items-center gap-2">
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
                     <div className="size-1 rounded-full bg-orange-500" />
                     Popular unanswered
                   </h2>
                   {data.unansweredBugs.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-2 italic text-center bg-muted/20 rounded-md">No unanswered bugs.</p>
                   ) : (
-                    <ul className="space-y-1">
+                    <ul className="space-y-0.5">
                       {data.unansweredBugs.slice(0, 5).map((b) => (
                         <li key={b.id}>
                           <Link
                             href={`/bugs/${b.id}`}
-                            className="group flex items-center justify-between rounded-md border border-transparent px-3 py-2 hover:bg-muted/50 hover:border-border/40 transition-all"
+                            className="group flex items-center justify-between rounded-md border border-transparent px-2.5 py-1.5 hover:bg-muted/50 hover:border-border/40 transition-all"
                             onClick={() => setOpen(false)}
                           >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
                               <div className="size-1.5 rounded-full bg-orange-400/80 shrink-0" />
                               <span className="truncate text-sm text-foreground/90 group-hover:text-primary transition-colors">{b.title}</span>
                             </div>
@@ -193,7 +193,7 @@ export function HomeHeaderStatsDialog() {
                   )}
                   <Link
                     href="/?sort=unanswered"
-                    className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-2 inline-flex items-center gap-1 px-1"
+                    className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
                     onClick={() => setOpen(false)}
                   >
                     View all unanswered <ArrowRight className="size-3" />
@@ -202,22 +202,22 @@ export function HomeHeaderStatsDialog() {
 
                 {/* Recently Viewed Section */}
                 <section>
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-3 flex items-center gap-2">
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
                     <Eye className="size-3.5" />
                     Recently viewed
                   </h2>
                   {data.recentBugs.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-2 italic text-center bg-muted/20 rounded-md">No recent history.</p>
                   ) : (
-                    <ul className="space-y-1">
+                    <ul className="space-y-0.5">
                       {data.recentBugs.slice(0, 5).map((b) => (
                         <li key={b.id}>
                           <Link
                             href={`/bugs/${b.id}`}
-                            className="group flex items-center justify-between rounded-md border border-transparent px-3 py-2 hover:bg-muted/50 hover:border-border/40 transition-all"
+                            className="group flex items-center justify-between rounded-md border border-transparent px-2.5 py-1.5 hover:bg-muted/50 hover:border-border/40 transition-all"
                             onClick={() => setOpen(false)}
                           >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
                               <div className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0 group-hover:bg-primary/50 transition-colors" />
                               <span className="truncate text-sm text-foreground/90 group-hover:text-primary transition-colors">{b.title}</span>
                             </div>
@@ -229,7 +229,7 @@ export function HomeHeaderStatsDialog() {
                   )}
                   <Link
                     href="/"
-                    className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-2 inline-flex items-center gap-1 px-1"
+                    className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
                     onClick={() => setOpen(false)}
                   >
                     Return to feed <ArrowRight className="size-3" />
