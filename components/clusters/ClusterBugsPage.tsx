@@ -7,11 +7,11 @@ import { IconReport, IconArrowLeft, IconUsers, IconPencil, IconUserPlus, IconChe
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
 import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
 import { ClusterBugsList } from "./ClusterBugsList"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
 import { EditClusterDialog } from "./EditClusterDialog"
+import { ClusterBugsPageSkeleton } from "@/components/skeletons/ClusterBugsPageSkeleton"
 
 interface ClusterBugsPageProps {
   clusterId: string
@@ -137,13 +137,7 @@ export function ClusterBugsPage({
   }
 
   if (loading) {
-    return (
-      <div>
-        <Skeleton className="h-8 w-64 mb-4" />
-        <Skeleton className="h-10 w-full mb-4" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    )
+    return <ClusterBugsPageSkeleton />
   }
 
   if (!cluster) {

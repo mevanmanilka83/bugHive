@@ -4,8 +4,8 @@ import * as React from "react"
 import Link from "next/link"
 import { RotateCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils-client"
+import { RelatedBugsPanelSkeleton } from "@/components/skeletons/RelatedBugsPanelSkeleton"
 
 /** Normalized shape from API */
 export type RelatedBugSource =
@@ -134,11 +134,7 @@ export function RelatedBugsPanel({
         {/* Scrollable content */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3">
           {loading ? (
-            <div className="space-y-3" role="status" aria-label="Loading related bugs">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-12 w-full rounded-md" />
-              ))}
-            </div>
+            <RelatedBugsPanelSkeleton count={5} />
           ) : error ? (
             <p className="text-sm text-muted-foreground py-2">{error}</p>
           ) : githubItems.length === 0 && bughiveItems.length === 0 ? (

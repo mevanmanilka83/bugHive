@@ -7,8 +7,8 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggleGroup"
+import { ClustersListSkeleton } from "@/components/skeletons/ClustersListSkeleton"
 import {
   Dialog,
   DialogContent,
@@ -210,9 +210,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
         )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-            {loading ? (
-              <Skeleton className="h-5 w-24" />
-            ) : (
+            {!loading && (
               <p className="text-sm text-muted-foreground">
                 {filteredClusters.length} {visibilityFilter} cluster{filteredClusters.length !== 1 ? "s" : ""}
               </p>
@@ -302,17 +300,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
         }
       >
         {loading ? (
-          Array.from({ length: 3 }).map((_, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-48 mt-2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          ))
+          <ClustersListSkeleton count={3} />
         ) : filteredClusters.length === 0 ? (
           <div className="col-span-full text-center py-12 text-muted-foreground">
             <IconUsers className="size-12 mx-auto mb-4 opacity-50" />

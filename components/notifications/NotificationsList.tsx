@@ -5,9 +5,9 @@ import { IconBell, IconCheck, IconUsers, IconMail, IconBug, IconX, IconUserPlus,
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { NotificationsListSkeleton } from "@/components/skeletons/NotificationsListSkeleton"
 
 interface NotificationsListProps {
   userId: string
@@ -225,16 +225,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
 
         <TabsContent value="unread" className="mt-4">
           {loading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <Skeleton className="h-5 w-48" />
-                    <Skeleton className="h-4 w-full mt-2" />
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+            <NotificationsListSkeleton count={3} />
           ) : unreadNotifications.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <IconBell className="size-12 mx-auto mb-4 opacity-50" />
@@ -259,16 +250,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
 
         <TabsContent value="all" className="mt-4">
           {loading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <Skeleton className="h-5 w-48" />
-                    <Skeleton className="h-4 w-full mt-2" />
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+            <NotificationsListSkeleton count={5} />
           ) : allNotifications.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <IconBell className="size-12 mx-auto mb-4 opacity-50" />

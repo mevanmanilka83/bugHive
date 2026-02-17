@@ -18,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { ChartAreaInteractiveSkeleton } from "@/components/skeletons/ChartAreaInteractiveSkeleton"
 import {
   Select,
   SelectContent,
@@ -166,7 +167,7 @@ export function ChartAreaInteractive() {
           </CardDescription>
         </CardHeader>
         <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-          <div className="aspect-auto h-[250px] w-full animate-pulse rounded bg-muted" />
+          <ChartAreaInteractiveSkeleton />
         </CardContent>
       </Card>
     )

@@ -9,9 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { ClusterMembersDialogSkeleton } from "@/components/skeletons/ClusterMembersDialogSkeleton"
 
 interface ClusterMembersDialogProps {
   open: boolean
@@ -134,17 +134,7 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
         </DialogHeader>
         <div className="max-h-[400px] overflow-y-auto">
           {loading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-48" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ClusterMembersDialogSkeleton count={3} />
           ) : members.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <IconUsers className="size-12 mx-auto mb-2 opacity-50" />
