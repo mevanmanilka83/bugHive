@@ -146,9 +146,8 @@ export function SidebarPublicNav({
     {
       key: "tags",
       title: "Tags",
-      href: "/dashboard/bugs",
+      href: "/tags",
       icon: IconTag,
-      requiresAuth: true,
     },
     {
       key: "clusters",

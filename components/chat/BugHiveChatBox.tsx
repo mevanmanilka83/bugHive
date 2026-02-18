@@ -10,7 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { MessageSquare, Send, X, Bot, User, Bug } from "lucide-react"
+import Image from "next/image"
+import { Send, X, Bot, User, Bug } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils-client"
 
@@ -176,14 +177,23 @@ export function BugHiveChatBox() {
       <Button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999]"
+        className={cn(
+          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] bg-white border border-border hover:bg-white/90 dark:bg-white dark:hover:bg-white/90 dark:border-border",
+          isOpen && "text-black [&_svg]:!text-black"
+        )}
         size="icon"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
-          <X className="h-6 w-6" />
+          <X className="h-6 w-6" stroke="currentColor" />
         ) : (
-          <MessageSquare className="h-6 w-6" />
+          <Image
+            src="/chat-icon.png"
+            alt="Chat"
+            width={24}
+            height={24}
+            className="h-6 w-6 object-contain"
+          />
         )}
       </Button>
 
@@ -194,11 +204,21 @@ export function BugHiveChatBox() {
             "max-h-[min(500px,80vh)]"
           )}
         >
-          <CardHeader className="pb-3 border-b shrink-0">
+          <CardHeader className="pb-3 border-b shrink-0 flex flex-row items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Bug className="h-5 w-5 text-primary" />
               BugHive Assistant
             </CardTitle>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              className="h-8 w-8 shrink-0 text-black hover:bg-muted dark:text-black"
+              aria-label="Close chat"
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </CardHeader>
 
           <CardContent className="flex-1 flex flex-col p-0 min-h-0">
