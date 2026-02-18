@@ -4,6 +4,7 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { BugHiveChatBox } from "@/components/chat/BugHiveChatBox";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
           <SessionProvider>
             {children}
             <Toaster position="top-right" />
+            <BugHiveChatBox />
           </SessionProvider>
         </ThemeProvider>
       </body>
