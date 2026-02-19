@@ -7,14 +7,15 @@ export function AppFooter() {
         <span className="min-w-0 break-words">
           © {new Date().getFullYear()} BugHive. All rights reserved.
         </span>
-        <span className="min-w-0 break-words flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-end">
+        <span className="min-w-0 break-words flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:justify-end">
           <Link href="/terms" className="hover:text-foreground underline">
             Terms of Service
           </Link>
+          <span aria-hidden>·</span>
           <Link href="/privacy" className="hover:text-foreground underline">
             Privacy Policy
           </Link>
-          <span className="hidden sm:inline">·</span>
+          <span aria-hidden>·</span>
           <span>Built for sharing and solving real-world bugs.</span>
         </span>
       </div>

@@ -1,6 +1,6 @@
-"use client"
 
 import * as React from "react"
+import { useParams } from "next/navigation"
 import {
     Dialog,
     DialogContent,
@@ -124,16 +124,23 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
     const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
     const [insights, setInsights] = React.useState<any>(null)
 
+    const params = useParams()
+    const bugId = params?.bugId as string | undefined
+
     React.useEffect(() => {
         if (open) {
             fetchGraphData()
         }
-    }, [open])
+    }, [open, bugId])
 
     async function fetchGraphData() {
         try {
             setLoading(true)
-            const res = await fetch(`/api/graph`)
+            const query = new URLSearchParams()
+            if (bugId) query.set("bugId", bugId)
+            query.set("t", Date.now().toString())
+
+            const res = await fetch(`/api/graph?${query.toString()}`)
             if (!res.ok) return
             const data = await res.json()
 
@@ -340,26 +347,63 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                         )}
 
                                         <div className="pt-4 border-t border-border/40">
-                                            <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Connections</h5>
-                                            <ul className="space-y-2">
+                                            <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Contextual Connections</h5>
+                                            <ul className="space-y-3">
                                                 {edges
                                                     .filter(e => e.source === selectedNode.id || e.target === selectedNode.id)
                                                     .map(e => {
                                                         const isSource = e.source === selectedNode.id
                                                         const otherId = isSource ? e.target : e.source
                                                         const otherNode = nodes.find(n => n.id === otherId)
+                                                        const edgeData = e.data as any || {}
+
                                                         return (
-                                                            <li key={e.id} className="text-xs p-2 rounded bg-muted/50 flex items-center justify-between">
-                                                                <div className="flex items-center gap-2 overflow-hidden">
-                                                                    <span className={cn("w-1.5 h-1.5 rounded-full shrink-0",
-                                                                        (otherNode?.type === 'cause') ? "bg-red-500" :
-                                                                            (otherNode?.type === 'evidence') ? "bg-cyan-500" :
-                                                                                (otherNode?.type === 'solution') ? "bg-emerald-500" :
-                                                                                    "bg-primary"
-                                                                    )} />
-                                                                    <span className="font-medium text-foreground/80 truncate">{(otherNode?.data as any)?.label}</span>
+                                                            <li key={e.id} className="text-xs p-3 rounded-lg bg-muted/40 border border-border/40 flex flex-col gap-2">
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                                        <span className={cn("w-2 h-2 rounded-full shrink-0",
+                                                                            (otherNode?.type === 'cause') ? "bg-red-500" :
+                                                                                (otherNode?.type === 'evidence') ? "bg-cyan-500" :
+                                                                                    (otherNode?.type === 'solution') ? "bg-emerald-500" :
+                                                                                        (otherNode?.type === 'stack_overflow' || e.type === 'CONTRADICTS') ? "bg-amber-500" :
+                                                                                            "bg-primary"
+                                                                        )} />
+                                                                        <span className="font-semibold text-foreground/90 truncate max-w-[120px]">
+                                                                            {(otherNode?.data as any)?.label || (otherNode?.data as any)?.title || "Unknown"}
+                                                                        </span>
+                                                                    </div>
+                                                                    <Badge variant={e.type === 'CONTRADICTS' ? "destructive" : "secondary"} className="text-[10px] h-5 px-1.5 uppercase">
+                                                                        {e.label}
+                                                                    </Badge>
                                                                 </div>
-                                                                <Badge variant="secondary" className="text-[10px] h-5 shrink-0 ml-2">{e.label || (e as any).type}</Badge>
+
+                                                                {/* Metrics Row */}
+                                                                <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground pl-4">
+                                                                    {edgeData.confidence && (
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span className="opacity-70">Confidence:</span>
+                                                                            <span className="font-mono text-foreground">{(edgeData.confidence * 100).toFixed(0)}%</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {edgeData.similarity && (
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span className="opacity-70">Similarity:</span>
+                                                                            <span className="font-mono text-foreground">{(edgeData.similarity * 100).toFixed(0)}%</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {edgeData.contradictionScore && (
+                                                                        <div className="flex items-center gap-1 col-span-2 text-amber-600 dark:text-amber-400">
+                                                                            <span className="font-medium">Contradiction:</span>
+                                                                            <span className="font-mono">{(edgeData.contradictionScore * 100).toFixed(0)}%</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                {edgeData.reasoning && (
+                                                                    <p className="text-[10px] text-muted-foreground italic pl-4 border-l-2 border-amber-500/30">
+                                                                        "{edgeData.reasoning}"
+                                                                    </p>
+                                                                )}
                                                             </li>
                                                         )
                                                     })}
