@@ -29,6 +29,7 @@ import {
   MarkerType,
   NodeTypes,
   EdgeTypes,
+  ReactFlowInstance,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { cn } from "@/lib/utils-client"
@@ -107,6 +108,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
   const [loading, setLoading] = React.useState(false)
   const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
   const [graphData, setGraphData] = React.useState<GraphData | null>(null)
+  const [reactFlowInstance, setReactFlowInstance] = React.useState<ReactFlowInstance | null>(null)
 
   React.useEffect(() => {
     if (open && bugId) {
@@ -162,6 +164,13 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
     }
   }
 
+  React.useEffect(() => {
+    if (!open || loading || nodes.length === 0 || !reactFlowInstance) return
+    window.requestAnimationFrame(() => {
+      reactFlowInstance.fitView({ padding: 0.2 })
+    })
+  }, [open, loading, nodes.length, reactFlowInstance])
+
   const onNodeClick = React.useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNode(node)
     // Highlight connected nodes
@@ -200,9 +209,9 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 flex gap-4 p-6 min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 p-6 min-h-0 min-w-0 overflow-hidden">
           {/* Graph Canvas */}
-          <div className="flex-1 rounded-lg border bg-background overflow-hidden relative">
+          <div className="flex-1 min-w-0 rounded-lg border bg-background overflow-hidden relative">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -215,10 +224,11 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                 onEdgesChange={onEdgesChange}
                 onNodeClick={onNodeClick}
                 onPaneClick={onPaneClick}
+                onInit={setReactFlowInstance}
                 nodeTypes={nodeTypes}
                 connectionMode={ConnectionMode.Loose}
                 fitView
-                className="bg-muted/20"
+                className="bg-muted/20 h-full w-full"
               >
                 <Background />
                 <Controls />
@@ -234,7 +244,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
           </div>
 
           {/* Insights Panel */}
-          <div className="w-80 shrink-0 space-y-4 overflow-y-auto">
+          <div className="w-full lg:w-80 lg:max-w-[35%] shrink-0 space-y-4 overflow-y-auto">
             {selectedNode ? (
               <Card>
                 <CardHeader>

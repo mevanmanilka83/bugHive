@@ -191,20 +191,38 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[95vw] max-w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl bg-background/95 backdrop-blur-xl">
-                <DialogHeader className="px-6 py-4 border-b border-border/40 shrink-0 flex flex-row items-center justify-between space-y-0">
-                    <DialogTitle className="flex items-center gap-3 text-xl">
-                        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                            <Share2 className="h-5 w-5" />
+            <DialogContent
+                className="p-0 gap-0 border-none shadow-2xl bg-background/95 backdrop-blur-xl focus:outline-none"
+                style={{
+                    maxWidth: '95vw',
+                    width: '95vw',
+                    height: '90vh',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}
+                aria-describedby={undefined}
+                showCloseButton={false}
+            >
+                <DialogHeader className="px-4 py-3 border-b border-border/40 shrink-0 flex flex-row items-center justify-between space-y-0 bg-background/50">
+                    <DialogTitle className="flex items-center gap-2.5 text-lg">
+                        <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
+                            <Share2 className="h-4 w-4" />
                         </div>
                         <span className="font-semibold tracking-tight">Bug Relationship Graph</span>
                     </DialogTitle>
-                    {/* Optional: Add header actions here if needed */}
+
+                    <button
+                        onClick={() => onOpenChange(false)}
+                        className="rounded-full p-2 hover:bg-muted/50 transition-colors"
+                    >
+                        <ExternalLink className="h-4 w-4 rotate-45" />
+                        <span className="sr-only">Close</span>
+                    </button>
                 </DialogHeader>
 
-                <div className="flex-1 flex flex-row min-h-0 relative isolate">
-                    {/* Graph Canvas */}
-                    <div className="flex-1 relative bg-muted/5 min-w-0">
+                <div className="flex-1 relative w-full h-full min-h-0 overflow-hidden bg-muted/5">
+                    {/* Graph Canvas - Absolute Full Fill */}
+                    <div className="absolute inset-0 z-0">
                         {loading && (
                             <div className="absolute inset-0 flex flex-col gap-3 items-center justify-center bg-background/50 backdrop-blur-sm z-50">
                                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -230,18 +248,19 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                 type: 'smoothstep',
                                 animated: true,
                             }}
+                            defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+                            style={{ width: '100%', height: '100%' }}
                         >
                             <Background color="hsl(var(--muted-foreground))" gap={20} size={1} className="opacity-10" />
 
-                            <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
-                                <Controls
-                                    className="!static bg-background border shadow-sm rounded-lg p-1"
-                                    showInteractive={false}
-                                />
-                            </div>
+                            <Controls
+                                className="bg-background border shadow-md rounded-lg p-1 m-4"
+                                position="bottom-left"
+                                showInteractive={false}
+                            />
 
-                            <div className="absolute top-4 right-4 z-10">
-                                <div className="bg-background/90 backdrop-blur border shadow-sm rounded-lg p-3 space-y-2 max-w-[200px]">
+                            <div className="absolute top-4 right-4 z-10 pointer-events-none">
+                                <div className="bg-background/90 backdrop-blur border shadow-sm rounded-lg p-3 space-y-2 max-w-[200px] pointer-events-auto">
                                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Legend</h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -273,160 +292,86 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                     if (type === 'solution') return '#10b981'
                                     return '#64748b'
                                 }}
-                                className="!static m-0 bg-background border shadow-sm rounded-lg"
+                                className="bg-background border shadow-md rounded-lg m-4"
+                                position="bottom-right"
                                 maskColor="rgba(0, 0, 0, 0.05)"
                             />
-                            {/* Position MiniMap in bottom-right via absolute container if needed, or adjust padding */}
-                            <div className="absolute bottom-4 right-4 z-10 hidden lg:block">
-                                {/* Wrapped MiniMap logic handled by library, but standard prop positioning sometimes conflicts. 
-                                    Using CSS class !static inside a positioned div gives more control if needed.
-                                    Actually, standard library MiniMap has absolute positioning. Let's use standard props but clean styling.
-                                */}
-                            </div>
                         </ReactFlow>
-
-                        {/* Redefine MiniMap placement properly using ReactFlow children order or CSS override if necessary. 
-                            The library's MiniMap component renders absolutely by default unless styled otherwise.
-                            Let's rely on standard props but fixing the overlap.
-                        */}
                     </div>
 
-                    {/* Insights Sidebar - Flex item on Desktop, Absolute on Mobile */}
+                    {/* Insights Sidebar - Absolute Overlay */}
                     <div className={cn(
-                        "w-80 border-l border-border/40 bg-background/80 backdrop-blur-md transition-all duration-300 ease-in-out z-20 shadow-xl flex flex-col",
-                        // Mobile: Absolute positioning
-                        "absolute right-0 top-0 bottom-0 lg:static lg:h-full",
-                        // Visibility logic
-                        selectedNode ? "translate-x-0" : "translate-x-full lg:translate-x-0 lg:w-80"
+                        "absolute top-0 right-0 bottom-0 w-80 bg-background/90 backdrop-blur-md border-l border-border/40 shadow-xl z-20 transition-transform duration-300 ease-in-out",
+                        selectedNode ? "translate-x-0" : "translate-x-full"
                     )}>
-                        <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/20">
-                            <h3 className="font-semibold text-sm flex items-center gap-2">
-                                {selectedNode ? "Selected Entity" : "Graph Insights"}
-                            </h3>
-                            {selectedNode && (
+                        <div className="flex flex-col h-full overflow-hidden">
+                            <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/20">
+                                <h3 className="font-semibold text-sm flex items-center gap-2">
+                                    Graph Insights
+                                </h3>
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSelectedNode(null)}>
                                     <span className="sr-only">Close</span>
                                     <ExternalLink className="h-3 w-3 rotate-180" />
                                 </Button>
-                            )}
-                        </div>
+                            </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {selectedNode && selectedNode.data ? (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <div className="space-y-1">
-                                        <Badge variant="outline" className="capitalize mb-2 w-fit">
-                                            {String((selectedNode.data as any).type || "bug").replace(/_/g, " ")}
-                                        </Badge>
-                                        <h4 className="text-lg font-bold leading-tight">{String((selectedNode.data as any).label || "")}</h4>
-                                    </div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                {selectedNode && selectedNode.data ? (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                        <div className="space-y-1">
+                                            <Badge variant="outline" className="capitalize mb-2 w-fit">
+                                                {String((selectedNode.data as any).type || "bug").replace(/_/g, " ")}
+                                            </Badge>
+                                            <h4 className="text-lg font-bold leading-tight">{String((selectedNode.data as any).label || "")}</h4>
+                                        </div>
 
-                                    {(selectedNode.data as any).description && (
-                                        <p className="text-sm text-muted-foreground leading-relaxed">
-                                            {(selectedNode.data as any).description}
-                                        </p>
-                                    )}
+                                        {(selectedNode.data as any).description && (
+                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                                {(selectedNode.data as any).description}
+                                            </p>
+                                        )}
 
-                                    {(selectedNode.data as any).url && (
-                                        <Button className="w-full gap-2" size="sm" asChild>
-                                            <a href={(selectedNode.data as any).url} target="_blank" rel="noopener noreferrer">
-                                                Open Details <ExternalLink className="h-4 w-4" />
-                                            </a>
-                                        </Button>
-                                    )}
+                                        {(selectedNode.data as any).url && (
+                                            <Button className="w-full gap-2" size="sm" asChild>
+                                                <a href={(selectedNode.data as any).url} target="_blank" rel="noopener noreferrer">
+                                                    Open Details <ExternalLink className="h-4 w-4" />
+                                                </a>
+                                            </Button>
+                                        )}
 
-                                    <div className="pt-4 border-t border-border/40">
-                                        <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Connections</h5>
-                                        <ul className="space-y-2">
-                                            {edges
-                                                .filter(e => e.source === selectedNode.id || e.target === selectedNode.id)
-                                                .map(e => {
-                                                    const isSource = e.source === selectedNode.id
-                                                    const otherId = isSource ? e.target : e.source
-                                                    const otherNode = nodes.find(n => n.id === otherId)
-                                                    return (
-                                                        <li key={e.id} className="text-xs p-2 rounded bg-muted/50 flex items-center justify-between">
-                                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0",
-                                                                    (otherNode?.type === 'cause') ? "bg-red-500" :
-                                                                        (otherNode?.type === 'evidence') ? "bg-cyan-500" :
-                                                                            (otherNode?.type === 'solution') ? "bg-emerald-500" :
-                                                                                "bg-primary"
-                                                                )} />
-                                                                <span className="font-medium text-foreground/80 truncate">{(otherNode?.data as any)?.label}</span>
-                                                            </div>
-                                                            <Badge variant="secondary" className="text-[10px] h-5 shrink-0 ml-2">{e.label || (e as any).type}</Badge>
-                                                        </li>
-                                                    )
-                                                })}
-                                        </ul>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    {/* Root Cause Patterns */}
-                                    {insights?.rootCausePatterns?.length > 0 && (
-                                        <div className="space-y-3">
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                                <AlertCircle className="h-3.5 w-3.5" /> Root Cause Patterns
-                                            </h4>
+                                        <div className="pt-4 border-t border-border/40">
+                                            <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Connections</h5>
                                             <ul className="space-y-2">
-                                                {insights.rootCausePatterns.map((p: string, i: number) => (
-                                                    <li key={i} className="text-sm p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-700 dark:text-orange-400">
-                                                        {p}
-                                                    </li>
-                                                ))}
+                                                {edges
+                                                    .filter(e => e.source === selectedNode.id || e.target === selectedNode.id)
+                                                    .map(e => {
+                                                        const isSource = e.source === selectedNode.id
+                                                        const otherId = isSource ? e.target : e.source
+                                                        const otherNode = nodes.find(n => n.id === otherId)
+                                                        return (
+                                                            <li key={e.id} className="text-xs p-2 rounded bg-muted/50 flex items-center justify-between">
+                                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                                    <span className={cn("w-1.5 h-1.5 rounded-full shrink-0",
+                                                                        (otherNode?.type === 'cause') ? "bg-red-500" :
+                                                                            (otherNode?.type === 'evidence') ? "bg-cyan-500" :
+                                                                                (otherNode?.type === 'solution') ? "bg-emerald-500" :
+                                                                                    "bg-primary"
+                                                                    )} />
+                                                                    <span className="font-medium text-foreground/80 truncate">{(otherNode?.data as any)?.label}</span>
+                                                                </div>
+                                                                <Badge variant="secondary" className="text-[10px] h-5 shrink-0 ml-2">{e.label || (e as any).type}</Badge>
+                                                            </li>
+                                                        )
+                                                    })}
                                             </ul>
                                         </div>
-                                    )}
-
-                                    {/* Recurring Environments */}
-                                    {insights?.recurringEnvironments?.length > 0 && (
-                                        <div className="space-y-3">
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                                <Globe className="h-3.5 w-3.5" /> Recurring Environments
-                                            </h4>
-                                            <div className="grid gap-2">
-                                                {insights.recurringEnvironments.map((e: any, i: number) => (
-                                                    <div key={i} className="flex items-center justify-between text-sm p-2 rounded bg-muted/40">
-                                                        <span>{e.environment}</span>
-                                                        <Badge>{e.count}</Badge>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* AI Metrics */}
-                                    {insights?.aiMetrics && (
-                                        <div className="space-y-3">
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                                <Code className="h-3.5 w-3.5" /> Model Performance
-                                            </h4>
-                                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                                <div className="p-2 bg-muted/30 rounded border flex flex-col items-center justify-center text-center">
-                                                    <span className="text-muted-foreground mb-1">Precision</span>
-                                                    <span className="font-mono font-bold text-lg">{insights.aiMetrics.precision}</span>
-                                                </div>
-                                                <div className="p-2 bg-muted/30 rounded border flex flex-col items-center justify-center text-center">
-                                                    <span className="text-muted-foreground mb-1">Recall</span>
-                                                    <span className="font-mono font-bold text-lg">{insights.aiMetrics.recall}</span>
-                                                </div>
-                                                <div className="p-2 bg-muted/30 rounded border col-span-2 flex items-center justify-between px-4">
-                                                    <span className="text-muted-foreground">F1 Score</span>
-                                                    <span className="font-mono font-bold text-primary">{insights.aiMetrics.f1Score}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="p-4 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10">
-                                        <p className="text-xs text-muted-foreground text-center">
-                                            Select a node to explore specific relationships and details.
-                                        </p>
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                                        <p className="text-sm">Select a node to view details</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
