@@ -14,6 +14,7 @@
  * ```
  */
 
+import { notFound } from "next/navigation"
 import { supabase } from "./config"
 import { ensureValidUUID } from "./utils-client"
 import type { ActionResponse } from "./auth/helpers"
@@ -30,6 +31,21 @@ export async function getSingleRecord(
   if (error) throw error
   if (data === null) throw new Error("Record not found")
   return data
+}
+
+/**
+ * Fetches a single record by ID or calls notFound(). Use in server components to avoid repeated try/catch.
+ */
+export async function getRecordOrNotFound(
+  table: string,
+  id: string,
+  idField: string = 'id'
+): Promise<any> {
+  try {
+    return await getSingleRecord(table, id, idField)
+  } catch {
+    notFound()
+  }
 }
 
 /**

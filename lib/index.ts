@@ -91,6 +91,7 @@ export type {
 
 export {
   getSingleRecord,
+  getRecordOrNotFound,
   getMultipleRecords,
   insertRecord,
   updateRecord,
