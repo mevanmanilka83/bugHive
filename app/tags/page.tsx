@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { GalleryVerticalEnd, Tag } from "lucide-react"
 import { auth } from "@/lib"
+import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
@@ -58,13 +59,7 @@ export default async function TagsPage() {
           </section>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-auto border-t bg-background">
-          <div className="flex flex-col gap-2 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>© {new Date().getFullYear()} BugHive. All rights reserved.</span>
-            <span>Built for sharing and solving real-world bugs.</span>
-          </div>
-        </footer>
+        <AppFooter />
       </div>
       <MobileBottomNav active="tags" isAuthenticated={!!session} useAuthFallback />
     </main>

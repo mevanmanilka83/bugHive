@@ -4,11 +4,13 @@ import { auth, getSingleRecord, ensureValidUUID } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
 import { BugDetailsView } from "@/components/bugs/BugDetailsView"
 import { RelatedBugsPanel } from "@/components/bugs/RelatedBugsPanel"
+import { BugGraphDialog } from "@/components/bugs/BugGraphDialog"
 import { AppFooter } from "@/components/AppFooter"
 import { HomeHeaderUser } from "@/components/HomeHeaderUser"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
 import { SidebarPublicNav } from "@/components/SidebarPublicNav"
 import { notFound } from "next/navigation"
+import { GraphButton } from "@/components/bugs/GraphButton"
 
 export default async function BugDetailsPage({
   params,
@@ -68,14 +70,7 @@ export default async function BugDetailsPage({
               >
                 ← Back to Public bugs
               </Link>
-              <Link
-                href={`/bugs/${bug.id}`}
-                className="inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 h-8 w-8"
-                title="View bug graph"
-                aria-label="View bug graph"
-              >
-                <BarChart3 className="h-4 w-4" />
-              </Link>
+              <GraphButton bugId={bug.id} />
             </div>
             <BugDetailsView
               bug={bug}

@@ -9,8 +9,9 @@ import {
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react"
-import { GalleryVerticalEnd } from "lucide-react"
+import { GalleryVerticalEnd, Share2 } from "lucide-react"
 
+import { GlobalGraphDialog } from "@/components/graph/GlobalGraphDialog"
 import { NavMain } from "@/components/NavMain"
 import { NavSecondary } from "@/components/NavSecondary"
 import { NavUser } from "@/components/NavUser"
@@ -24,9 +25,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-export function AppSidebar({ 
-  user, 
-  ...props 
+export function AppSidebar({
+  user,
+  ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user?: {
     name?: string | null
@@ -35,6 +36,7 @@ export function AppSidebar({
   }
 }) {
   const [notificationCount, setNotificationCount] = React.useState(0)
+  const [graphOpen, setGraphOpen] = React.useState(false)
 
   React.useEffect(() => {
     const fetchNotifications = async () => {
@@ -61,7 +63,7 @@ export function AppSidebar({
           const unreadCount = data?.notifications?.filter((n: any) => !n.read).length || 0
           setNotificationCount(unreadCount)
         })
-        .catch(() => {})
+        .catch(() => { })
     }
 
     window.addEventListener("notification:updated", onNotificationUpdate as EventListener)
@@ -113,6 +115,7 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
+      <GlobalGraphDialog open={graphOpen} onOpenChange={setGraphOpen} />
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -131,6 +134,17 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <SidebarMenu className="px-2 py-2">
+          <SidebarMenuItem>
+            <button
+              onClick={() => setGraphOpen(true)}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors group"
+            >
+              <Share2 className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span>Graph View</span>
+            </button>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <NavMain items={navMain} />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
@@ -140,3 +154,4 @@ export function AppSidebar({
     </Sidebar>
   )
 }
+
