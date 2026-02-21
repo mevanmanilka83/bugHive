@@ -15,7 +15,7 @@ export default async function NotFound() {
   return (
     <PublicPageLayout session={session} sidebarActive="public" useAuthFallback>
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="rounded-full bg-muted p-4 mb-6">
+        <div className="rounded-xl bg-muted p-4 mb-6">
           <FileQuestion className="h-12 w-12 text-muted-foreground" />
         </div>
         <h1 className="text-3xl font-semibold tracking-tight mb-2">404</h1>
