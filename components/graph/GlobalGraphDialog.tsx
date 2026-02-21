@@ -45,7 +45,7 @@ const nodeTypeColors: Record<string, string> = {
     component: "bg-pink-500/10 border-pink-500/50 text-pink-500",
     github_issue: "bg-zinc-700/10 border-zinc-500/50 text-zinc-500",
     stack_overflow: "bg-orange-600/10 border-orange-600/50 text-orange-600",
-    cause: "bg-red-500/10 border-red-500/50 text-red-500",
+    cause: "bg-orange-500/10 border-orange-500/50 text-orange-500",
     evidence: "bg-cyan-500/10 border-cyan-500/50 text-cyan-500",
     solution: "bg-emerald-500/10 border-emerald-500/50 text-emerald-500",
 }
@@ -152,20 +152,30 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                 data: { ...node.data, type: node.type, label: node.label },
             }))
 
-            const flowEdges: Edge[] = (data.edges || []).map((edge: any) => ({
-                id: edge.id,
-                source: edge.source,
-                target: edge.target,
-                type: "smoothstep", // 'smoothstep', 'step', 'default', 'straight'
-                animated: true,
-                label: edge.label,
-                style: { stroke: "hsl(var(--primary))", strokeWidth: 1.5, opacity: 0.6 },
-                labelStyle: { fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 500 },
-                markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    color: "hsl(var(--primary))",
-                },
-            }))
+            const flowEdges: Edge[] = (data.edges || []).map((edge: any) => {
+                let stroke = "hsl(var(--muted-foreground))" // default gray
+                const type = edge.type || ""
+                if (type === "solution_for" || type === "verified_by") stroke = "#10b981" // green
+                else if (type === "cause_of") stroke = "#f97316" // orange
+                else if (type === "contradicts") stroke = "#ef4444" // red
+                else if (type === "similar_to" || type === "duplicate_of") stroke = "#3b82f6" // blue
+                else if (type === "occurs_on") stroke = "#f97316" // orange/environment
+
+                return {
+                    id: edge.id,
+                    source: edge.source,
+                    target: edge.target,
+                    type: "smoothstep",
+                    animated: true,
+                    label: edge.label || type.replace(/_/g, " "),
+                    style: { stroke, strokeWidth: Math.max(1.5, (edge.weight || 0.5) * 3), opacity: 0.8 },
+                    labelStyle: { fill: stroke, fontSize: 11, fontWeight: 500 },
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: stroke,
+                    },
+                }
+            })
 
             setNodes(flowNodes)
             setEdges(flowEdges)

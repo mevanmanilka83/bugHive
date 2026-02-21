@@ -44,6 +44,8 @@ interface FilterState {
 
 interface BugExploreListProps {
   userId: string
+  /** When set (e.g. from /?tag=...), bugs are filtered to those with this tag. */
+  initialTag?: string
   showTitle?: boolean
   showReportButton?: boolean
   currentUserName?: string
@@ -52,6 +54,7 @@ interface BugExploreListProps {
 
 export function BugExploreList({
   userId,
+  initialTag,
   showTitle = true,
   showReportButton = true,
   currentUserName,
@@ -69,7 +72,7 @@ export function BugExploreList({
   const [filters, setFilters] = React.useState<FilterState>({
     status: [],
     priority: [],
-    tags: [],
+    tags: initialTag ? [initialTag] : [],
     browser: "",
     os: "",
     device: "",
@@ -234,6 +237,15 @@ export function BugExploreList({
     fetchBugs()
   }, [])
 
+  // Sync tag filter from URL when initialTag changes (e.g. user clicked a tag on /tags)
+  React.useEffect(() => {
+    if (initialTag && initialTag.trim()) {
+      setFilters((prev) =>
+        prev.tags.includes(initialTag) ? prev : { ...prev, tags: [initialTag] }
+      )
+    }
+  }, [initialTag])
+
   React.useEffect(() => {
     if (allBugs.length > 0) {
       applyFilters()
@@ -279,6 +291,10 @@ export function BugExploreList({
       dateModifiedTo: "",
       assignee: "",
     })
+    // Clear tag from URL so refresh doesn't re-apply it
+    if (typeof window !== "undefined" && window.location.search.includes("tag=")) {
+      router.replace("/", { scroll: false })
+    }
   }
 
   function hasActiveFilters() {

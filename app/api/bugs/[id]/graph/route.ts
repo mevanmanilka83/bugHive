@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server"
-import { extractRouteId, getSingleRecord, getMultipleRecords, successResponse, errorResponse } from "@/lib"
+import { extractRouteId, getSingleRecord, successResponse, errorResponse } from "@/lib"
 import { stripHtml } from "@/lib/utils-client"
+import { findRelatedItems } from "@/lib/related"
+import { BugSignature } from "@/lib/bug-relationships"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -17,6 +19,9 @@ type NodeType =
   | "github_issue"
   | "stack_overflow"
   | "bugzilla"
+  | "cause"
+  | "evidence"
+  | "solution"
 
 type RelationshipType =
   | "duplicate_of"
@@ -27,6 +32,10 @@ type RelationshipType =
   | "fix_reference"
   | "belongs_to"
   | "related_to"
+  | "cause_of"
+  | "solution_for"
+  | "verified_by"
+  | "contradicts"
 
 export type GraphNode = {
   id: string
@@ -49,6 +58,8 @@ export type GraphEdge = {
   type: RelationshipType
   weight: number // 0-1, higher = stronger relationship
   label?: string
+  data?: any
+  style?: any
 }
 
 export type GraphData = {
@@ -61,10 +72,10 @@ export type GraphData = {
   }
 }
 
-async function analyzeWithGemini(bug: any, relatedBugs: any[], relatedExternal: any[]): Promise<GraphData> {
+async function analyzeWithGemini(bug: any, relatedInternal: any[], relatedExternal: any[]): Promise<GraphData> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    return generateFallbackGraph(bug, relatedBugs, relatedExternal)
+    return generateFallbackGraph(bug, relatedInternal, relatedExternal)
   }
 
   const bugText = [
@@ -75,50 +86,59 @@ async function analyzeWithGemini(bug: any, relatedBugs: any[], relatedExternal: 
     `Error: ${bug.actual_behavior || ""}`,
   ].join("\n")
 
-  const relatedText = relatedBugs
-    .slice(0, 10)
-    .map((b, i) => `Bug ${i + 1}: ${b.title || ""} - ${(b.description || "").slice(0, 200)}`)
+  const relatedText = relatedInternal
+    .slice(0, 8)
+    .map((b, i) => `Internal Bug ${i + 1}: ${b.title} (Score: ${b.relevanceScore?.toFixed(2)} - ${b.relevanceReasons?.join(", ")})`)
     .join("\n")
 
   const externalText = relatedExternal
-    .slice(0, 10)
-    .map((e) => `${e.source}: ${e.title || ""}`)
+    .slice(0, 8)
+    .map((e) => `${e.source}: ${e.title} - ${e.snippet}`)
     .join("\n")
 
-  const prompt = `Analyze this bug report and its related items. Generate a JSON graph structure with nodes and relationships.
+  const prompt = `Analyze this bug report and its related ecosystem to generate a strictly focused "Ego-Graph".
+  
+GOAL: Construct a subgraph centered EXCLUSIVELY on the Main Bug.
+- FILTER: The graph must NOT be a global dump. Only include nodes with a direct, justified, and strong relationship to the Main Bug.
+- CENTRAL NODE: The Main Bug (${bug.id}) is the primary anchor.
+- RELATIONSHIPS: Every edge must be backed by a clear justification metric.
+    - "similar_to" -> Must be based on Cosine Similarity or Error Signature Overlap.
+    - "solution_for" -> Must be a valid fix or patch.
+    - "contradicts" -> Must have a high Contradiction Score.
+- METRICS: The "label" of each edge MUST explicitly state the relationship rationale (e.g., "95% Stack Trace Overlap", "Fixes Memory Leak", "Contradicts Root Cause").
 
 Bug Report:
 ${bugText}
 
-Related Bugs:
+Related Internal Bugs (Context for Similarity):
 ${relatedText}
 
-External References:
+External References (Context for Evidence/Solutions):
 ${externalText}
 
 Return JSON with this structure:
 {
   "nodes": [
-    {"id": "bug-123", "type": "bug", "label": "Short Title", "data": {...}},
-    {"id": "tag-js", "type": "tag", "label": "javascript", "data": {"count": 5}},
-    {"id": "env-safari", "type": "environment", "label": "Safari", "data": {...}},
-    {"id": "gh-456", "type": "github_issue", "label": "Issue Title", "data": {"url": "..."}}
+    {"id": "bug-${bug.id}", "type": "bug", "label": "Focus Bug", "data": {"isFocus": true}},
+    {"id": "cause-1", "type": "cause", "label": "Null Check Missing", "data": {"confidence": 0.9, "description": "Logic error in map function."}},
+    {"id": "sol-1", "type": "solution", "label": "Guard Clause", "data": {"impact": "High"}},
+    {"id": "similar-1", "type": "bug", "label": "Bug #402", "data": {"url": "..."}}
   ],
   "edges": [
-    {"id": "e1", "source": "bug-123", "target": "tag-js", "type": "tagged_with", "weight": 0.9},
-    {"id": "e2", "source": "bug-123", "target": "bug-124", "type": "similar_to", "weight": 0.8},
-    {"id": "e3", "source": "bug-123", "target": "gh-456", "type": "fix_reference", "weight": 0.7}
+    {"id": "e1", "source": "cause-1", "target": "bug-${bug.id}", "type": "cause_of", "weight": 0.95, "label": "Direct Root Cause"},
+    {"id": "e2", "source": "sol-1", "target": "bug-${bug.id}", "type": "solution_for", "weight": 0.85, "label": "Verifies Fix"},
+    {"id": "e3", "source": "bug-${bug.id}", "target": "similar-1", "type": "similar_to", "weight": 0.75, "label": "High Text Overlap"}
   ],
   "insights": {
-    "rootCausePatterns": ["Pattern 1", "Pattern 2"],
-    "recurringEnvironments": [{"environment": "Safari", "count": 5}],
-    "externalReferences": [{"type": "GitHub", "title": "...", "url": "..."}]
+    "rootCausePatterns": ["Pattern 1"],
+    "recurringEnvironments": [{"environment": "Prod", "count": 2}],
+    "externalReferences": []
   }
 }
 
-Node types: bug, cluster, tag, environment, component, github_issue, stack_overflow, bugzilla
-Relationship types: duplicate_of, tagged_with, occurs_on, affects, similar_to, fix_reference, belongs_to, related_to
-Weight: 0.0-1.0, where 1.0 is strongest relationship.`
+Use these node types: bug, cause, solution, evidence, github_issue, stack_overflow.
+Use these edge types: cause_of, solution_for, verified_by, similar_to, contradicts, related_to.
+Ensure the Main Bug (${bug.id}) is the central node.`
 
   try {
     const response = await fetch(
@@ -129,7 +149,7 @@ Weight: 0.0-1.0, where 1.0 is strongest relationship.`
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.3,
+            temperature: 0.2,
             maxOutputTokens: 4000,
             responseMimeType: "application/json",
           },
@@ -137,180 +157,115 @@ Weight: 0.0-1.0, where 1.0 is strongest relationship.`
       }
     )
 
-    if (!response.ok) {
-      return generateFallbackGraph(bug, relatedBugs, relatedExternal)
-    }
+    if (!response.ok) return generateFallbackGraph(bug, relatedInternal, relatedExternal)
 
     const data = await response.json()
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) return generateFallbackGraph(bug, relatedBugs, relatedExternal)
+    if (!text) return generateFallbackGraph(bug, relatedInternal, relatedExternal)
 
-    try {
-      const parsed = JSON.parse(text)
-      return validateAndEnrichGraph(parsed, bug, relatedBugs, relatedExternal)
-    } catch {
-      return generateFallbackGraph(bug, relatedBugs, relatedExternal)
-    }
+    const parsed = JSON.parse(text)
+    return validateAndEnrichGraph(parsed, bug, relatedInternal, relatedExternal)
   } catch {
-    return generateFallbackGraph(bug, relatedBugs, relatedExternal)
+    return generateFallbackGraph(bug, relatedInternal, relatedExternal)
   }
 }
 
-function generateFallbackGraph(bug: any, relatedBugs: any[], relatedExternal: any[]): GraphData {
+function generateFallbackGraph(bug: any, relatedInternal: any[], relatedExternal: any[]): GraphData {
+  // If AI fails, we build a deterministic graph from the high-quality related items we found
   const nodes: GraphNode[] = []
   const edges: GraphEdge[] = []
-  const insights = {
-    rootCausePatterns: [] as string[],
-    recurringEnvironments: [] as Array<{ environment: string; count: number }>,
-    externalReferences: [] as Array<{ type: string; title: string; url: string }>,
-  }
 
-  // Main bug node
   const bugId = `bug-${bug.id}`
   nodes.push({
     id: bugId,
     type: "bug",
-    label: (bug.title || "Untitled Bug").slice(0, 30),
-    data: {
-      title: bug.title,
-      description: stripHtml(String(bug.description || "")).slice(0, 200),
-      url: `/bugs/${bug.id}`,
-    },
+    label: (bug.title || "Untitled").slice(0, 30),
+    data: { ...bug, isFocus: true },
+    position: { x: 0, y: 0 }
   })
 
-  // Tags
-  if (Array.isArray(bug.tags)) {
-    bug.tags.forEach((tag: string) => {
-      const tagId = `tag-${tag.toLowerCase().replace(/\s+/g, "-")}`
-      if (!nodes.find((n) => n.id === tagId)) {
-        nodes.push({
-          id: tagId,
-          type: "tag",
-          label: tag,
-          data: { count: 1 },
-        })
-      }
-      edges.push({
-        id: `edge-${bugId}-${tagId}`,
-        source: bugId,
-        target: tagId,
-        type: "tagged_with",
-        weight: 0.8,
-      })
-    })
-  }
-
-  // Environment
-  if (bug.environment) {
-    const envId = `env-${bug.environment.toLowerCase().replace(/\s+/g, "-")}`
-    if (!nodes.find((n) => n.id === envId)) {
-      nodes.push({
-        id: envId,
-        type: "environment",
-        label: bug.environment.slice(0, 30),
-        data: { environment: bug.environment },
-      })
-    }
-    edges.push({
-      id: `edge-${bugId}-${envId}`,
-      source: bugId,
-      target: envId,
-      type: "occurs_on",
-      weight: 0.7,
-    })
-  }
-
-  // Related bugs
-  relatedBugs.slice(0, 10).forEach((relatedBug: any, idx: number) => {
-    const relatedId = `bug-${relatedBug.id}`
-    if (!nodes.find((n) => n.id === relatedId)) {
-      nodes.push({
-        id: relatedId,
-        type: "bug",
-        label: (relatedBug.title || "Untitled").slice(0, 30),
-        data: {
-          title: relatedBug.title,
-          url: `/bugs/${relatedBug.id}`,
-        },
-      })
-    }
-    edges.push({
-      id: `edge-${bugId}-${relatedId}`,
-      source: bugId,
-      target: relatedId,
-      type: "similar_to",
-      weight: 0.6,
-    })
-  })
-
-  // External references
-  relatedExternal.slice(0, 10).forEach((ext: any, idx: number) => {
-    const extId = `ext-${ext.source}-${idx}`
-    const nodeType: NodeType =
-      ext.source === "github_issue" || ext.source === "github_repo"
-        ? "github_issue"
-        : ext.source === "stack_overflow_question"
-          ? "stack_overflow"
-          : ext.source === "bugzilla_bug"
-            ? "bugzilla"
-            : "bug"
-
+  // Add highly relevant internal bugs
+  relatedInternal.slice(0, 5).forEach((item, i) => {
+    const nodeId = item.id
+    const angle = (2 * Math.PI * i) / 5
+    const radius = 300
     nodes.push({
-      id: extId,
-      type: nodeType,
-      label: (ext.title || "").slice(0, 30),
-      data: {
-        title: ext.title,
-        url: ext.url,
-        snippet: ext.snippet,
-      },
+      id: nodeId,
+      type: "bug",
+      label: item.title.slice(0, 20),
+      data: item,
+      position: { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius }
     })
     edges.push({
-      id: `edge-${bugId}-${extId}`,
+      id: `e-${bugId}-${nodeId}`,
       source: bugId,
-      target: extId,
+      target: nodeId,
+      type: "similar_to",
+      weight: item.relevanceScore || 0.5,
+      label: item.relevanceScore ? `Match ${(item.relevanceScore * 100).toFixed(0)}%` : "Similar"
+    })
+  })
+
+  // Add external refs
+  relatedExternal.slice(0, 5).forEach((item, i) => {
+    const nodeId = item.id
+    const angle = (2 * Math.PI * i) / 5 + Math.PI / 5 // offset
+    const radius = 450
+    const type = item.source === "stack_overflow_question" ? "stack_overflow" : "github_issue"
+    nodes.push({
+      id: nodeId,
+      type: type as any,
+      label: item.title.slice(0, 20),
+      data: item,
+      position: { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius }
+    })
+    edges.push({
+      id: `e-${bugId}-${nodeId}`,
+      source: bugId,
+      target: nodeId,
       type: "related_to",
       weight: 0.5,
-    })
-
-    insights.externalReferences.push({
-      type: ext.source.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-      title: ext.title,
-      url: ext.url,
+      label: "Reference"
     })
   })
 
-  return { nodes, edges, insights }
+  return {
+    nodes,
+    edges,
+    insights: {
+      rootCausePatterns: [],
+      recurringEnvironments: [],
+      externalReferences: relatedExternal.map(e => ({ type: e.source, title: e.title, url: e.url }))
+    }
+  }
 }
 
-function validateAndEnrichGraph(
-  parsed: any,
-  bug: any,
-  relatedBugs: any[],
-  relatedExternal: any[]
-): GraphData {
-  const nodes: GraphNode[] = Array.isArray(parsed.nodes) ? parsed.nodes : []
-  const edges: GraphEdge[] = Array.isArray(parsed.edges) ? parsed.edges : []
-  const insights = parsed.insights || {
-    rootCausePatterns: [],
-    recurringEnvironments: [],
-    externalReferences: [],
-  }
+function validateAndEnrichGraph(parsed: any, bug: any, internal: any[], external: any[]): GraphData {
+  const nodes = Array.isArray(parsed.nodes) ? parsed.nodes : []
+  const edges = Array.isArray(parsed.edges) ? parsed.edges : []
+  const insights = parsed.insights || { rootCausePatterns: [], recurringEnvironments: [], externalReferences: [] }
 
-  // Ensure main bug node exists
-  const bugId = `bug-${bug.id}`
-  if (!nodes.find((n) => n.id === bugId)) {
+  // Ensure focus node exists
+  const focusId = `bug-${bug.id}`
+  if (!nodes.find((n: any) => n.id === focusId)) {
     nodes.unshift({
-      id: bugId,
+      id: focusId,
       type: "bug",
-      label: (bug.title || "Untitled Bug").slice(0, 30),
-      data: {
-        title: bug.title,
-        description: stripHtml(String(bug.description || "")).slice(0, 200),
-        url: `/bugs/${bug.id}`,
-      },
+      label: "Focus Bug",
+      data: { title: bug.title, isFocus: true }
     })
   }
+
+  // Calculate better positions (Basic Star Layout)
+  const center = { x: 0, y: 0 }
+  const others = nodes.filter((n: any) => n.id !== focusId)
+  others.forEach((n: any, i: number) => {
+    const angle = (2 * Math.PI * i) / others.length
+    const r = n.type === 'solution' || n.type === 'cause' ? 200 : 400
+    n.position = { x: Math.cos(angle) * r, y: Math.sin(angle) * r }
+  })
+  const focusNode = nodes.find((n: any) => n.id === focusId)
+  if (focusNode) focusNode.position = center
 
   return { nodes, edges, insights }
 }
@@ -327,21 +282,10 @@ export async function GET(
       return errorResponse("Bug not found", 404)
     }
 
-    // Fetch related bugs
-    const allBugs = await getMultipleRecords("bugs")
-    const relatedBugs = allBugs
-      .filter((b: any) => {
-        if (b.id === bugId) return false
-        const visibility = String(b?.visibility || "public").toLowerCase().trim()
-        return visibility !== "private"
-      })
-      .slice(0, 20)
+    // Smart Fetching using Shared Logic
+    const { internal, external } = await findRelatedItems(bug)
 
-    // For now, relatedExternal will be populated by Gemini analysis
-    // In a full implementation, you'd fetch from GitHub/Jira/StackOverflow APIs here
-    const relatedExternal: any[] = []
-
-    const graphData = await analyzeWithGemini(bug, relatedBugs, relatedExternal)
+    const graphData = await analyzeWithGemini(bug, internal, external)
 
     return successResponse(graphData)
   } catch (error) {
