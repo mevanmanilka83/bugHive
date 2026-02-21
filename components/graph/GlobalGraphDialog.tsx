@@ -28,6 +28,8 @@ import {
     ConnectionMode,
     MarkerType,
     NodeTypes,
+    Handle,
+    Position,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { cn } from "@/lib/utils-client"
@@ -72,12 +74,13 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
     return (
         <div
             className={cn(
-                "rounded-xl border backdrop-blur-md shadow-lg transition-all duration-300",
+                "rounded-xl border backdrop-blur-md shadow-lg transition-all duration-300 relative",
                 "w-[140px] sm:w-[180px] max-w-[240px]", // Responsive width
                 selected ? "ring-2 ring-primary border-primary shadow-primary/20 scale-105" : "hover:border-primary/50",
                 "bg-card/80"
             )}
         >
+            <Handle type="target" position={Position.Top} className="opacity-0" />
             <div className={cn("p-2 sm:p-3 flex items-start gap-2 sm:gap-3", styles)}>
                 <div className={cn("p-1.5 sm:p-2 rounded-lg bg-background/50 shadow-sm shrink-0 text-foreground")}>
                     <div className="h-3 w-3 sm:h-4 sm:w-4 flex items-center justify-center">
@@ -99,6 +102,7 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
                     {data.description}
                 </div>
             )}
+            <Handle type="source" position={Position.Bottom} className="opacity-0" />
         </div>
     )
 }

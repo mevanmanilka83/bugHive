@@ -19,6 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BugHive",
   description: "BugHive – collaborative bug tracking and solutions",
+  icons: { icon: "/bugHiveFavicon.ico" },
 };
 
 export default function RootLayout({

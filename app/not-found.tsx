@@ -22,7 +22,7 @@ export default async function NotFound() {
         <p className="text-muted-foreground mb-6 max-w-sm">
           This page could not be found. The bug or resource may have been removed or the link is incorrect.
         </p>
-        <Button asChild>
+        <Button asChild className="rounded-full">
           <Link href="/">Back to Home</Link>
         </Button>
       </div>

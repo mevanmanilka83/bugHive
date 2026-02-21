@@ -43,7 +43,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
     return qs ? `${pathname}?${qs}` : pathname
   }, [pathname, searchParams])
   const [clusters, setClusters] = React.useState<any[]>([])
-  const [loading, setLoading] = React.useState(false)
+  const [loading, setLoading] = React.useState(true)
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
@@ -61,8 +61,8 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
   const [requestingClusterId, setRequestingClusterId] = React.useState<string | null>(null)
   const [requestedClusters, setRequestedClusters] = React.useState<Set<string>>(new Set())
 
-  // Hydrate view mode from localStorage after mount
-  React.useEffect(() => {
+  // Hydrate view mode from localStorage before paint to avoid layout shift
+  React.useLayoutEffect(() => {
     setViewMode(getClusterViewMode())
   }, [])
 
@@ -210,11 +210,11 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
         )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-            {!loading && (
-              <p className="text-sm text-muted-foreground">
-                {filteredClusters.length} {visibilityFilter} cluster{filteredClusters.length !== 1 ? "s" : ""}
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground min-w-[120px]">
+              {loading
+                ? "— cluster(s)"
+                : `${filteredClusters.length} ${visibilityFilter} cluster${filteredClusters.length !== 1 ? "s" : ""}`}
+            </p>
             <ToggleGroup
               type="single"
               variant="outline"

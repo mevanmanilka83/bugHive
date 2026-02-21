@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import Image from "next/image"
 import { Send, X, Bot, User, Bug } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils-client"
@@ -187,13 +186,7 @@ export function BugHiveChatBox() {
         {isOpen ? (
           <X className="h-6 w-6" stroke="currentColor" />
         ) : (
-          <Image
-            src="/chat-icon.png"
-            alt="Chat"
-            width={24}
-            height={24}
-            className="h-6 w-6 object-contain"
-          />
+          <Bug className="h-6 w-6 text-primary" aria-hidden />
         )}
       </Button>
 

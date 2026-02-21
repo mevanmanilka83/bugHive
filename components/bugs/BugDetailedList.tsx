@@ -3,6 +3,8 @@
 import * as React from "react"
 import {
   IconChevronDown,
+  IconChevronLeft,
+  IconChevronRight,
   IconEye,
   IconFilter,
   IconMessageCircle,
@@ -29,9 +31,6 @@ import {
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination"
 
 interface BugDetailedListProps {
@@ -242,9 +241,16 @@ export function BugDetailedList({
   const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0
 
   React.useEffect(() => {
-    // Reset to first page when sort, filters, or page size change
+    // Reset to first page when sort or page size change
     setCurrentPage(1)
-  }, [sortBy, pageSize, totalItems])
+  }, [sortBy, pageSize])
+
+  React.useEffect(() => {
+    // Clamp to valid page when total pages shrinks (e.g. after filter)
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [totalPages, currentPage])
 
   const paginatedBugs = React.useMemo(() => {
     if (totalItems === 0) return []
@@ -659,16 +665,17 @@ export function BugDetailedList({
           <Pagination className="mx-0">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  aria-disabled={currentPage === 1}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    if (currentPage > 1) {
-                      setCurrentPage((p) => Math.max(1, p - 1))
-                    }
-                  }}
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 px-2 sm:pl-2 text-xs h-8"
+                  aria-label="Go to previous page"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                >
+                  <IconChevronLeft className="size-3.5" />
+                  <span className="hidden sm:block">Previous</span>
+                </Button>
               </PaginationItem>
 
               {pageNumbers.map((p, index) =>
@@ -678,31 +685,31 @@ export function BugDetailedList({
                   </PaginationItem>
                 ) : (
                   <PaginationItem key={p}>
-                    <PaginationLink
-                      href="#"
-                      isActive={p === currentPage}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setCurrentPage(p)
-                      }}
+                    <Button
+                      variant={p === currentPage ? "outline" : "ghost"}
+                      size="sm"
+                      className="min-w-7 text-xs h-8"
+                      aria-current={p === currentPage ? "page" : undefined}
+                      onClick={() => setCurrentPage(p)}
                     >
                       {p}
-                    </PaginationLink>
+                    </Button>
                   </PaginationItem>
                 )
               )}
 
               <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  aria-disabled={currentPage === totalPages}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    if (currentPage < totalPages) {
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                  }}
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 px-2 sm:pr-2 text-xs h-8"
+                  aria-label="Go to next page"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  <span className="hidden sm:block">Next</span>
+                  <IconChevronRight className="size-3.5" />
+                </Button>
               </PaginationItem>
             </PaginationContent>
           </Pagination>

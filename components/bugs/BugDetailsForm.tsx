@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -30,15 +31,29 @@ export interface BugDetailsFormProps {
     sources?: unknown
     attachments?: unknown
     created_by?: string
+    assigned_to?: string | null
     [key: string]: unknown
   }
   userId?: string
+  /** Display name for the current assignee (e.g. from user batch fetch) */
+  assigneeDisplayName?: string | null
   onStatusChange?: (bugId: string, newStatus: string) => void | Promise<void>
+  /** Called when assignee is set or cleared. Only shown when bug creator is viewing. */
+  onAssigneeChange?: (bugId: string, assignedTo: string | null) => void | Promise<void>
 }
 
-export function BugDetailsForm({ bug, userId, onStatusChange }: BugDetailsFormProps) {
+export function BugDetailsForm({
+  bug,
+  userId,
+  assigneeDisplayName,
+  onStatusChange,
+  onAssigneeChange,
+}: BugDetailsFormProps) {
   const status = (bug.status || "open") as string
   const canEditStatus = Boolean(userId && bug.created_by === userId && onStatusChange)
+  const canEditAssignee = Boolean(userId && bug.created_by === userId && onAssigneeChange)
+  const assignedTo = bug.assigned_to ?? null
+  const isAssignedToMe = Boolean(userId && assignedTo === userId)
 
   const attachments = (() => {
     let att = bug.attachments
@@ -92,6 +107,43 @@ export function BugDetailsForm({ bug, userId, onStatusChange }: BugDetailsFormPr
         <div className="flex flex-col gap-1.5">
           <Label>Priority</Label>
           <Input value={(bug.priority || "medium") as string} disabled className="capitalize" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label>Assignee</Label>
+          {canEditAssignee ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground min-w-[100px]">
+                {assigneeDisplayName || (assignedTo ? "—" : "Unassigned")}
+              </span>
+              {!isAssignedToMe && userId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAssigneeChange?.(bug.id, userId)}
+                >
+                  Assign to me
+                </Button>
+              )}
+              {assignedTo && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onAssigneeChange?.(bug.id, null)}
+                >
+                  Unassign
+                </Button>
+              )}
+            </div>
+          ) : (
+            <Input
+              value={assigneeDisplayName || (assignedTo ? "—" : "Unassigned")}
+              disabled
+            />
+          )}
         </div>
       </div>
       <div className="flex flex-col gap-1.5">

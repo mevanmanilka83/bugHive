@@ -35,6 +35,7 @@ export interface BugDetailsViewProps {
     sources?: unknown
     attachments?: unknown
     created_by?: string
+    assigned_to?: string | null
     [key: string]: unknown
   }
   userId?: string | null
@@ -63,6 +64,7 @@ type SolutionSortOption = "newest" | "active" | "votes" | "unanswered" | "most_v
 export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const isLoggedIn = Boolean(userId)
   const [currentBug, setCurrentBug] = React.useState(bug)
+  const [assigneeDisplayName, setAssigneeDisplayName] = React.useState<string | null>(null)
   const [solutionOpen, setSolutionOpen] = React.useState(false)
   const [solutions, setSolutions] = React.useState<SolutionItem[]>([])
   const [solutionsLoading, setSolutionsLoading] = React.useState(true)
@@ -136,6 +138,49 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
     window.addEventListener("solution:created", onCreated)
     return () => window.removeEventListener("solution:created", onCreated)
   }, [currentBug.id, fetchSolutions])
+
+  React.useEffect(() => {
+    const assigneeId = currentBug.assigned_to
+    if (!assigneeId) {
+      setAssigneeDisplayName(null)
+      return
+    }
+    let cancelled = false
+    fetch(`/api/users/batch?ids=${encodeURIComponent(assigneeId)}`)
+      .then((res) => (res.ok ? res.json() : { users: [] }))
+      .then((data) => {
+        if (cancelled) return
+        const users = Array.isArray(data?.users) ? data.users : []
+        const u = users.find((x: { id?: string }) => x.id === assigneeId)
+        setAssigneeDisplayName(u?.name || u?.email || null)
+      })
+      .catch(() => setAssigneeDisplayName(null))
+    return () => {
+      cancelled = true
+    }
+  }, [currentBug.assigned_to])
+
+  async function handleAssigneeChange(bugId: string, assignedTo: string | null) {
+    try {
+      const res = await fetch(`/api/bugs/${bugId}/reports`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assigned_to: assignedTo || null }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error || err?.message || "Failed to update assignee")
+      }
+      setCurrentBug((prev) => ({ ...prev, assigned_to: assignedTo || undefined }))
+      if (!assignedTo) setAssigneeDisplayName(null)
+      toast.success(assignedTo ? "Bug assigned" : "Assignee cleared")
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("bug:updated", { detail: { bugId, assigned_to: assignedTo } }))
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update assignee")
+    }
+  }
 
   async function handleStatusChange(bugId: string, newStatus: string) {
     try {
@@ -232,7 +277,9 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
         <BugDetailsForm
           bug={currentBug}
           userId={userId ?? undefined}
+          assigneeDisplayName={assigneeDisplayName}
           onStatusChange={handleStatusChange}
+          onAssigneeChange={handleAssigneeChange}
         />
       </div>
 
