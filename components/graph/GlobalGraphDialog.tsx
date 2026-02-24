@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ThumbsDown, ThumbsUp } from "lucide-react"
 import {
     ReactFlow,
     Node,
@@ -30,6 +30,10 @@ import {
     NodeTypes,
     Handle,
     Position,
+    BaseEdge,
+    EdgeLabelRenderer,
+    getSmoothStepPath,
+    type EdgeProps
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { cn } from "@/lib/utils-client"
@@ -97,14 +101,94 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
                 </div>
             </div>
 
+            {(data.upvotes > 0 || data.downvotes > 0) && (
+                <div className="px-2 py-1 flex items-center gap-2 bg-muted/10 border-t border-border/10">
+                    {data.upvotes > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-500 font-medium tracking-tight">
+                            <ThumbsUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            {data.upvotes}
+                        </div>
+                    )}
+                    {data.downvotes > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] sm:text-xs text-red-600 dark:text-red-500 font-medium tracking-tight">
+                            <ThumbsDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            {data.downvotes}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {data.description && (
                 <div className="px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-xs text-muted-foreground bg-muted/30 rounded-b-xl border-t border-border/10 line-clamp-2 hidden sm:block">
                     {data.description}
                 </div>
             )}
-            <Handle type="source" position={Position.Bottom} className="opacity-0" />
+            <Handle type="source" position={Position.Bottom} className="!w-2.5 !h-2.5 !bg-muted-foreground/30 !border-[1.5px] !border-background !bottom-[-5px]" />
         </div>
     )
+}
+
+function CustomBadgeEdge({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {},
+    markerEnd,
+    label,
+    data
+}: EdgeProps) {
+    const [edgePath, labelX, labelY] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+    });
+
+    const edgeType = data?.type as string || '';
+    const isDestructive = ["contradicts", "condractary", "condractary-dispute", "conflict", "disputes", "conflicts"].includes(edgeType);
+    const isPositive = ["solution_for", "verified_by", "supports", "complements", "support", "complement", "complementary -support", "fix_reference", "belongs_to"].includes(edgeType);
+
+    let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "secondary";
+    let extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 bg-background shadow-sm border font-semibold";
+
+    if (isDestructive) {
+        badgeVariant = "destructive";
+        extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 shadow-sm";
+    } else if (isPositive) {
+        badgeVariant = "default";
+        extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 shadow-sm bg-emerald-500 hover:bg-emerald-600";
+        if (["supports", "complements", "support", "complement", "complementary -support", "belongs_to"].includes(edgeType)) {
+            extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 shadow-sm bg-violet-500 hover:bg-violet-600";
+        }
+    }
+
+    return (
+        <>
+            <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} id={id} />
+            <EdgeLabelRenderer>
+                <div
+                    style={{
+                        position: 'absolute',
+                        transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+                        pointerEvents: 'all',
+                    }}
+                    className="nodrag nopan z-[100]"
+                >
+                    {label ? (
+                        <Badge variant={badgeVariant} className={extraClasses}>
+                            {label}
+                        </Badge>
+                    ) : null}
+                </div>
+            </EdgeLabelRenderer>
+        </>
+    );
 }
 
 const nodeTypes: NodeTypes = {
@@ -119,6 +203,10 @@ const nodeTypes: NodeTypes = {
     evidence: CustomNode,
     solution: CustomNode,
     default: CustomNode,
+}
+
+const edgeTypes = {
+    custom: CustomBadgeEdge,
 }
 
 export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps) {
@@ -156,24 +244,26 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                 data: { ...node.data, type: node.type, label: node.label },
             }))
 
-            const flowEdges: Edge[] = (data.edges || []).map((edge: any) => {
+            const flowEdges: Edge[] = (data.edges || []).map((edge: any, idx: number) => {
                 let stroke = "hsl(var(--muted-foreground))" // default gray
                 const type = edge.type || ""
                 if (type === "solution_for" || type === "verified_by") stroke = "#10b981" // green
                 else if (type === "cause_of") stroke = "#f97316" // orange
-                else if (type === "contradicts") stroke = "#ef4444" // red
+                else if (type === "contradicts" || type === "disputes" || type === "conflicts" || type === "condractary" || type === "condractary-dispute" || type === "conflict") stroke = "#ef4444" // red
                 else if (type === "similar_to" || type === "duplicate_of") stroke = "#3b82f6" // blue
                 else if (type === "occurs_on") stroke = "#f97316" // orange/environment
+                else if (type === "supports" || type === "complements" || type === "support" || type === "complement" || type === "complementary -support") stroke = "#8b5cf6" // violet
+                else if (type === "belongs_to") stroke = "#a855f7" // purple
 
                 return {
-                    id: edge.id,
+                    id: edge.id || `ge-${edge.source}-${edge.target}-${idx}`,
                     source: edge.source,
                     target: edge.target,
-                    type: "smoothstep",
+                    type: "custom",
                     animated: true,
                     label: edge.label || type.replace(/_/g, " "),
+                    data: { type },
                     style: { stroke, strokeWidth: Math.max(1.5, (edge.weight || 0.5) * 3), opacity: 0.8 },
-                    labelStyle: { fill: stroke, fontSize: 11, fontWeight: 500 },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
                         color: stroke,
@@ -260,6 +350,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                             onPaneClick={onPaneClick}
                             onInit={setReactFlowInstance}
                             nodeTypes={nodeTypes}
+                            edgeTypes={edgeTypes}
                             connectionMode={ConnectionMode.Loose}
                             fitView
                             className="bg-dots-pattern"

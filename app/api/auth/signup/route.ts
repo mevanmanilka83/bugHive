@@ -11,6 +11,7 @@
  */
 import { NextRequest } from "next/server"
 import { errorResponse, successResponse, validateWithSchema } from "@/lib"
+import { hashPassword } from "@/lib/password"
 import { saveUserToSupabase } from "@/app/actions/User"
 import { getSignupValidationSchema } from "@/lib"
 
@@ -29,14 +30,15 @@ export async function POST(request: NextRequest) {
 
     const { email, password, name } = validation.data
 
-    // Save user to Supabase database
-    // Note: Password is not stored here - authentication is handled by NextAuth
-    // This creates the user profile record in the database
+    const passwordHash = await hashPassword(password)
+
+    // Save user to Supabase (includes hashed password for credentials login)
     const result = await saveUserToSupabase(
       email,
       name,
       null, // image
-      null  // email_verified
+      null, // email_verified
+      passwordHash
     )
 
     if (!result.success) {

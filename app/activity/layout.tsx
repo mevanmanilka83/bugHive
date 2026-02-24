@@ -9,7 +9,7 @@ export default async function ActivityLayout({
   const session = await requireAuthForPage()
 
   return (
-    <PublicPageLayout session={session} sidebarActive="activity">
+    <PublicPageLayout session={session as any} sidebarActive="activity">
       {children}
     </PublicPageLayout>
   )

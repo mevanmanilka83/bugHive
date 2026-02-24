@@ -652,8 +652,12 @@ export async function GET(
 
     const githubToken = process.env.GITHUB_TOKEN
     const stackExchangeKey = process.env.STACK_EXCHANGE_API
-    const bugzillaBaseUrl = process.env.BUGZILLA_BASE_URL || ""
+    const bugzillaBaseUrl = process.env.BUGZILLA_BASE_URL || "https://bugzilla.mozilla.org"
     const bugzillaApiKey = process.env.BUGZILLA_API_KEY
+    const bugzillaHeaders: Record<string, string> = {
+      Accept: "application/json",
+      "User-Agent": "BugHive/1.0 (Related Bugs)",
+    }
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
@@ -782,96 +786,94 @@ export async function GET(
 
     const stackQuestions = stackItems.map(normalizeStackOverflowQuestion)
 
-    // Bugzilla fetch
+    // Bugzilla fetch (default: bugzilla.mozilla.org when BUGZILLA_BASE_URL not set)
     let bugzillaItems: BugzillaBug[] = []
-    if (bugzillaBaseUrl) {
-      try {
-        const cleanBase = bugzillaBaseUrl.replace(/\/+$/, "")
-        const bzUrl = new URL(`${cleanBase}/rest/bug`)
-        const quickSearch = truncateQuery(
-          [
-            signature.hardError,
-            signature.languageTerms[0],
-            title,
-          ]
-            .filter(Boolean)
-            .join(" ")
+    try {
+      const cleanBase = bugzillaBaseUrl.replace(/\/+$/, "")
+      const bzUrl = new URL(`${cleanBase}/rest/bug`)
+      let quickSearch = truncateQuery(
+        [
+          signature.hardError,
+          signature.languageTerms[0],
+          title,
+        ]
+          .filter(Boolean)
+          .join(" ")
+      )
+      if (!quickSearch && description) {
+        quickSearch = truncateQuery(
+          description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80)
         )
+      }
+      if (!quickSearch) quickSearch = "bug"
 
-        if (quickSearch) {
-          bzUrl.searchParams.set("quicksearch", quickSearch)
-          if (bugzillaApiKey) {
-            bzUrl.searchParams.set("api_key", bugzillaApiKey)
-          }
+      bzUrl.searchParams.set("quicksearch", quickSearch)
+      bzUrl.searchParams.set("limit", "10")
+      if (bugzillaApiKey) {
+        bzUrl.searchParams.set("api_key", bugzillaApiKey)
+      }
 
-          // console.log(`Bugzilla Query: "${quickSearch}"`)
-          const bzRes = await fetch(bzUrl.toString())
-          if (bzRes.ok) {
-            const bzData = await bzRes.json()
-            bugzillaItems = Array.isArray(bzData?.bugs)
-              ? (bzData.bugs as BugzillaBug[])
-              : []
-            // console.log(`Bugzilla Items found: ${bugzillaItems.length}`)
-          } else {
-            console.error(`Bugzilla API Error: ${bzRes.status}`, await bzRes.text())
-            bugzillaItems = []
-          }
+      const bzRes = await fetch(bzUrl.toString(), { headers: bugzillaHeaders })
+      if (bzRes.ok) {
+        const bzData = await bzRes.json()
+        bugzillaItems = Array.isArray(bzData?.bugs)
+          ? (bzData.bugs as BugzillaBug[])
+          : []
+      } else {
+        console.error(`Bugzilla API Error: ${bzRes.status}`, await bzRes.text())
+      }
 
-          // Fallback 1: Signature-based (Language + Error)
-          if (bugzillaItems.length === 0) {
-            const fallbackTerms = [
-              signature.languageTerms[0],
-              signature.hardError
-            ].filter(Boolean)
-
-            if (fallbackTerms.length > 0) {
-              const fallbackQ = fallbackTerms.join(" ")
-              if (fallbackQ && fallbackQ !== quickSearch) {
-                bzUrl.searchParams.set("quicksearch", fallbackQ)
-                try {
-                  const fbRes = await fetch(bzUrl.toString())
-                  if (fbRes.ok) {
-                    const fbData = await fbRes.json()
-                    bugzillaItems = Array.isArray(fbData?.bugs)
-                      ? (fbData.bugs as BugzillaBug[])
-                      : []
-                  }
-                } catch (e) { console.error("Bugzilla Fallback 1 failed", e) }
+      // Fallback 1: Signature-based (Language + Error)
+      if (bugzillaItems.length === 0) {
+        const fallbackTerms = [
+          signature.languageTerms[0],
+          signature.hardError
+        ].filter(Boolean)
+        if (fallbackTerms.length > 0) {
+          const fallbackQ = fallbackTerms.join(" ")
+          if (fallbackQ && fallbackQ !== quickSearch) {
+            bzUrl.searchParams.set("quicksearch", fallbackQ)
+            try {
+              const fbRes = await fetch(bzUrl.toString(), { headers: bugzillaHeaders })
+              if (fbRes.ok) {
+                const fbData = await fbRes.json()
+                bugzillaItems = Array.isArray(fbData?.bugs)
+                  ? (fbData.bugs as BugzillaBug[])
+                  : []
               }
-            }
-          }
-
-          // Fallback 2: Title-based keyword search
-          if (bugzillaItems.length === 0 && title) {
-            const cleanTitle = title
-              .replace(/bug|issue|problem|error|fail|failure|crash/gi, "")
-              .replace(/\s+/g, " ")
-              .trim()
-
-            if (cleanTitle && cleanTitle !== quickSearch) {
-              bzUrl.searchParams.set("quicksearch", cleanTitle)
-              try {
-                const fb2Res = await fetch(bzUrl.toString())
-                if (fb2Res.ok) {
-                  const fb2Data = await fb2Res.json()
-                  bugzillaItems = Array.isArray(fb2Data?.bugs)
-                    ? (fb2Data.bugs as BugzillaBug[])
-                    : []
-                }
-              } catch (e) { console.error("Bugzilla Fallback 2 failed", e) }
-            }
+            } catch (e) { console.error("Bugzilla Fallback 1 failed", e) }
           }
         }
-      } catch (error) {
-        console.error("Bugzilla fetch error:", error)
-        bugzillaItems = []
       }
+
+      // Fallback 2: Title-based keyword search
+      if (bugzillaItems.length === 0 && title) {
+        const cleanTitle = title
+          .replace(/bug|issue|problem|error|fail|failure|crash/gi, "")
+          .replace(/\s+/g, " ")
+          .trim()
+        if (cleanTitle && cleanTitle !== quickSearch) {
+          bzUrl.searchParams.set("quicksearch", cleanTitle)
+          try {
+            const fb2Res = await fetch(bzUrl.toString(), { headers: bugzillaHeaders })
+            if (fb2Res.ok) {
+              const fb2Data = await fb2Res.json()
+              bugzillaItems = Array.isArray(fb2Data?.bugs)
+                ? (fb2Data.bugs as BugzillaBug[])
+                : []
+            }
+          } catch (e) { console.error("Bugzilla Fallback 2 failed", e) }
+        }
+      }
+    } catch (error) {
+      console.error("Bugzilla fetch error:", error)
+      bugzillaItems = []
     }
 
     const bugzillaResults =
-      bugzillaBaseUrl && bugzillaItems.length > 0
+      bugzillaItems.length > 0
         ? bugzillaItems.map((bug) =>
-          normalizeBugzillaBug(bugzillaBaseUrl, bug)
+          normalizeBugzillaBug(bugzillaBaseUrl.replace(/\/+$/, ""), bug)
         )
         : []
 

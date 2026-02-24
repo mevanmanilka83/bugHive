@@ -33,7 +33,8 @@ export async function saveUserToSupabase(
   email: string,
   name?: string | null,
   image?: string | null,
-  emailVerified?: string | null
+  emailVerified?: string | null,
+  passwordHash?: string | null
 ) {
   try {
     if (!email) {
@@ -42,7 +43,7 @@ export async function saveUserToSupabase(
 
     const userIdFromEmail = generateUUIDFromEmailSync(email)
     
-    const userData = {
+    const userData: Record<string, unknown> = {
       id: userIdFromEmail,
       email: email.toLowerCase().trim(),
       name: name || extractUsernameFromEmail(email),
@@ -50,13 +51,16 @@ export async function saveUserToSupabase(
       email_verified: emailVerified || null,
       updated_at: new Date().toISOString(),
     }
+    if (passwordHash != null && passwordHash !== "") {
+      userData.password_hash = passwordHash
+    }
 
     const supabaseServiceKey = env.supabaseServiceKey
 
     try {
       // If we don't have service role key, try using the function instead
       if (!supabaseServiceKey) {
-        const { data: functionData, error: functionError } = await supabase.rpc('register_user', {
+        const { error: functionError } = await supabase.rpc('register_user', {
           p_id: userData.id,
           p_email: userData.email,
           p_name: userData.name,

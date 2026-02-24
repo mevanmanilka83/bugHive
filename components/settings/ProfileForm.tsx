@@ -72,7 +72,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
       toast.success(result.message ?? "Avatar updated.")
       router.refresh()
     } else {
-      toast.error(result.error ?? "Failed to upload avatar.")
+      const message = !result.success && "error" in result ? result.error : "Failed to upload avatar."
+      toast.error(message)
     }
   }
 

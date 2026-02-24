@@ -1,6 +1,7 @@
 "use server"
 
-import { supabase, generateUUIDFromEmailSync, uploadAvatarFile } from "@/lib"
+import { supabase, getSupabaseAdmin, generateUUIDFromEmailSync, uploadAvatarFile } from "@/lib"
+import { verifyPassword, hashPassword } from "@/lib/password"
 import { getUpdateProfileValidationSchema, getChangePasswordValidationSchema } from "@/lib/schemas/zod"
 import { auth } from "@/lib/auth/config"
 import type { ActionResponse } from "@/lib/auth/helpers" 
@@ -113,13 +114,8 @@ export async function uploadAvatar(formData: FormData): Promise<
 }
 
 /**
- * Change user password
- * 
- * Note: This is a placeholder implementation since the current Credentials provider
- * doesn't validate passwords. In a production app, you would:
- * 1. Store hashed passwords in the database
- * 2. Validate current password against the hash
- * 3. Hash and store the new password
+ * Change user password (credentials / email-password users only).
+ * Verifies current password, then hashes and stores the new password.
  */
 export async function changePassword(formData: FormData): Promise<ActionResponse> {
   try {
@@ -150,13 +146,39 @@ export async function changePassword(formData: FormData): Promise<ActionResponse
       }
     }
 
-    // TODO: Implement actual password validation and storage
-    // For now, return a message indicating this feature requires implementation
-    return { 
-      success: false, 
-      error: "Password management requires backend implementation. Please use OAuth providers (GitHub) for authentication." 
+    const { currentPassword, newPassword } = validation.data
+    const db = getSupabaseAdmin()
+    const { data: row, error: fetchError } = await db
+      .from("users")
+      .select("password_hash")
+      .eq("id", session.user.id)
+      .single()
+
+    const user = row as { password_hash: string | null } | null
+    if (fetchError || !user?.password_hash) {
+      return {
+        success: false,
+        error: "No password is set for this account. Use “Forgot password” if you need to reset it.",
+      }
     }
 
+    const valid = await verifyPassword(currentPassword, user.password_hash)
+    if (!valid) {
+      return { success: false, error: "Current password is incorrect." }
+    }
+
+    const newHash = await hashPassword(newPassword)
+    const { error: updateError } = await db
+      .from("users")
+      .update({ password_hash: newHash, updated_at: new Date().toISOString() } as never)
+      .eq("id", session.user.id)
+
+    if (updateError) {
+      console.error("Change password update error:", updateError)
+      return { success: false, error: "Failed to update password." }
+    }
+
+    return { success: true, message: "Password changed successfully." }
   } catch (error) {
     console.error("Change password error:", error)
     return { success: false, error: "An unexpected error occurred" }

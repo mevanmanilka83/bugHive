@@ -57,10 +57,8 @@ export function PendingInvitesDialog({
           return
         }
         const data = await res.json()
-        const users = data.users || []
-        const userMap = new Map(
-          users.map((user: any) => [user.id, user])
-        )
+        const users = (data.users || []) as { id: string; name?: string | null; email?: string | null; image?: string | null }[]
+        const userMap = new Map(users.map((user) => [user.id, user]))
 
         const pending = inviteIds.map((id: string) => {
           const user = userMap.get(id)

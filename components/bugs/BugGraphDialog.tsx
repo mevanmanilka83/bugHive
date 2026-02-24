@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ThumbsUp, ThumbsDown } from "lucide-react"
 import {
   ReactFlow,
   Node,
@@ -30,6 +30,12 @@ import {
   NodeTypes,
   ReactFlowInstance,
   Panel,
+  Position,
+  Handle as FlowHandle,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
+  type EdgeProps
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { cn } from "@/lib/utils-client"
@@ -68,6 +74,16 @@ type RelationshipType =
   | "verified_by"
   | "contradicts"
   | "supports"
+  | "disputes"
+  | "conflicts"
+  | "complements"
+  | "support"
+  | "condractary"
+  | "complement"
+  | "condractary-dispute"
+  | "conflict"
+  | "complementary -support"
+  | "relate"
 
 interface GraphNode {
   id: string
@@ -142,8 +158,19 @@ const edgeTypeStyles: Record<string, { stroke: string; strokeDasharray?: string 
   verified_by: { stroke: "#0ea5e9" }, // Sky 500
   cause_of: { stroke: "#f59e0b" }, // Amber 500
   contradicts: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
+  disputes: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
+  conflicts: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
   related_to: { stroke: "#cbd5e1" }, // Slate 300
   supports: { stroke: "#8b5cf6" }, // Violet 500
+  complements: { stroke: "#8b5cf6" }, // Violet 500
+  support: { stroke: "#8b5cf6" }, // Violet 500
+  condractary: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
+  complement: { stroke: "#8b5cf6" }, // Violet 500
+  "condractary-dispute": { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
+  conflict: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
+  "complementary -support": { stroke: "#8b5cf6" }, // Violet 500
+  relate: { stroke: "#cbd5e1" }, // Slate 300
+  belongs_to: { stroke: "#a855f7", strokeDasharray: "3,3" }, // Purple 500
   fix_reference: { stroke: "#10b981", strokeDasharray: "2,2" },
 }
 
@@ -156,11 +183,12 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-xl border shadow-sm transition-all duration-200 min-w-[160px] max-w-[240px] bg-background",
+        "rounded-xl border shadow-sm transition-all duration-200 min-w-[160px] max-w-[240px] bg-background relative",
         selected ? "ring-2 ring-primary border-primary shadow-md" : "border-border",
         isFocus ? "ring-4 ring-primary/20 scale-105 shadow-xl" : ""
       )}
     >
+      <FlowHandle type="target" position={Position.Top} className="!w-2.5 !h-2.5 !bg-muted-foreground/30 !border-[1.5px] !border-background !top-[-5px]" />
       <div className={cn("text-white p-2 rounded-t-xl flex items-center gap-2", colorClass)}>
         <div className="bg-white/20 p-1 rounded-full backdrop-blur-sm">{icon}</div>
         <span className="text-xs font-bold uppercase tracking-wider text-white/90">
@@ -191,8 +219,21 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
               {data.impact} Impact
             </Badge>
           )}
+          {data.upvotes !== undefined && data.upvotes > 0 && (
+            <Badge variant="outline" className="text-[10px] h-5 px-1 flex items-center gap-1 border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-400">
+              <ThumbsUp className="w-2.5 h-2.5" />
+              {data.upvotes}
+            </Badge>
+          )}
+          {data.downvotes !== undefined && data.downvotes > 0 && (
+            <Badge variant="outline" className="text-[10px] h-5 px-1 flex items-center gap-1 border-red-200 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-400">
+              <ThumbsDown className="w-2.5 h-2.5" />
+              {data.downvotes}
+            </Badge>
+          )}
         </div>
       </div>
+      <FlowHandle type="source" position={Position.Bottom} className="!w-2.5 !h-2.5 !bg-muted-foreground/30 !border-[1.5px] !border-background !bottom-[-5px]" />
     </div>
   )
 }
@@ -205,6 +246,74 @@ const nodeTypes: NodeTypes = {
   evidence: CustomNode,
   github_issue: CustomNode,
   stack_overflow: CustomNode,
+  cluster: CustomNode,
+}
+
+function CustomBadgeEdge({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+  label,
+  data
+}: EdgeProps) {
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  const edgeType = data?.type as string || '';
+  const isDestructive = ["contradicts", "condractary", "condractary-dispute", "conflict", "disputes", "conflicts"].includes(edgeType);
+  const isPositive = ["solution_for", "verified_by", "supports", "complements", "support", "complement", "complementary -support", "fix_reference", "belongs_to"].includes(edgeType);
+
+  let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "secondary";
+  let extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 bg-background shadow-sm border font-semibold";
+
+  if (isDestructive) {
+    badgeVariant = "destructive";
+    extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 shadow-sm";
+  } else if (isPositive) {
+    badgeVariant = "default";
+    extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 shadow-sm bg-emerald-500 hover:bg-emerald-600";
+    if (["supports", "complements", "support", "complement", "complementary -support", "belongs_to"].includes(edgeType)) {
+      extraClasses = "text-[9px] px-1.5 py-0 h-4 min-h-0 shadow-sm bg-violet-500 hover:bg-violet-600";
+    }
+  }
+
+  return (
+    <>
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} id={id} />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+          className="nodrag nopan z-50"
+        >
+          {label ? (
+            <Badge variant={badgeVariant} className={extraClasses}>
+              {label}
+            </Badge>
+          ) : null}
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
+
+const edgeTypes = {
+  custom: CustomBadgeEdge,
 }
 
 export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProps) {
@@ -247,21 +356,17 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
         data: { ...node.data, type: node.type, label: node.label },
       }))
 
-      const flowEdges: Edge[] = graph.edges.map((edge) => {
+      const flowEdges: Edge[] = graph.edges.map((edge, idx) => {
         const baseStyle = edgeTypeStyles[edge.type] || { stroke: "#94a3b8" }
         const weight = edge.weight || 0.5
 
         return {
-          id: edge.id,
+          id: edge.id || `e-${edge.source}-${edge.target}-${idx}`,
           source: edge.source,
           target: edge.target,
-          type: "smoothstep", // Consider "bezier" or "straight" if preferred
-          label: edge.label || edge.type.replace(/_/g, " "),
-          labelShowBg: true,
-          labelBgStyle: { fill: "#f8fafc", opacity: 0.95, rx: 4, ry: 4 },
-          labelBgPadding: [8, 4],
-          labelBgBorderRadius: 4,
-          animated: edge.type === "solution_for" || edge.type === "cause_of" || edge.type === "contradicts",
+          type: "custom",
+          label: edge.label || edge.type?.replace(/_/g, " ") || "Related",
+          animated: edge.type === "solution_for" || edge.type === "cause_of" || edge.type === "contradicts" || edge.type === "condractary" || edge.type === "condractary-dispute" || edge.type === "conflict",
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: baseStyle.stroke,
@@ -352,6 +457,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                   onPaneClick={onPaneClick}
                   onInit={setReactFlowInstance}
                   nodeTypes={nodeTypes}
+                  edgeTypes={edgeTypes}
                   connectionMode={ConnectionMode.Loose}
                   fitView
                   className="h-full w-full"
@@ -374,9 +480,11 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
 
                   {/* Legend Panel */}
                   <Panel position="top-right" className="bg-background/95 backdrop-blur-sm p-3 rounded-lg border shadow-lg text-xs w-[200px]">
-                    <div className="font-semibold mb-2 flex items-center gap-2">
-                      <GitBranch className="h-3 w-3" />
-                      <span>Legend</span>
+                    <div className="font-semibold mb-2 flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        <GitBranch className="h-3 w-3" />
+                        <span>Legend ({edges.length} edges drawn)</span>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 gap-1.5">
                       {Object.entries(nodeTypeColors).slice(0, 8).map(([type, color]) => (

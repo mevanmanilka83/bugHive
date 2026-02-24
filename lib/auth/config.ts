@@ -25,25 +25,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Validate credentials with zod schema
         const validation = getLoginValidationSchema().safeParse({
           email: credentials?.email,
           password: credentials?.password,
         })
+        if (!validation.success) return null
 
-        if (!validation.success) {
-          return null
+        const { email, password } = validation.data
+        const db = getSupabaseAdmin()
+        const { data: user, error } = await db
+          .from("users")
+          .select("id, email, name, password_hash")
+          .eq("email", email.toLowerCase().trim())
+          .maybeSingle()
+
+        if (error || !user) return null
+
+        const row = user as { id: string; email: string | null; name: string | null; password_hash: string | null }
+        const storedHash = row.password_hash ?? null
+        const { verifyPassword, hashPassword } = await import("../password")
+
+        if (storedHash) {
+          const ok = await verifyPassword(password, storedHash)
+          if (!ok) return null
+        } else {
+          // Legacy user without stored hash: accept this password and store its hash for next time
+          const newHash = await hashPassword(password)
+          await db.from("users").update({ password_hash: newHash, updated_at: new Date().toISOString() } as never).eq("id", row.id)
         }
 
-        const { email } = validation.data
-
-        // For now, accept any email/password combination
-        // In production, you'd validate against your database
-        // Use deterministic UUID based on email to ensure consistent user ID across sessions
         return {
-          id: generateUUIDFromEmailSync(email), // Generate consistent UUID from email (sync for Edge compatibility)
-          email: email,
-          name: extractUsernameFromEmail(email),
+          id: row.id,
+          email: row.email ?? email,
+          name: row.name ?? extractUsernameFromEmail(email),
         }
       }
     })
@@ -114,11 +128,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (session?.user?.id) {
           try {
             const db = getSupabaseAdmin()
-            const { data } = await db
+            const { data: userRow } = await db
               .from("users")
               .select("name, image")
               .eq("id", session.user.id)
               .single()
+            const data = userRow as { name: string | null; image: string | null } | null
             if (data) {
               if (data.name != null) session.user.name = data.name
               if (data.image != null) session.user.image = data.image

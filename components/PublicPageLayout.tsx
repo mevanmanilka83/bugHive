@@ -1,4 +1,5 @@
 import type { Session } from "next-auth"
+import type { AuthenticatedSession } from "@/lib/auth/helpers"
 import { AppFooter } from "@/components/AppFooter"
 import { AppHeader } from "@/components/AppHeader"
 import { MobileBottomNav } from "@/components/MobileBottomNav"
@@ -17,7 +18,7 @@ type NavActive =
 
 interface PublicPageLayoutProps {
   children: React.ReactNode
-  session: Session | null
+  session: Session | AuthenticatedSession | null
   /** Sidebar active item; matches SidebarPublicNav `active` prop */
   sidebarActive: NavActive
   /** Use auth fallback for sidebar (e.g. show sign-in for protected links) */
@@ -45,7 +46,7 @@ export function PublicPageLayout({
   return (
     <main className="min-h-screen bg-muted/20 flex flex-col">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 pb-20 sm:px-4 md:pb-0">
-        <AppHeader session={session} />
+        <AppHeader session={session as Session | null} />
 
         <div className="flex flex-1 gap-6 py-6">
           <SidebarPublicNav

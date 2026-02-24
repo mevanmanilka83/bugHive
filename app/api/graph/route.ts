@@ -24,6 +24,13 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "No bug found" }, { status: 404 })
         }
 
+        // Fetch Public Clusters suitable for linking
+        const { data: publicClusters } = await supabase
+            .from('clusters')
+            .select('*')
+            .eq('visibility', 'public')
+            .limit(3)
+
         // 2. Fetch "Related" Bugs (Simulated Vector Search)
         // In a real app, we'd use embedding similarity here.
         // For now, fetch 5 other bugs to serve as neighbors
@@ -54,7 +61,9 @@ export async function GET(request: Request) {
                 type: "bug",
                 source: "BugHive",
                 url: `/bugs/${mainBug.id}`,
-                isFocus: true
+                isFocus: true,
+                upvotes: mainBug.upvotes_count || 0,
+                downvotes: mainBug.downvotes_count || 0
             },
             position: { x: CENTER_X, y: CENTER_Y },
             style: {
@@ -161,7 +170,9 @@ export async function GET(request: Request) {
                         description: bug.description?.slice(0, 50) + "...",
                         type: "bug",
                         source: "BugHive",
-                        url: `/bugs/${bug.id}`
+                        url: `/bugs/${bug.id}`,
+                        upvotes: bug.upvotes_count || 0,
+                        downvotes: bug.downvotes_count || 0
                     },
                     position: { x, y }
                 })
@@ -174,6 +185,40 @@ export async function GET(request: Request) {
                     label: `${similarity}`,
                     data: { similarity: parseFloat(similarity) },
                     style: { strokeDasharray: "5,5", stroke: "hsl(var(--muted-foreground))" }
+                })
+            })
+        }
+
+        // --- PUBLIC CLUSTERS (Left Arc) ---
+        if (publicClusters) {
+            publicClusters.forEach((cluster: any, i: number) => {
+                const angle = Math.PI + (i * (Math.PI / 4)) // Distribute around left half
+                const x = CENTER_X + Math.cos(angle) * RADIUS_OUTER * 0.9
+                const y = CENTER_Y + Math.sin(angle) * RADIUS_OUTER * 0.8
+
+                const clusterId = `cluster-${cluster.id}`
+
+                nodes.push({
+                    id: clusterId,
+                    type: "cluster",
+                    label: `Cluster: ${cluster.name.slice(0, 15)}`,
+                    data: {
+                        title: cluster.name,
+                        description: cluster.description?.slice(0, 50) || "Public Bug Cluster",
+                        type: "cluster",
+                        source: "BugHive",
+                        url: `/clusters/${cluster.id}`
+                    },
+                    position: { x, y }
+                })
+
+                edges.push({
+                    id: `e-clus-${cluster.id}`,
+                    source: centerId,
+                    target: clusterId,
+                    type: "belongs_to",
+                    label: "Grouped In",
+                    style: { strokeDasharray: "4,4", stroke: "#a855f7" }
                 })
             })
         }

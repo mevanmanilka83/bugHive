@@ -158,7 +158,7 @@ export async function uploadAvatarFile(
   if (!env.awsS3Bucket || !env.awsRegion) {
     throw new Error("S3 bucket configuration is missing. Please check your .env file.")
   }
-  const buffer = await (file instanceof Blob ? file.arrayBuffer() : file.arrayBuffer())
+  const buffer = await file.arrayBuffer()
   const size = buffer.byteLength
   if (size > AVATAR_MAX_BYTES) {
     throw new Error("Image must be 2MB or smaller.")

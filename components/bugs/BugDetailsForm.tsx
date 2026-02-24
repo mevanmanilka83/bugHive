@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { cn } from "@/lib/utils-client"
 
 export interface BugDetailsFormProps {
   bug: {
@@ -68,10 +69,35 @@ export function BugDetailsForm({
   })()
 
   const tagsDisplay = Array.isArray(bug.tags) && bug.tags.length ? bug.tags.join(", ") : "—"
-  const sourcesDisplay =
+  const sourceUrls: string[] =
     Array.isArray(bug.sources) && bug.sources.length
-      ? (bug.sources as unknown[]).map((s: unknown) => (typeof s === "object" && s && "url" in s ? (s as { url: string }).url : String(s))).join(", ")
-      : "—"
+      ? (bug.sources as unknown[])
+          .map((s: unknown) => (typeof s === "object" && s && "url" in s ? (s as { url: string }).url : String(s)))
+          .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+      : []
+
+  const [linkValidity, setLinkValidity] = React.useState<Record<string, boolean | null>>({})
+  React.useEffect(() => {
+    if (sourceUrls.length === 0) return
+    const allowed = (u: string) => {
+      try {
+        const parsed = new URL(u)
+        return parsed.protocol === "http:" || parsed.protocol === "https:"
+      } catch {
+        return false
+      }
+    }
+    sourceUrls.forEach((url) => {
+      if (!allowed(url.trim())) {
+        setLinkValidity((prev) => ({ ...prev, [url]: false }))
+        return
+      }
+      fetch(`/api/validate-link?url=${encodeURIComponent(url.trim())}`)
+        .then((res) => res.json().catch(() => ({ valid: false })))
+        .then((data) => setLinkValidity((prev) => ({ ...prev, [url]: data.valid === true })))
+        .catch(() => setLinkValidity((prev) => ({ ...prev, [url]: false })))
+    })
+  }, [sourceUrls.join("\n")])
 
   const isImageUrl = (url: string): boolean => {
     if (!url) return false
@@ -187,7 +213,43 @@ export function BugDetailsForm({
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Sources</Label>
-          <Input value={sourcesDisplay} disabled />
+          {sourceUrls.length === 0 ? (
+            <Input value="—" disabled />
+          ) : (
+            <div className="flex flex-col gap-2 rounded-md border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
+              {sourceUrls.map((url) => {
+                const valid = linkValidity[url]
+                const isValid = valid === true
+                const isInvalid = valid === false
+                const isPending = valid === undefined || valid === null
+                return (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(
+                      "inline-flex items-center gap-2 break-all text-sm underline underline-offset-2",
+                      isPending && "text-muted-foreground",
+                      isValid && "text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400",
+                      isInvalid && "text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "h-2 w-2 shrink-0 rounded-full",
+                        isPending && "bg-muted-foreground/50",
+                        isValid && "bg-green-500",
+                        isInvalid && "bg-red-500"
+                      )}
+                      aria-hidden
+                    />
+                    {url}
+                  </a>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
       <div className="flex flex-col gap-1.5">

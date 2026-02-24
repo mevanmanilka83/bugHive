@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { extractRouteId, getSingleRecord, successResponse, errorResponse } from "@/lib"
+import { extractRouteId, getSingleRecord, successResponse, errorResponse, supabase } from "@/lib"
 import { stripHtml } from "@/lib/utils-client"
 import { findRelatedItems } from "@/lib/related"
 import { BugSignature } from "@/lib/bug-relationships"
@@ -36,6 +36,17 @@ type RelationshipType =
   | "solution_for"
   | "verified_by"
   | "contradicts"
+  | "supports"
+  | "disputes"
+  | "conflicts"
+  | "complements"
+  | "support"
+  | "condractary"
+  | "complement"
+  | "condractary-dispute"
+  | "conflict"
+  | "complementary -support"
+  | "relate"
 
 export type GraphNode = {
   id: string
@@ -72,7 +83,7 @@ export type GraphData = {
   }
 }
 
-async function analyzeWithGemini(bug: any, relatedInternal: any[], relatedExternal: any[]): Promise<GraphData> {
+async function analyzeWithGemini(bug: any, relatedInternal: any[], relatedExternal: any[], clusters: any[]): Promise<GraphData> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     return generateFallbackGraph(bug, relatedInternal, relatedExternal)
@@ -84,16 +95,22 @@ async function analyzeWithGemini(bug: any, relatedInternal: any[], relatedExtern
     `Environment: ${bug.environment || ""}`,
     `Tags: ${Array.isArray(bug.tags) ? bug.tags.join(", ") : ""}`,
     `Error: ${bug.actual_behavior || ""}`,
+    `Votes: Upvotes (${bug.upvotes_count || 0}), Downvotes (${bug.downvotes_count || 0})`,
   ].join("\n")
 
   const relatedText = relatedInternal
     .slice(0, 8)
-    .map((b, i) => `Internal Bug ${i + 1}: ${b.title} (Score: ${b.relevanceScore?.toFixed(2)} - ${b.relevanceReasons?.join(", ")})`)
+    .map((b, i) => `Internal Bug ${i + 1}: ${b.title} (Matches: ${b.relevanceScore?.toFixed(2)}) | Upvotes: ${b.upvotes_count || 0}, Downvotes: ${b.downvotes_count || 0} - ${b.relevanceReasons?.join(", ")}`)
     .join("\n")
 
   const externalText = relatedExternal
     .slice(0, 8)
     .map((e) => `${e.source}: ${e.title} - ${e.snippet}`)
+    .join("\n")
+
+  const clustersText = clusters
+    .slice(0, 5)
+    .map((c: any) => `Public Cluster (ID: ${c.id}): ${c.name} - ${c.description || "No description"}`)
     .join("\n")
 
   const prompt = `Analyze this bug report and its related ecosystem to generate a strictly focused "Ego-Graph".
@@ -102,16 +119,24 @@ GOAL: Construct a subgraph centered EXCLUSIVELY on the Main Bug.
 - FILTER: The graph must NOT be a global dump. Only include nodes with a direct, justified, and strong relationship to the Main Bug.
 - CENTRAL NODE: The Main Bug (${bug.id}) is the primary anchor.
 - RELATIONSHIPS: Every edge must be backed by a clear justification metric.
-    - "similar_to" -> Must be based on Cosine Similarity or Error Signature Overlap.
-    - "solution_for" -> Must be a valid fix or patch.
-    - "contradicts" -> Must have a high Contradiction Score.
-- METRICS: The "label" of each edge MUST explicitly state the relationship rationale (e.g., "95% Stack Trace Overlap", "Fixes Memory Leak", "Contradicts Root Cause").
+    - "support" -> Must be a supporting reference/metric.
+    - "condractary" -> Must demonstrate a high Contradiction score (or if downvote ratio is significant).
+    - "complement" -> Must be a complementary reference/metric (or high upvote matched logic).
+    - "condractary-dispute" -> For competing discussions or disputes.
+    - "conflict" -> For conflicting methods.
+    - "complementary -support" -> For complementary supporting rationale.
+    - "relate" -> General metric for relation or reference.
+    - "belongs_to" -> For grouping into Public Clusters.
+- METRICS: The "label" of each edge MUST explicitly state the relationship rationale (e.g., "95% Stack Trace Overlap", "Fixes Memory Leak", "Contradicts Root Cause"). Be sure to weigh upvotes and downvotes into scoring and mapping.
 
 Bug Report:
 ${bugText}
 
-Related Internal Bugs (Context for Similarity):
+Related Internal Bugs (Context for Similarity & Votes):
 ${relatedText}
+
+Available Public Clusters (Context for Grouping):
+${clustersText}
 
 External References (Context for Evidence/Solutions):
 ${externalText}
@@ -126,8 +151,9 @@ Return JSON with this structure:
   ],
   "edges": [
     {"id": "e1", "source": "cause-1", "target": "bug-${bug.id}", "type": "cause_of", "weight": 0.95, "label": "Direct Root Cause"},
-    {"id": "e2", "source": "sol-1", "target": "bug-${bug.id}", "type": "solution_for", "weight": 0.85, "label": "Verifies Fix"},
-    {"id": "e3", "source": "bug-${bug.id}", "target": "similar-1", "type": "similar_to", "weight": 0.75, "label": "High Text Overlap"}
+    {"id": "e2", "source": "sol-1", "target": "bug-${bug.id}", "type": "support", "weight": 0.85, "label": "Verifies Fix"},
+    {"id": "e3", "source": "bug-${bug.id}", "target": "similar-1", "type": "relate", "weight": 0.75, "label": "High Text Overlap"},
+    {"id": "e4", "source": "bug-${bug.id}", "target": "sol-1", "type": "condractary", "weight": 0.80, "label": "Contradicts Method"}
   ],
   "insights": {
     "rootCausePatterns": ["Pattern 1"],
@@ -136,8 +162,8 @@ Return JSON with this structure:
   }
 }
 
-Use these node types: bug, cause, solution, evidence, github_issue, stack_overflow.
-Use these edge types: cause_of, solution_for, verified_by, similar_to, contradicts, related_to.
+Use these node types: bug, cause, solution, evidence, github_issue, stack_overflow, cluster.
+Use these edge types: cause_of, solution_for, verified_by, similar_to, support, condractary, complement, condractary-dispute, conflict, complementary -support, relate, belongs_to.
 Ensure the Main Bug (${bug.id}) is the central node.`
 
   try {
@@ -285,7 +311,14 @@ export async function GET(
     // Smart Fetching using Shared Logic
     const { internal, external } = await findRelatedItems(bug)
 
-    const graphData = await analyzeWithGemini(bug, internal, external)
+    // Fetch Public Clusters that could be suitable for grouping/matching
+    const { data: publicClusters } = await supabase
+      .from('clusters')
+      .select('id, name, description, visibility')
+      .eq('visibility', 'public')
+      .limit(10)
+
+    const graphData = await analyzeWithGemini(bug, internal, external, publicClusters || [])
 
     return successResponse(graphData)
   } catch (error) {

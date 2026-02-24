@@ -355,32 +355,33 @@ export async function findRelatedItems(bug: any) {
         console.error("StackOverflow search failed", e)
     }
 
-    // --- Bugzilla Fetch ---
-    const bugzillaBaseUrl = process.env.BUGZILLA_BASE_URL
+    // --- Bugzilla Fetch (default: bugzilla.mozilla.org) ---
+    const bugzillaBaseUrl = process.env.BUGZILLA_BASE_URL || "https://bugzilla.mozilla.org"
     const bugzillaApiKey = process.env.BUGZILLA_API_KEY
     let bugzillaResults: RelatedResult[] = []
+    const bzHeaders = { Accept: "application/json", "User-Agent": "BugHive/1.0 (Related Bugs)" }
 
-    if (bugzillaBaseUrl) {
-        // Simplification: only implementing main query for brevity, falling back to empty if fails
-        try {
-            const cleanBase = bugzillaBaseUrl.replace(/\/+$/, "")
-            const bzUrl = new URL(`${cleanBase}/rest/bug`)
-            const quickSearch = truncateQuery([signature.hardError, signature.languageTerms[0], title].filter(Boolean).join(" "))
-
-            if (quickSearch) {
-                bzUrl.searchParams.set("quicksearch", quickSearch)
-                if (bugzillaApiKey) bzUrl.searchParams.set("api_key", bugzillaApiKey)
-
-                const bzRes = await fetch(bzUrl.toString())
-                if (bzRes.ok) {
-                    const bzData = await bzRes.json()
-                    const items = Array.isArray(bzData?.bugs) ? (bzData.bugs as BugzillaBug[]) : []
-                    bugzillaResults = items.map(b => normalizeBugzillaBug(bugzillaBaseUrl, b))
-                }
-            }
-        } catch (e) {
-            console.error("Bugzilla search failed", e)
+    try {
+        const cleanBase = bugzillaBaseUrl.replace(/\/+$/, "")
+        const bzUrl = new URL(`${cleanBase}/rest/bug`)
+        let quickSearch = truncateQuery([signature.hardError, signature.languageTerms[0], title].filter(Boolean).join(" "))
+        if (!quickSearch && description) {
+            quickSearch = truncateQuery(description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80))
         }
+        if (!quickSearch) quickSearch = "bug"
+
+        bzUrl.searchParams.set("quicksearch", quickSearch)
+        bzUrl.searchParams.set("limit", "10")
+        if (bugzillaApiKey) bzUrl.searchParams.set("api_key", bugzillaApiKey)
+
+        const bzRes = await fetch(bzUrl.toString(), { headers: bzHeaders })
+        if (bzRes.ok) {
+            const bzData = await bzRes.json()
+            const items = Array.isArray(bzData?.bugs) ? (bzData.bugs as BugzillaBug[]) : []
+            bugzillaResults = items.map(b => normalizeBugzillaBug(cleanBase, b))
+        }
+    } catch (e) {
+        console.error("Bugzilla search failed", e)
     }
 
     // --- Internal Bug Fetch ---

@@ -14,7 +14,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react"
 
-type NavKey = "home" | "public" | "mybugs" | "clusters" | "notifications" | "saved" | "activity" | "settings"
+type NavKey = "home" | "public" | "mybugs" | "tags" | "clusters" | "notifications" | "saved" | "activity" | "settings" | "faq"
 
 type NavItem = {
   key: NavKey
