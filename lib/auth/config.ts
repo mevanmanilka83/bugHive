@@ -124,6 +124,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           (session.user as { provider?: string }).provider = token.provider as string
         }
 
+        // Ensure OAuth users (and any user with userDataToSave) have a row in public.users so FKs (e.g. saved_graphs.user_id) succeed
+        const toSave = token.userDataToSave as { email: string; name?: string; image?: string | null; email_verified?: string | null } | undefined
+        if (toSave?.email) {
+          try {
+            const { saveUserToSupabase } = await import("@/app/actions/User")
+            await saveUserToSupabase(toSave.email, toSave.name ?? undefined, toSave.image ?? undefined, toSave.email_verified ?? undefined)
+            delete (token as { userDataToSave?: unknown }).userDataToSave
+          } catch {
+            // Non-fatal; user may already exist or will be created on first write
+          }
+        }
+
         // Use name and image from database so uploaded avatar and profile name show everywhere (header, dropdown, etc.)
         if (session?.user?.id) {
           try {

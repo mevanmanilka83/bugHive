@@ -13,6 +13,7 @@ type NavActive =
   | "clusters"
   | "notifications"
   | "saved"
+  | "workspaces"
   | "activity"
   | "settings"
 

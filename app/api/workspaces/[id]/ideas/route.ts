@@ -1,0 +1,97 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getSupabaseAdmin, getAuthenticatedUserId } from "@/lib"
+
+/**
+ * GET /api/workspaces/[id]/ideas
+ * List ideas/solutions for a saved graph (owner or public graph).
+ */
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params
+    const supabase = await getSupabaseAdmin()
+
+    const { data: graph } = await (supabase as any)
+      .from("saved_graphs")
+      .select("id, user_id, is_public")
+      .eq("id", id)
+      .single()
+
+    if (!graph) {
+      return NextResponse.json({ error: "Graph not found" }, { status: 404 })
+    }
+
+    const userId = await getAuthenticatedUserId()
+    const canView = graph.is_public || (userId && graph.user_id === userId)
+    if (!canView) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const { data: ideas, error } = await (supabase as any)
+      .from("graph_ideas")
+      .select("id, kind, title, content, created_at, updated_at")
+      .eq("saved_graph_id", id)
+      .order("created_at", { ascending: true })
+
+    if (error) throw error
+    return NextResponse.json({ success: true, ideas: ideas ?? [] })
+  } catch (e: any) {
+    console.error("List ideas error:", e)
+    return NextResponse.json({ error: e.message || "Failed to list ideas" }, { status: 500 })
+  }
+}
+
+/**
+ * POST /api/workspaces/[id]/ideas
+ * Add an idea/solution/fix to a saved graph (owner only).
+ */
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const userId = await getAuthenticatedUserId()
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const { id } = await context.params
+    const body = await request.json()
+    const { kind = "idea", title, content } = body
+
+    if (!title || typeof title !== "string" || !title.trim()) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 })
+    }
+
+    const validKind = ["idea", "solution", "fix"].includes(kind) ? kind : "idea"
+    const supabase = await getSupabaseAdmin()
+
+    const { data: graph, error: fetchErr } = await (supabase as any)
+      .from("saved_graphs")
+      .select("id, user_id")
+      .eq("id", id)
+      .single()
+
+    if (fetchErr || !graph || graph.user_id !== userId) {
+      return NextResponse.json({ error: "Graph not found or you are not the owner" }, { status: 403 })
+    }
+
+    const { data: idea, error: insertErr } = await (supabase as any)
+      .from("graph_ideas")
+      .insert({
+        saved_graph_id: id,
+        user_id: userId,
+        kind: validKind,
+        title: title.trim(),
+        content: content && typeof content === "string" ? content.trim() : null,
+      })
+      .select()
+      .single()
+
+    if (insertErr) throw insertErr
+    return NextResponse.json({ success: true, idea })
+  } catch (e: any) {
+    console.error("Add idea error:", e)
+    return NextResponse.json({ error: e.message || "Failed to add idea" }, { status: 500 })
+  }
+}

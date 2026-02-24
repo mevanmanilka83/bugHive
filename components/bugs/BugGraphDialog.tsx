@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog"
 import {
   Card,
@@ -15,7 +16,11 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ThumbsUp, ThumbsDown } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ThumbsUp, ThumbsDown, X, Save } from "lucide-react"
+import { useRouter } from "next/navigation"
 import {
   ReactFlow,
   Node,
@@ -112,14 +117,18 @@ interface GraphEdge {
 }
 
 interface GraphData {
+  center?: string
   nodes: GraphNode[]
   edges: GraphEdge[]
-  insights: {
+  insights?: {
     rootCausePatterns: string[]
     recurringEnvironments: Array<{ environment: string; count: number }>
     externalReferences: Array<{ type: string; title: string; url: string }>
   }
 }
+
+const GRAPH_DEPTH = 2
+const GRAPH_LIMIT = 25
 
 // --- Visual Configuration ---
 
@@ -152,11 +161,19 @@ const nodeTypeIcons: Record<string, React.ReactNode> = {
 }
 
 const edgeTypeStyles: Record<string, { stroke: string; strokeDasharray?: string }> = {
-  similar_to: { stroke: "#94a3b8", strokeDasharray: "5,5" }, // Slate 400
-  duplicate_of: { stroke: "#64748b", strokeDasharray: "5,5" }, // Slate 500
-  solution_for: { stroke: "#10b981" }, // Emerald 500
-  verified_by: { stroke: "#0ea5e9" }, // Sky 500
-  cause_of: { stroke: "#f59e0b" }, // Amber 500
+  // Normalized API types (from subgraph builder)
+  SIMILAR: { stroke: "#94a3b8", strokeDasharray: "5,5" },
+  DUPLICATE: { stroke: "#64748b", strokeDasharray: "5,5" },
+  CAUSE_OF: { stroke: "#f59e0b" },
+  EVIDENCE_FOR: { stroke: "#0ea5e9" },
+  SOLUTION_FOR: { stroke: "#10b981" },
+  RELATE: { stroke: "#cbd5e1" },
+  // Legacy / display names
+  similar_to: { stroke: "#94a3b8", strokeDasharray: "5,5" },
+  duplicate_of: { stroke: "#64748b", strokeDasharray: "5,5" },
+  solution_for: { stroke: "#10b981" },
+  verified_by: { stroke: "#0ea5e9" },
+  cause_of: { stroke: "#f59e0b" },
   contradicts: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
   disputes: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
   conflicts: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
@@ -317,86 +334,97 @@ const edgeTypes = {
   custom: CustomBadgeEdge,
 }
 
+const graphCache = new Map<string, GraphData>()
+
 export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
   const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
   const [graphData, setGraphData] = React.useState<GraphData | null>(null)
   const [reactFlowInstance, setReactFlowInstance] = React.useState<ReactFlowInstance | null>(null)
+  const [saving, setSaving] = React.useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = React.useState(false)
+  const [saveTitle, setSaveTitle] = React.useState("")
+  const [saveAsPublic, setSaveAsPublic] = React.useState(false)
+  const router = useRouter()
 
   React.useEffect(() => {
     if (open && bugId) {
       setSelectedNode(null)
+      setError(null)
       fetchGraphData()
     }
   }, [open, bugId])
 
   async function fetchGraphData() {
+    const cached = graphCache.get(bugId)
+    if (cached?.nodes?.length) {
+      applyGraphToFlow(cached)
+      setGraphData(cached)
+      setLoading(false)
+      return
+    }
     try {
       setLoading(true)
-      const res = await fetch(`/api/bugs/${bugId}/graph`)
-      if (!res.ok) throw new Error("Failed to fetch graph")
+      setError(null)
+      const params = new URLSearchParams({ depth: String(GRAPH_DEPTH), limit: String(GRAPH_LIMIT) })
+      const res = await fetch(`/api/bugs/${bugId}/graph?${params}`)
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        throw new Error(errBody?.error || `Failed to load graph (${res.status})`)
+      }
       const wrapper = await res.json()
-      // API returns { success: true, data: { ... } } or just data depending on format
-      const graph: GraphData = wrapper.data || wrapper
+      const graph: GraphData = wrapper.data ?? wrapper
 
-      if (!graph || !graph.nodes || !graph.edges) {
-        console.error("Invalid graph data format:", graph)
+      if (!graph?.nodes?.length || !Array.isArray(graph.edges)) {
+        setError("Graph returned no data.")
         return
       }
-
-      // Convert to React Flow format
-      const flowNodes: Node[] = graph.nodes.map((node, idx) => ({
-        id: node.id,
-        type: node.type, // Map directly to registered types
-        position: node.position || {
-          x: Math.cos((idx / graph.nodes.length) * Math.PI * 2) * 300,
-          y: Math.sin((idx / graph.nodes.length) * Math.PI * 2) * 300,
-        },
-        data: { ...node.data, type: node.type, label: node.label },
-      }))
-
-      const flowEdges: Edge[] = graph.edges.map((edge, idx) => {
-        const baseStyle = edgeTypeStyles[edge.type] || { stroke: "#94a3b8" }
-        const weight = edge.weight || 0.5
-
-        return {
-          id: edge.id || `e-${edge.source}-${edge.target}-${idx}`,
-          source: edge.source,
-          target: edge.target,
-          type: "custom",
-          label: edge.label || edge.type?.replace(/_/g, " ") || "Related",
-          animated: edge.type === "solution_for" || edge.type === "cause_of" || edge.type === "contradicts" || edge.type === "condractary" || edge.type === "condractary-dispute" || edge.type === "conflict",
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: baseStyle.stroke,
-          },
-          style: {
-            ...baseStyle,
-            strokeWidth: Math.max(2, weight * 3),
-            opacity: 0.9,
-            ...edge.style, // Allow API override
-          },
-          labelStyle: {
-            fill: "#334155", // slate-700
-            fontWeight: 600,
-            fontSize: 10,
-          },
-          data: { weight, type: edge.type }
-        }
-      })
-
-      setNodes(flowNodes)
-      setEdges(flowEdges)
+      graphCache.set(bugId, graph)
+      applyGraphToFlow(graph)
       setGraphData(graph)
-      // Do not auto-select the focus node — show the graph first; user can click a node to see details.
-
-    } catch (error) {
-      console.error("Failed to fetch graph:", error)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to fetch graph"
+      setError(message)
+      setNodes([])
+      setEdges([])
     } finally {
       setLoading(false)
     }
+  }
+
+  function applyGraphToFlow(graph: GraphData) {
+    const flowNodes: Node[] = graph.nodes.map((node, idx) => ({
+      id: node.id,
+      type: node.type,
+      position: node.position ?? {
+        x: Math.cos((idx / graph.nodes.length) * Math.PI * 2) * 300,
+        y: Math.sin((idx / graph.nodes.length) * Math.PI * 2) * 300,
+      },
+      data: { ...node.data, type: node.type, label: node.label },
+    }))
+
+    const flowEdges: Edge[] = graph.edges.map((edge, idx) => {
+      const baseStyle = edgeTypeStyles[edge.type] || { stroke: "#94a3b8" }
+      const weight = edge.weight ?? 0.5
+      return {
+        id: edge.id || `e-${edge.source}-${edge.target}-${idx}`,
+        source: edge.source,
+        target: edge.target,
+        type: "custom",
+        label: edge.label || edge.type?.replace(/_/g, " ") || "Related",
+        animated: ["SOLUTION_FOR", "CAUSE_OF", "solution_for", "cause_of", "contradicts", "condractary", "condractary-dispute", "conflict"].includes(edge.type),
+        markerEnd: { type: MarkerType.ArrowClosed, color: baseStyle.stroke },
+        style: { ...baseStyle, strokeWidth: Math.max(2, weight * 3), opacity: 0.9, ...edge.style },
+        labelStyle: { fill: "#334155", fontWeight: 600, fontSize: 10 },
+        data: { weight, type: edge.type },
+      }
+    })
+
+    setNodes(flowNodes)
+    setEdges(flowEdges)
   }
 
   React.useEffect(() => {
@@ -427,17 +455,80 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
     setNodes((nds) => nds.map((n) => ({ ...n, selected: false })))
   }, [setNodes])
 
+  function openSaveDialog() {
+    setSaveTitle(`Relationship graph – Bug #${bugId.slice(0, 8)}`)
+    setSaveAsPublic(false)
+    setSaveDialogOpen(true)
+  }
+
+  async function handleSaveWorkspace() {
+    if (!reactFlowInstance || !bugId) return
+    const title = saveTitle.trim() || `Workspace: Bug #${bugId.slice(0, 8)}`
+    try {
+      setSaving(true)
+      const rfObject = reactFlowInstance.toObject()
+
+      const res = await fetch("/api/workspaces", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description: `Graph workspace for bug ${bugId.slice(0, 8)}. ${saveAsPublic ? "Public – others can view and copy to build ideas." : "Private – only you can view and add ideas."}`,
+          nodes: rfObject.nodes,
+          edges: rfObject.edges,
+          origin_bug_id: bugId,
+          is_public: saveAsPublic,
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to save workspace")
+      }
+
+      const data = await res.json()
+      setSaveDialogOpen(false)
+      onOpenChange(false)
+      setTimeout(() => {
+        router.push(`/workspaces/${data.graph.id}`)
+      }, 150)
+    } catch (e: any) {
+      console.error("Failed to save workspace:", e)
+      setError(e.message || "Failed to save workspace.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const selectedNodeData = selectedNode?.data as any
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[95vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden outline-none">
-          <DialogHeader className="px-6 py-4 border-b shrink-0 bg-background z-10">
-            <DialogTitle className="flex items-center gap-2">
-              <GitBranch className="h-5 w-5 text-primary" />
-              Bug Relationship Graph
+        <DialogContent showCloseButton={false} className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-[100vw] min-w-full h-screen max-w-none sm:max-w-none max-h-none translate-x-0 translate-y-0 rounded-none flex flex-col p-0 gap-0 overflow-hidden outline-none !left-0 !top-0">
+          <DialogHeader className="px-6 py-4 border-b shrink-0 bg-background z-10 flex flex-row items-center justify-between gap-4 min-h-14">
+            <DialogTitle className="flex items-center gap-2 min-w-0 truncate">
+              <GitBranch className="h-5 w-5 text-primary shrink-0" />
+              <span className="truncate">Bug Relationship Graph</span>
             </DialogTitle>
+            <div className="flex items-center gap-2 shrink-0 flex-shrink-0 relative z-10">
+              <Button
+                variant="default"
+                size="default"
+                className="shrink-0 gap-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                onClick={openSaveDialog}
+                disabled={saving || nodes.length === 0}
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Save relationship diagram
+              </Button>
+              <DialogClose asChild>
+                <Button variant="outline" size="default" className="shrink-0 gap-2 rounded-full">
+                  <X className="h-4 w-4" />
+                  Close
+                </Button>
+              </DialogClose>
+            </div>
           </DialogHeader>
 
           <div className="flex-1 w-full h-full min-h-0 relative">
@@ -447,6 +538,13 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                 <div className="absolute inset-0 flex items-center justify-center z-50 bg-background/50 backdrop-blur-sm">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <span className="ml-2 font-medium text-muted-foreground">Generating Graph...</span>
+                </div>
+              ) : error ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-50 bg-background/80 backdrop-blur-sm p-4">
+                  <p className="text-destructive font-medium text-center">{error}</p>
+                  <Button variant="outline" size="sm" onClick={() => { setError(null); fetchGraphData(); }}>
+                    Retry
+                  </Button>
                 </div>
               ) : (
                 <ReactFlow
@@ -547,6 +645,61 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                 </ReactFlow>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save diagram: title + public/private */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Save className="h-5 w-5" />
+              Save relationship diagram
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-7 py-7">
+            <div className="grid gap-2">
+              <Label htmlFor="save-title" className="text-sm font-semibold mb-1">Title</Label>
+              <Input
+                id="save-title"
+                value={saveTitle}
+                onChange={(e) => setSaveTitle(e.target.value)}
+                placeholder="e.g. Crash on divide by zero – graph"
+                className="border-2 border-primary/40 bg-white dark:bg-background text-base font-normal focus:ring-primary focus:border-primary rounded-lg shadow-sm px-4 py-2 transition-all duration-150 outline-none"
+                style={{ boxShadow: '0 0 0 2px rgba(59,130,246,0.08)', fontWeight: 400 }}
+              />
+            </div>
+            <div className="grid gap-2 mt-2">
+              <Label className="text-sm font-semibold mb-1">Visibility</Label>
+              <RadioGroup
+                value={saveAsPublic ? "public" : "private"}
+                onValueChange={(v) => setSaveAsPublic(v === "public")}
+                className="flex flex-col gap-3"
+              >
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="private" id="vis-private" />
+                  <Label htmlFor="vis-private" className="font-medium cursor-pointer text-sm text-foreground">
+                    Private (only you)
+                  </Label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="public" id="vis-public" />
+                  <Label htmlFor="vis-public" className="font-medium cursor-pointer text-sm text-foreground">
+                    Public (anyone can view)
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-5">
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)} className="rounded-full">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveWorkspace} disabled={saving} className="rounded-full bg-primary text-primary-foreground font-semibold shadow-md px-6 py-2">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Save
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

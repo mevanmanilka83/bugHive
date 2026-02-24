@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import {
     Dialog,
     DialogContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ThumbsDown, ThumbsUp } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ThumbsDown, ThumbsUp, Save } from "lucide-react"
 import {
     ReactFlow,
     Node,
@@ -219,8 +219,46 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
     const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
     const [insights, setInsights] = React.useState<any>(null)
 
+    const [saving, setSaving] = React.useState(false)
+
     const params = useParams()
+    const router = useRouter()
     const bugId = params?.bugId as string | undefined
+
+    async function handleSaveWorkspace() {
+        if (!reactFlowInstance || !bugId) return
+        try {
+            setSaving(true)
+            const rfObject = reactFlowInstance.toObject()
+
+            const res = await fetch("/api/workspaces", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: `Workspace: Graph Context`,
+                    description: `Global context graph derived from Bug #${bugId.slice(0, 8)}`,
+                    nodes: rfObject.nodes,
+                    edges: rfObject.edges,
+                    origin_bug_id: bugId
+                })
+            })
+
+            if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.error || "Failed to save workspace")
+            }
+
+            const data = await res.json()
+            onOpenChange(false)
+            setTimeout(() => {
+                router.push(`/workspaces/${data.graph.id}`)
+            }, 150)
+        } catch (e: any) {
+            console.error("Failed to save workspace:", e)
+        } finally {
+            setSaving(false)
+        }
+    }
 
     React.useEffect(() => {
         if (open) {
@@ -325,13 +363,27 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                         <span className="font-semibold tracking-tight">Bug Relationship Graph</span>
                     </DialogTitle>
 
-                    <button
-                        onClick={() => onOpenChange(false)}
-                        className="rounded-full p-2 hover:bg-muted/50 transition-colors"
-                    >
-                        <ExternalLink className="h-4 w-4 rotate-45" />
-                        <span className="sr-only">Close</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {nodes.length > 0 && (
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className="shrink-0 gap-2 bg-indigo-600 hover:bg-indigo-700 text-white border-transparent"
+                                onClick={handleSaveWorkspace}
+                                disabled={saving}
+                            >
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                Save to Workspace
+                            </Button>
+                        )}
+                        <button
+                            onClick={() => onOpenChange(false)}
+                            className="rounded-full p-2 hover:bg-muted/50 transition-colors"
+                        >
+                            <ExternalLink className="h-4 w-4 rotate-45" />
+                            <span className="sr-only">Close</span>
+                        </button>
+                    </div>
                 </DialogHeader>
 
                 <div className="flex-1 relative w-full h-full min-h-0 overflow-hidden bg-muted/5">

@@ -26,6 +26,7 @@ type NavKey =
   | "clusters"
   | "notifications"
   | "saved"
+  | "workspaces"
   | "activity"
   | "settings"
   | "faq"
@@ -163,6 +164,13 @@ export function SidebarPublicNav({
       title: "Notifications",
       href: "/notifications",
       icon: IconBell,
+      requiresAuth: true,
+    },
+    {
+      key: "workspaces",
+      title: "Workspaces",
+      href: "/workspaces",
+      icon: IconBookmark,
       requiresAuth: true,
     },
     {

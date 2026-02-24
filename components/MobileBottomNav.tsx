@@ -14,7 +14,18 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react"
 
-type NavKey = "home" | "public" | "mybugs" | "tags" | "clusters" | "notifications" | "saved" | "activity" | "settings" | "faq"
+type NavKey =
+  | "home"
+  | "public"
+  | "mybugs"
+  | "tags"
+  | "clusters"
+  | "notifications"
+  | "saved"
+  | "workspaces"
+  | "activity"
+  | "settings"
+  | "faq"
 
 type NavItem = {
   key: NavKey
@@ -86,6 +97,13 @@ export function MobileBottomNav({
       requiresAuth: true,
     },
     {
+      key: "workspaces",
+      title: "Workspaces",
+      href: "/workspaces",
+      icon: IconBookmark,
+      requiresAuth: true,
+    },
+    {
       key: "activity",
       title: "Activity",
       href: "/activity",
@@ -125,6 +143,7 @@ export function MobileBottomNav({
           (item.key === "clusters" && pathname.startsWith("/clusters")) ||
           (item.key === "notifications" && pathname.startsWith("/notifications")) ||
           (item.key === "saved" && pathname.startsWith("/saved")) ||
+          (item.key === "workspaces" && pathname.startsWith("/workspaces")) ||
           (item.key === "activity" && pathname.startsWith("/activity")) ||
           (item.key === "settings" && pathname.startsWith("/settings"))
 

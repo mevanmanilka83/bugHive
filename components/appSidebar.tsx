@@ -9,7 +9,7 @@ import {
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react"
-import { GalleryVerticalEnd, Share2 } from "lucide-react"
+import { GalleryVerticalEnd, Share2, GitBranch } from "lucide-react"
 
 import { GlobalGraphDialog } from "@/components/graph/GlobalGraphDialog"
 import { NavMain } from "@/components/NavMain"
@@ -96,6 +96,11 @@ export function AppSidebar({
       title: "Team Clusters",
       url: "/dashboard/clusters",
       icon: IconUsers,
+    },
+    {
+      title: "Saved Graphs",
+      url: "/workspaces",
+      icon: GitBranch,
     },
   ]
 
