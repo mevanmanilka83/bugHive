@@ -95,3 +95,52 @@ export async function POST(
     return NextResponse.json({ error: e.message || "Failed to add idea" }, { status: 500 })
   }
 }
+
+/**
+ * DELETE /api/workspaces/[id]/ideas
+ * Delete an idea/solution/fix from a saved graph (owner only).
+ * Expects JSON body: { id: string }
+ */
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const userId = await getAuthenticatedUserId()
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const { id } = await context.params
+    const body = await request.json().catch(() => null)
+    const ideaId = body?.id as string | undefined
+
+    if (!ideaId) {
+      return NextResponse.json({ error: "Idea id is required" }, { status: 400 })
+    }
+
+    const supabase = await getSupabaseAdmin()
+
+    // Ensure the current user owns the graph
+    const { data: graph, error: fetchErr } = await (supabase as any)
+      .from("saved_graphs")
+      .select("id, user_id")
+      .eq("id", id)
+      .single()
+
+    if (fetchErr || !graph || graph.user_id !== userId) {
+      return NextResponse.json({ error: "Graph not found or you are not the owner" }, { status: 403 })
+    }
+
+    const { error: deleteErr } = await (supabase as any)
+      .from("graph_ideas")
+      .delete()
+      .eq("id", ideaId)
+      .eq("saved_graph_id", id)
+
+    if (deleteErr) throw deleteErr
+
+    return NextResponse.json({ success: true })
+  } catch (e: any) {
+    console.error("Delete idea error:", e)
+    return NextResponse.json({ error: e.message || "Failed to delete idea" }, { status: 500 })
+  }
+}
