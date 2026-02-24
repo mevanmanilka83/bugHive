@@ -409,6 +409,10 @@ export async function findRelatedItems(bug: any) {
 
     return {
         internal: internalBugs,
-        external: [...githubIssues, ...stackQuestions, ...bugzillaResults].slice(0, 15)
+        external: [
+            ...githubIssues.slice(0, 5),
+            ...stackQuestions.slice(0, 5),
+            ...bugzillaResults.slice(0, 5)
+        ]
     }
 }

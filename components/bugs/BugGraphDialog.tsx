@@ -247,6 +247,7 @@ const nodeTypes: NodeTypes = {
   github_issue: CustomNode,
   stack_overflow: CustomNode,
   cluster: CustomNode,
+  bugzilla: CustomNode,
 }
 
 function CustomBadgeEdge({

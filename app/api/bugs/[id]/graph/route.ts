@@ -162,9 +162,10 @@ Return JSON with this structure:
   }
 }
 
-Use these node types: bug, cause, solution, evidence, github_issue, stack_overflow, cluster.
+Use these node types: bug, cause, solution, evidence, github_issue, stack_overflow, cluster, bugzilla.
 Use these edge types: cause_of, solution_for, verified_by, similar_to, support, condractary, complement, condractary-dispute, conflict, complementary -support, relate, belongs_to.
-Ensure the Main Bug (${bug.id}) is the central node.`
+Ensure the Main Bug (${bug.id}) is the central node.
+Note: Nodes from Stack Overflow must use type "stack_overflow", and Bugzilla must use type "bugzilla".`
 
   try {
     const response = await fetch(

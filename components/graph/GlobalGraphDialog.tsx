@@ -54,6 +54,7 @@ const nodeTypeColors: Record<string, string> = {
     cause: "bg-orange-500/10 border-orange-500/50 text-orange-500",
     evidence: "bg-cyan-500/10 border-cyan-500/50 text-cyan-500",
     solution: "bg-emerald-500/10 border-emerald-500/50 text-emerald-500",
+    bugzilla: "bg-red-500/10 border-red-500/50 text-red-500",
 }
 
 const nodeTypeIcons: Record<string, React.ReactNode> = {
@@ -67,6 +68,7 @@ const nodeTypeIcons: Record<string, React.ReactNode> = {
     cause: <AlertTriangle className="h-4 w-4" />,
     evidence: <FileText className="h-4 w-4" />,
     solution: <CheckCircle className="h-4 w-4" />,
+    bugzilla: <Bug className="h-4 w-4" />,
 }
 
 // Responsive node sizing
@@ -202,6 +204,7 @@ const nodeTypes: NodeTypes = {
     cause: CustomNode,
     evidence: CustomNode,
     solution: CustomNode,
+    bugzilla: CustomNode,
     default: CustomNode,
 }
 
