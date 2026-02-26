@@ -96,7 +96,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
 
       await markNotificationRead(notification.id)
       toast.success(result.message || "Invitation accepted! You are now a member of the cluster.")
-      
+
       // Refresh after a short delay to show the cluster
       setTimeout(() => {
         window.location.href = '/dashboard/clusters'
@@ -191,7 +191,7 @@ export function NotificationsList({ userId }: NotificationsListProps) {
         return 'bg-red-500'
       case 'bug_assigned':
       case 'bug_updated':
-        return 'bg-orange-500'
+        return 'bg-primary'
       case 'solution_created':
         return 'bg-purple-500'
       default:
@@ -404,6 +404,6 @@ function getTimeAgo(date: Date): string {
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
-  
+
   return date.toLocaleDateString()
 }

@@ -104,12 +104,19 @@ export function RelatedBugsPanel({
   const bughiveItems = React.useMemo(() => items.filter(isBugHive), [items])
 
   const linkBaseClass = cn(
-    "block w-full min-w-0 rounded-md px-3 py-2 text-left text-sm leading-normal",
+    "flex items-start w-full min-w-0 rounded-md px-2 py-2 text-left text-sm leading-normal",
     "transition-colors duration-150",
-    "hover:bg-muted/60 hover:text-primary",
+    "text-blue-600 dark:text-blue-400 hover:bg-blue-50/80 dark:hover:bg-blue-950/30 hover:underline",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "break-words whitespace-normal"
   )
+
+  const decodeHtml = (text: string) => {
+    if (typeof document === 'undefined') return text.trim()
+    const txt = document.createElement("textarea")
+    txt.innerHTML = text
+    return txt.value.trim()
+  }
 
   return (
     <div className={cn("flex flex-col min-h-0", className)}>
@@ -140,7 +147,7 @@ export function RelatedBugsPanel({
 
         {/* Scrollable content with restrained max height */}
         <div
-          className="flex-1 min-h-0 overflow-y-scroll overscroll-contain px-5 pt-4 pb-6 scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-1 pb-6 scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent"
           style={{ scrollbarGutter: "stable" }}
         >
           {loading ? (
@@ -158,14 +165,14 @@ export function RelatedBugsPanel({
               <p className="text-xs text-muted-foreground mt-1.5">We couldn&apos;t find similar issues in your linked sources.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-5 items-start">
               {/* GitHub issues */}
               {githubItems.length > 0 && (
-                <section aria-label="GitHub issues">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-2 mb-2 border-b border-border/40 flex items-center gap-2">
+                <section aria-label="GitHub issues" className="w-full">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
                     GitHub issues
                   </h4>
-                  <ul className="space-y-2" role="list">
+                  <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
                     {githubItems.map((item) => (
                       <li key={`gh-${item.id}`}>
                         <a
@@ -173,9 +180,10 @@ export function RelatedBugsPanel({
                           target="_blank"
                           rel="noreferrer noopener"
                           className={linkBaseClass}
-                          title={item.title}
+                          title={decodeHtml(item.title)}
                         >
-                          {item.title}
+                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
+                          <span className="flex-1">{decodeHtml(item.title)}</span>
                         </a>
                       </li>
                     ))}
@@ -185,11 +193,11 @@ export function RelatedBugsPanel({
 
               {/* Stack Overflow questions */}
               {stackItems.length > 0 && (
-                <section aria-label="Stack Overflow questions">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-2 mb-2 border-b border-border/40 flex items-center gap-2">
+                <section aria-label="Stack Overflow questions" className="w-full">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
                     Stack Overflow questions
                   </h4>
-                  <ul className="space-y-2" role="list">
+                  <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
                     {stackItems.map((item) => (
                       <li key={`so-${item.id}`}>
                         <a
@@ -197,10 +205,10 @@ export function RelatedBugsPanel({
                           target="_blank"
                           rel="noreferrer noopener"
                           className={linkBaseClass}
-                          title={item.title}
+                          title={decodeHtml(item.title)}
                         >
-                          <span className="mr-1.5 inline-block size-1.5 rounded-full bg-orange-400/80 align-middle mb-0.5 shrink-0" aria-hidden="true" />
-                          {item.title}
+                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
+                          <span className="flex-1">{decodeHtml(item.title)}</span>
                         </a>
                       </li>
                     ))}
@@ -210,11 +218,11 @@ export function RelatedBugsPanel({
 
               {/* Bugzilla bugs */}
               {bugzillaItems.length > 0 && (
-                <section aria-label="Bugzilla bugs">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-2 mb-2 border-b border-border/40 flex items-center gap-2">
+                <section aria-label="Bugzilla bugs" className="w-full">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
                     Bugzilla bugs
                   </h4>
-                  <ul className="space-y-2" role="list">
+                  <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
                     {bugzillaItems.map((item) => (
                       <li key={`bz-${item.id}`}>
                         <a
@@ -222,9 +230,10 @@ export function RelatedBugsPanel({
                           target="_blank"
                           rel="noreferrer noopener"
                           className={linkBaseClass}
-                          title={item.title}
+                          title={decodeHtml(item.title)}
                         >
-                          {item.title}
+                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
+                          <span className="flex-1">{decodeHtml(item.title)}</span>
                         </a>
                       </li>
                     ))}
@@ -234,20 +243,21 @@ export function RelatedBugsPanel({
 
               {/* BugHive bugs */}
               {bughiveItems.length > 0 && (
-                <section aria-label="BugHive bugs">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-2 mb-2 border-b border-border/40 flex items-center gap-2">
+                <section aria-label="BugHive bugs" className="w-full">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
                     BugHive bugs
                   </h4>
-                  <ul className="space-y-2" role="list">
+                  <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
                     {bughiveItems.map((item) => (
                       <li key={`bh-${item.id}`}>
                         <Link
                           href={`/bugs/${item.id}`}
                           className={linkBaseClass}
-                          title={item.title}
+                          title={decodeHtml(item.title)}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {item.title}
+                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
+                          <span className="flex-1">{decodeHtml(item.title)}</span>
                         </Link>
                       </li>
                     ))}

@@ -462,7 +462,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                                   href={String(link)}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-xs text-primary hover:underline break-all"
+                                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline break-all"
                                 >
                                   {String(link)}
                                 </a>

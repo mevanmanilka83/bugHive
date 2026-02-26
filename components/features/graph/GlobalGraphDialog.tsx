@@ -46,11 +46,11 @@ const nodeTypeColors: Record<string, string> = {
     bug: "bg-blue-500/10 border-blue-500/50 text-blue-500",
     cluster: "bg-purple-500/10 border-purple-500/50 text-purple-500",
     tag: "bg-green-500/10 border-green-500/50 text-green-500",
-    environment: "bg-orange-500/10 border-orange-500/50 text-orange-500",
+    environment: "bg-slate-500/10 border-slate-500/50 text-slate-500",
     component: "bg-pink-500/10 border-pink-500/50 text-pink-500",
     github_issue: "bg-zinc-700/10 border-zinc-500/50 text-zinc-500",
-    stack_overflow: "bg-orange-600/10 border-orange-600/50 text-orange-600",
-    cause: "bg-orange-500/10 border-orange-500/50 text-orange-500",
+    stack_overflow: "bg-slate-600/10 border-slate-600/50 text-slate-600",
+    cause: "bg-slate-500/10 border-slate-500/50 text-slate-500",
     evidence: "bg-cyan-500/10 border-cyan-500/50 text-cyan-500",
     solution: "bg-emerald-500/10 border-emerald-500/50 text-emerald-500",
     bugzilla: "bg-red-500/10 border-red-500/50 text-red-500",
@@ -288,10 +288,10 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                 let stroke = "hsl(var(--muted-foreground))" // default gray
                 const type = edge.type || ""
                 if (type === "solution_for" || type === "verified_by") stroke = "#10b981" // green
-                else if (type === "cause_of") stroke = "#f97316" // orange
+                else if (type === "cause_of") stroke = "hsl(var(--muted-foreground))"
                 else if (type === "contradicts" || type === "disputes" || type === "conflicts" || type === "condractary" || type === "condractary-dispute" || type === "conflict") stroke = "#ef4444" // red
                 else if (type === "similar_to" || type === "duplicate_of") stroke = "#3b82f6" // blue
-                else if (type === "occurs_on") stroke = "#f97316" // orange/environment
+                else if (type === "occurs_on") stroke = "hsl(var(--muted-foreground))"
                 else if (type === "supports" || type === "complements" || type === "support" || type === "complement" || type === "complementary -support") stroke = "#8b5cf6" // violet
                 else if (type === "belongs_to") stroke = "#a855f7" // purple
 
@@ -437,7 +437,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                             <div className="w-2 h-2 rounded-full bg-primary" /> Cluster
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-full bg-red-500" /> Cause
+                                            <div className="w-2 h-2 rounded-full bg-slate-500" /> Cause
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                             <div className="w-2 h-2 rounded-full bg-cyan-500" /> Evidence
@@ -510,7 +510,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                                                             (otherNode?.type === 'cause') ? "bg-red-500" :
                                                                                 (otherNode?.type === 'evidence') ? "bg-cyan-500" :
                                                                                     (otherNode?.type === 'solution') ? "bg-emerald-500" :
-                                                                                        (otherNode?.type === 'stack_overflow' || e.type === 'CONTRADICTS') ? "bg-amber-500" :
+                                                                                        (otherNode?.type === 'stack_overflow' || e.type === 'CONTRADICTS') ? "bg-slate-500" :
                                                                                             "bg-primary"
                                                                         )} />
                                                                         <span className="font-semibold text-foreground/90 truncate max-w-[120px]">
@@ -537,7 +537,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                                                         </div>
                                                                     )}
                                                                     {edgeData.contradictionScore && (
-                                                                        <div className="flex items-center gap-1 col-span-2 text-amber-600 dark:text-amber-400">
+                                                                        <div className="flex items-center gap-1 col-span-2 text-slate-600 dark:text-slate-400">
                                                                             <span className="font-medium">Contradiction:</span>
                                                                             <span className="font-mono">{(edgeData.contradictionScore * 100).toFixed(0)}%</span>
                                                                         </div>
@@ -545,7 +545,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                                                 </div>
 
                                                                 {edgeData.reasoning && (
-                                                                    <p className="text-[10px] text-muted-foreground italic pl-4 border-l-2 border-amber-500/30">
+                                                                    <p className="text-[10px] text-muted-foreground italic pl-4 border-l-2 border-slate-500/30">
                                                                         "{edgeData.reasoning}"
                                                                     </p>
                                                                 )}

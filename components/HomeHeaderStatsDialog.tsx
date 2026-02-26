@@ -20,7 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react"
 import type { OverviewResponse } from "@/app/api/overview/route"
-import { HomeHeaderStatsDialogSkeleton } from "@/components/skeletons/HomeHeaderStatsDialogSkeleton"
+import { HomeHeaderStatsDialogSkeleton } from "@/components/features/skeletons/HomeHeaderStatsDialogSkeleton"
 
 export function HomeHeaderStatsDialog() {
   const [data, setData] = React.useState<OverviewResponse | null>(null)
@@ -42,7 +42,7 @@ export function HomeHeaderStatsDialog() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="rounded-full border-2 border-orange-500 p-1.5 text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
+          className="rounded-full border-2 border-primary p-1.5 text-primary hover:bg-primary/10 hover:text-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
           aria-label="Community stats and quick links"
         >
           <Flame className="size-4" />
@@ -167,7 +167,7 @@ export function HomeHeaderStatsDialog() {
                 {/* Popular Unanswered Section */}
                 <section>
                   <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
-                    <div className="size-1 rounded-full bg-orange-500" />
+                    <div className="size-1 rounded-full bg-primary" />
                     Popular unanswered
                   </h2>
                   {data.unansweredBugs.length === 0 ? (
@@ -182,10 +182,10 @@ export function HomeHeaderStatsDialog() {
                             onClick={() => setOpen(false)}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="size-1.5 rounded-full bg-orange-400/80 shrink-0" />
+                              <div className="size-1.5 rounded-full bg-foreground/20 shrink-0" />
                               <span className="truncate text-sm text-foreground/90 group-hover:text-primary transition-colors">{b.title}</span>
                             </div>
-                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-orange-500/50 transition-colors" />
+                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
                           </Link>
                         </li>
                       ))}

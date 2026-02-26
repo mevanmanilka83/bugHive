@@ -67,9 +67,29 @@ export function BugHiveChatBox() {
         body: JSON.stringify({ messages: messagesToSend }),
       })
 
+      const contentType = res.headers.get("content-type") || ""
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err?.error || res.statusText)
+        if (contentType.includes("application/json")) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err?.error || res.statusText)
+        }
+
+        const text = await res.text().catch(() => "")
+        const hint =
+          text.includes("<!DOCTYPE html>") || contentType.includes("text/html")
+            ? "The server returned an HTML error page. Check server logs (and auth middleware redirects)."
+            : "The server returned a non-JSON error response."
+        throw new Error(`${res.statusText}. ${hint}`)
+      }
+
+      if (!contentType.includes("application/json")) {
+        const text = await res.text().catch(() => "")
+        const hint =
+          text.includes("<!DOCTYPE html>") || contentType.includes("text/html")
+            ? "The server returned HTML instead of JSON. This can happen if middleware redirects."
+            : "The server returned a non-JSON success response."
+        throw new Error(hint)
       }
 
       const data = await res.json()
@@ -177,16 +197,16 @@ export function BugHiveChatBox() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] bg-black text-white border border-black/70 hover:bg-black/90 hover:text-white [&_svg]:text-white",
+          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] bg-primary text-primary-foreground border border-primary/70 hover:bg-primary/90 hover:text-primary-foreground [&_svg]:text-primary-foreground",
           isOpen && "scale-95"
         )}
         size="icon"
         aria-label={isOpen ? "Close chat" : "Open chat"}
-        >
+      >
         {isOpen ? (
           <X className="h-6 w-6" stroke="currentColor" />
         ) : (
-          <Bug className="h-6 w-6 text-white" aria-hidden />
+          <Bug className="h-6 w-6 text-primary-foreground" aria-hidden />
         )}
       </Button>
 
@@ -274,10 +294,10 @@ export function BugHiveChatBox() {
                       <Button
                         key={index}
                         type="button"
-                        variant="secondary"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="text-xs px-3 py-1.5 h-auto rounded-full"
+                        className="text-xs px-3 py-1.5 h-auto rounded-full text-foreground hover:bg-muted"
                       >
                         {suggestion}
                       </Button>

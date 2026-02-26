@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import OpenAI from "openai"
 
+export const runtime = "nodejs"
+
 export async function POST(req: NextRequest) {
   let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = []
 

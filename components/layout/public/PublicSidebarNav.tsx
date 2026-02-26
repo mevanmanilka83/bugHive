@@ -112,7 +112,7 @@ export function PublicSidebarNav({
             data?.notifications?.filter((n: any) => !n.read).length || 0
           setNotificationCount(unreadCount)
         })
-        .catch(() => {})
+        .catch(() => { })
     }
 
     window.addEventListener("notification:updated", onNotificationUpdate as EventListener)
@@ -208,7 +208,7 @@ export function PublicSidebarNav({
           const isActive = item.key === active
           return (
             <Link key={item.key} href={href} className={navLinkClass(isActive)}>
-              <item.icon className={`size-4 ${isActive ? "text-orange-500" : ""}`} />
+              <item.icon className={`size-4 ${isActive ? "text-icon-orange" : ""}`} />
               <span>{item.title}</span>
             </Link>
           )
@@ -236,7 +236,7 @@ export function PublicSidebarNav({
                 href={href}
                 className={navLinkClass(isActive)}
               >
-                <item.icon className={`size-4 ${isActive ? "text-orange-500" : ""}`} />
+                <item.icon className={`size-4 ${isActive ? "text-icon-orange" : ""}`} />
                 <span>{item.title}</span>
                 {item.key === "notifications" && isAuthenticated && (
                   <NotificationBadge count={notificationCount} />

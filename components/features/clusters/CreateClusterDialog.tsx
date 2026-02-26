@@ -32,7 +32,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full max-w-full rounded-full px-5 sm:w-auto"
+      className="w-full max-w-full rounded-full px-5 sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90"
     >
       {pending ? "Creating..." : "Create Cluster"}
     </Button>

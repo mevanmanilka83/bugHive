@@ -7,7 +7,7 @@ const ROUTE_PATTERNS = {
   AUTH_PAGES: ['/auth/signin', '/auth/signup'],
   API_AUTH_ROUTES: ['/api/auth/'],
   // Routes that anyone can access without authentication
-  PUBLIC_ROUTES: ['/', '/api/health'],
+  PUBLIC_ROUTES: ['/', '/api/health', '/api/chat'],
 } as const
 
 // Route checking utilities

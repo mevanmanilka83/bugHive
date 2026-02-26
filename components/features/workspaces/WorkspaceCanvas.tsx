@@ -48,14 +48,14 @@ type GraphIdea = { id: string; kind: string; title: string; content: string | nu
 const nodeTypeColors: Record<string, string> = {
     bug: "bg-rose-500/10 border-rose-500/50 text-rose-600",          // issue/bug = red
     cluster: "bg-purple-500/10 border-purple-500/50 text-purple-500",
-    cause: "bg-orange-500/10 border-orange-500/50 text-orange-500",
+    cause: "bg-slate-500/10 border-slate-500/50 text-slate-500",
     solution: "bg-emerald-500/10 border-emerald-500/50 text-emerald-600",
-    idea: "bg-yellow-500/10 border-yellow-500/50 text-yellow-600",
+    idea: "bg-indigo-500/10 border-indigo-500/50 text-indigo-600",
 }
 
 const ideaKindStyles: Record<string, { header: string; label: string }> = {
     idea: {
-        header: "bg-yellow-500/10 border-yellow-500/50 text-yellow-700",
+        header: "bg-indigo-500/10 border-indigo-500/50 text-indigo-700",
         label: "Idea / Note",
     },
     solution: {
@@ -70,8 +70,8 @@ const ideaKindStyles: Record<string, { header: string; label: string }> = {
 
 const ideaKindCardStyles: Record<string, { container: string; badge: string }> = {
     idea: {
-        container: "bg-amber-50 border-amber-200",
-        badge: "bg-amber-100 text-amber-800",
+        container: "bg-indigo-50/50 border-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-900",
+        badge: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
     },
     solution: {
         container: "bg-emerald-50 border-emerald-200",
@@ -95,7 +95,7 @@ function IdeaNode({ id, data, selected }: { id: string; data: any; selected: boo
     return (
         <div className={cn(
             "w-[200px] rounded-xl border backdrop-blur-md shadow-lg transition-all duration-300 relative",
-            selected ? "ring-2 ring-yellow-400 border-yellow-400 scale-105" : "hover:border-yellow-400/50",
+            selected ? "ring-2 ring-primary border-primary scale-105" : "hover:border-primary/50",
             "bg-card/90"
         )}>
             {/* Edit & delete icons for this idea node */}

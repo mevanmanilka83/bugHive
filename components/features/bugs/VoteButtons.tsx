@@ -99,7 +99,7 @@ export function VoteButtons({
           size="sm"
           className={cn(
             "h-6 w-6 p-0",
-            userVote === "upvote" && "text-orange-500 hover:text-orange-600"
+            userVote === "upvote" && "text-primary hover:text-primary/80"
           )}
           onClick={() => handleVote("upvote")}
           disabled={isVoting || !userId}
@@ -133,8 +133,8 @@ export function VoteButtons({
         variant="ghost"
         size="sm"
         className={cn(
-          "h-8 w-8 p-0 hover:bg-orange-50 dark:hover:bg-orange-950",
-          userVote === "upvote" && "text-orange-500 bg-orange-50 dark:bg-orange-950"
+          "h-8 w-8 p-0 hover:bg-muted dark:hover:bg-muted/50",
+          userVote === "upvote" && "text-primary bg-muted dark:bg-muted/50"
         )}
         onClick={() => handleVote("upvote")}
         disabled={isVoting || !userId}
@@ -145,7 +145,7 @@ export function VoteButtons({
       <span
         className={cn(
           "text-sm font-semibold min-w-[3ch] text-center",
-          score > 0 && "text-orange-500",
+          score > 0 && "text-primary",
           score < 0 && "text-blue-500"
         )}
       >

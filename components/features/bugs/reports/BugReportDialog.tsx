@@ -5,8 +5,8 @@ import { IconReport } from "@tabler/icons-react"
 import { Check } from "lucide-react"
 import { toast } from "sonner"
 import { z } from "zod"
-import { getBugReportSchema } from "@/lib"
-import { type BugPayload, type BugDialogErrors, type BugFormData } from "@/lib"
+import { getBugReportSchema } from "@/lib/schemas/zod"
+import { type BugPayload, type BugDialogErrors } from "@/lib/schemas/types"
 import { createBugReport } from "@/app/actions/bug/BugReport"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -105,20 +105,20 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   }
 
   // Step field definitions for validation
-    const stepFields: Record<number, (keyof BugPayload)[]> = {
-      1: ['title', 'description'], // Required fields
-      2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
-      3: ['expected_behavior', 'actual_behavior'], // Behavior step: require both
-      4: ['steps_to_reproduce'], // Details step: require steps to reproduce
-      5: [] // Review step
-    }
+  const stepFields: Record<number, (keyof BugPayload)[]> = {
+    1: ['title', 'description'], // Required fields
+    2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
+    3: ['expected_behavior', 'actual_behavior'], // Behavior step: require both
+    4: ['steps_to_reproduce'], // Details step: require steps to reproduce
+    5: [] // Review step
+  }
 
   function validateStep(stepNumber: number): boolean {
     const payload = getPayload()
     const fieldsToValidate = stepFields[stepNumber] || []
-    
+
     if (fieldsToValidate.length === 0) return true
-    
+
     try {
       const stepPayload = Object.fromEntries(
         fieldsToValidate.map(field => [field, payload[field]])
@@ -136,9 +136,9 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   function validateStepWithErrors(stepNumber: number): boolean {
     const payload = getPayload()
     const fieldsToValidate = stepFields[stepNumber] || []
-    
+
     if (fieldsToValidate.length === 0) return true
-    
+
     try {
       const stepPayload = Object.fromEntries(
         fieldsToValidate.map(field => [field, payload[field]])
@@ -147,7 +147,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         Object.fromEntries(fieldsToValidate.map(field => [field, true])) as any
       )
       partialSchema.parse(stepPayload)
-      
+
       // Clear errors for validated fields
       setErrors(prev => {
         const newErrors = { ...prev }
@@ -174,7 +174,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
   function validateAll(): boolean {
     const payload = getPayload()
-    
+
     try {
       bugReportSchema.parse(payload)
       setErrors({})
@@ -197,7 +197,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   function validateAttachments(files: File[]): { valid: File[]; errors: string[] } {
     const validFiles: File[] = []
     const errors: string[] = []
-    
+
     files.forEach((file) => {
       // Create a test payload with this file to validate against schema
       const testPayload = {
@@ -207,7 +207,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         visibility: "public" as const,
         attachments: [...attachments.map(att => att.file), file]
       }
-      
+
       try {
         bugReportSchema.parse(testPayload)
         validFiles.push(file)
@@ -216,7 +216,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
           const attachmentErrors = error.issues
             .filter(issue => issue.path.includes('attachments'))
             .map(issue => issue.message)
-          
+
           if (attachmentErrors.length > 0) {
             errors.push(...attachmentErrors)
           } else {
@@ -226,7 +226,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         }
       }
     })
-    
+
     return { valid: validFiles, errors }
   }
 
@@ -236,10 +236,10 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
     const fileArray = Array.from(files)
     const { valid, errors } = validateAttachments(fileArray)
-    
+
     // Show errors if any
     errors.forEach(error => toast.error(error))
-    
+
     if (valid.length === 0) return
 
     const newAttachments: AttachmentFile[] = valid.map((file) => {
@@ -296,7 +296,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
     try {
       setIsSubmitting(true)
-      
+
       // Create FormData for file uploads
       const formData = new FormData()
       formData.append('title', payload.title)
@@ -310,7 +310,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       if (payload.expected_behavior) formData.append('expected_behavior', payload.expected_behavior)
       if (payload.actual_behavior) formData.append('actual_behavior', payload.actual_behavior)
       if (payload.cluster_id) formData.append('cluster_id', payload.cluster_id)
-      
+
       // Add attachments
       payload.attachments?.forEach((file, index) => {
         formData.append(`attachment_${index}`, file)
@@ -455,105 +455,105 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
 
         {step === 1 && (
           <div key="step-1" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
-          <BugReportStep1Basic
-            title={title}
-            description={description}
-            errors={errors}
-            onChangeTitle={(v) => { setTitle(v); if (errors.title) setErrors(prev => ({ ...prev, title: '' })) }}
-            onChangeDescription={(v) => { setDescription(v); if (errors.description) setErrors(prev => ({ ...prev, description: '' })) }}
-            canNext={canNextFromStep1}
-            onNext={() => { if (validateStepWithErrors(1)) setStep(2) }}
-            onCancel={() => setOpen(false)}
-          />
+            <BugReportStep1Basic
+              title={title}
+              description={description}
+              errors={errors}
+              onChangeTitle={(v) => { setTitle(v); if (errors.title) setErrors(prev => ({ ...prev, title: '' })) }}
+              onChangeDescription={(v) => { setDescription(v); if (errors.description) setErrors(prev => ({ ...prev, description: '' })) }}
+              canNext={canNextFromStep1}
+              onNext={() => { if (validateStepWithErrors(1)) setStep(2) }}
+              onCancel={() => setOpen(false)}
+            />
           </div>
         )}
 
         {step === 2 && (
           <div key="step-2" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
-          <BugReportStep2Priority
-            priority={priority}
-            visibility={visibility}
-            errors={errors}
-            onChangePriority={(v) => { setPriority(v); if (errors.priority) setErrors(prev => ({ ...prev, priority: '' })) }}
-            onChangeVisibility={(v) => { setVisibility(v); if (errors.visibility) setErrors(prev => ({ ...prev, visibility: '' })) }}
-            canNext={canNextFromStep2}
-            onNext={() => { if (validateStepWithErrors(2)) setStep(3) }}
-            onBack={() => setStep(1)}
-            onCancel={() => setOpen(false)}
-            hideVisibility={!!clusterId}
-          />
+            <BugReportStep2Priority
+              priority={priority}
+              visibility={visibility}
+              errors={errors}
+              onChangePriority={(v) => { setPriority(v); if (errors.priority) setErrors(prev => ({ ...prev, priority: '' })) }}
+              onChangeVisibility={(v) => { setVisibility(v); if (errors.visibility) setErrors(prev => ({ ...prev, visibility: '' })) }}
+              canNext={canNextFromStep2}
+              onNext={() => { if (validateStepWithErrors(2)) setStep(3) }}
+              onBack={() => setStep(1)}
+              onCancel={() => setOpen(false)}
+              hideVisibility={!!clusterId}
+            />
           </div>
         )}
 
         {step === 3 && (
           <div key="step-3" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
-          <BugReportStep3Behavior
-            expectedBehavior={expectedBehavior}
-            actualBehavior={actualBehavior}
-            errors={errors}
-            canNext={canNextFromStep3}
-            onChangeExpected={(v) => { setExpectedBehavior(v); if (errors.expected_behavior) setErrors(prev => ({ ...prev, expected_behavior: '' })) }}
-            onChangeActual={(v) => { setActualBehavior(v); if (errors.actual_behavior) setErrors(prev => ({ ...prev, actual_behavior: '' })) }}
-            onNext={() => { if (validateStepWithErrors(3)) setStep(4) }}
-            onBack={() => setStep(2)}
-            onCancel={() => setOpen(false)}
-          />
+            <BugReportStep3Behavior
+              expectedBehavior={expectedBehavior}
+              actualBehavior={actualBehavior}
+              errors={errors}
+              canNext={canNextFromStep3}
+              onChangeExpected={(v) => { setExpectedBehavior(v); if (errors.expected_behavior) setErrors(prev => ({ ...prev, expected_behavior: '' })) }}
+              onChangeActual={(v) => { setActualBehavior(v); if (errors.actual_behavior) setErrors(prev => ({ ...prev, actual_behavior: '' })) }}
+              onNext={() => { if (validateStepWithErrors(3)) setStep(4) }}
+              onBack={() => setStep(2)}
+              onCancel={() => setOpen(false)}
+            />
           </div>
         )}
 
         {step === 4 && (
           <div key="step-4" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
-          <BugReportStep4Details
-            stepsToReproduce={stepsToReproduce}
-            tagsInput={tagsInput}
-            sourcesInput={sourcesInput}
-            attachments={attachments}
-            environmentBrowser={environmentBrowser}
-            environmentOs={environmentOs}
-            environmentDevice={environmentDevice}
-            environmentVersion={environmentVersion}
-            errors={errors}
-            onChangeSteps={(v) => { setStepsToReproduce(v); if (errors.steps_to_reproduce) setErrors(prev => ({ ...prev, steps_to_reproduce: '' })) }}
-            onChangeTags={(v) => setTagsInput(v)}
-            onChangeSources={(v) => setSourcesInput(v)}
-            onChangeEnvironmentBrowser={(v) => setEnvironmentBrowser(v)}
-            onChangeEnvironmentOs={(v) => setEnvironmentOs(v)}
-            onChangeEnvironmentDevice={(v) => setEnvironmentDevice(v)}
-            onChangeEnvironmentVersion={(v) => setEnvironmentVersion(v)}
-            onUpload={handleFileUpload}
-            onRemove={(id) => removeAttachment(id)}
-            formatFileSize={formatFileSize}
-            canNext={canNextFromStep4}
-            onReview={() => { if (validateStepWithErrors(4)) setStep(5) }}
-            onBack={() => setStep(3)}
-            onCancel={() => setOpen(false)}
-          />
+            <BugReportStep4Details
+              stepsToReproduce={stepsToReproduce}
+              tagsInput={tagsInput}
+              sourcesInput={sourcesInput}
+              attachments={attachments}
+              environmentBrowser={environmentBrowser}
+              environmentOs={environmentOs}
+              environmentDevice={environmentDevice}
+              environmentVersion={environmentVersion}
+              errors={errors}
+              onChangeSteps={(v) => { setStepsToReproduce(v); if (errors.steps_to_reproduce) setErrors(prev => ({ ...prev, steps_to_reproduce: '' })) }}
+              onChangeTags={(v) => setTagsInput(v)}
+              onChangeSources={(v) => setSourcesInput(v)}
+              onChangeEnvironmentBrowser={(v) => setEnvironmentBrowser(v)}
+              onChangeEnvironmentOs={(v) => setEnvironmentOs(v)}
+              onChangeEnvironmentDevice={(v) => setEnvironmentDevice(v)}
+              onChangeEnvironmentVersion={(v) => setEnvironmentVersion(v)}
+              onUpload={handleFileUpload}
+              onRemove={(id) => removeAttachment(id)}
+              formatFileSize={formatFileSize}
+              canNext={canNextFromStep4}
+              onReview={() => { if (validateStepWithErrors(4)) setStep(5) }}
+              onBack={() => setStep(3)}
+              onCancel={() => setOpen(false)}
+            />
           </div>
         )}
 
         {step === 5 && (
           <div key="step-5" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
-          <BugReportStep5Review
-            title={title}
-            description={description}
-            priority={priority}
-            visibility={visibility}
-            environmentBrowser={environmentBrowser}
-            environmentOs={environmentOs}
-            environmentDevice={environmentDevice}
-            environmentVersion={environmentVersion}
-            expectedBehavior={expectedBehavior}
-            actualBehavior={actualBehavior}
-            stepsToReproduce={stepsToReproduce}
-            tagsInput={tagsInput}
-            sourcesInput={sourcesInput}
-            attachmentsCount={attachments.length}
-            isSubmitting={isSubmitting}
-            onBack={() => setStep(4)}
-            onCancel={() => setOpen(false)}
-            onSubmit={handleSubmit}
-            hideVisibility={!!clusterId}
-          />
+            <BugReportStep5Review
+              title={title}
+              description={description}
+              priority={priority}
+              visibility={visibility}
+              environmentBrowser={environmentBrowser}
+              environmentOs={environmentOs}
+              environmentDevice={environmentDevice}
+              environmentVersion={environmentVersion}
+              expectedBehavior={expectedBehavior}
+              actualBehavior={actualBehavior}
+              stepsToReproduce={stepsToReproduce}
+              tagsInput={tagsInput}
+              sourcesInput={sourcesInput}
+              attachmentsCount={attachments.length}
+              isSubmitting={isSubmitting}
+              onBack={() => setStep(4)}
+              onCancel={() => setOpen(false)}
+              onSubmit={handleSubmit}
+              hideVisibility={!!clusterId}
+            />
           </div>
         )}
       </DialogContent>

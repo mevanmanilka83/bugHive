@@ -157,7 +157,11 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="rounded-full">
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             {saving ? "Saving..." : "Save & Exit"}
           </Button>
         </DialogFooter>

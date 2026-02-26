@@ -135,12 +135,12 @@ const nodeTypeColors: Record<string, string> = {
   bug: "bg-blue-500 border-blue-600",
   cluster: "bg-purple-500 border-purple-600",
   tag: "bg-green-500 border-green-600",
-  environment: "bg-orange-500 border-orange-600",
+  environment: "bg-slate-400 border-slate-500",
   component: "bg-pink-500 border-pink-600",
   github_issue: "bg-gray-700 border-gray-800",
-  stack_overflow: "bg-orange-600 border-orange-700",
+  stack_overflow: "bg-slate-600 border-slate-700",
   bugzilla: "bg-red-500 border-red-600",
-  cause: "bg-amber-500 border-amber-600",
+  cause: "bg-indigo-500 border-indigo-600",
   solution: "bg-emerald-500 border-emerald-600",
   evidence: "bg-cyan-500 border-cyan-600",
 }
@@ -163,7 +163,7 @@ const edgeTypeStyles: Record<string, { stroke: string; strokeDasharray?: string 
   // Normalized API types (from subgraph builder)
   SIMILAR: { stroke: "#94a3b8", strokeDasharray: "5,5" },
   DUPLICATE: { stroke: "#64748b", strokeDasharray: "5,5" },
-  CAUSE_OF: { stroke: "#f59e0b" },
+  CAUSE_OF: { stroke: "#475569" },
   EVIDENCE_FOR: { stroke: "#0ea5e9" },
   SOLUTION_FOR: { stroke: "#10b981" },
   RELATE: { stroke: "#cbd5e1" },
@@ -172,7 +172,7 @@ const edgeTypeStyles: Record<string, { stroke: string; strokeDasharray?: string 
   duplicate_of: { stroke: "#64748b", strokeDasharray: "5,5" },
   solution_for: { stroke: "#10b981" },
   verified_by: { stroke: "#0ea5e9" },
-  cause_of: { stroke: "#f59e0b" },
+  cause_of: { stroke: "#475569" },
   contradicts: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
   disputes: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
   conflicts: { stroke: "#ef4444", strokeDasharray: "4,2" }, // Red 500
@@ -589,9 +589,9 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                     <Panel position="top-left" className="bg-transparent m-4 max-w-[300px] flex flex-col gap-3">
                       {/* Root Cause Card */}
                       {graphData.insights.rootCausePatterns.length > 0 && (
-                        <Card className="bg-background/90 backdrop-blur-md border-amber-200/50 shadow-sm animate-in fade-in slide-in-from-left-4 duration-500">
+                        <Card className="bg-background/90 backdrop-blur-md border-indigo-200/50 shadow-sm animate-in fade-in slide-in-from-left-4 duration-500">
                           <CardHeader className="p-3 pb-1">
-                            <CardTitle className="text-xs font-bold uppercase tracking-wider text-amber-600 flex items-center gap-2">
+                            <CardTitle className="text-xs font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-2">
                               <Search className="h-3 w-3" />
                               Detected Patterns
                             </CardTitle>
@@ -600,7 +600,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                             <ul className="space-y-1">
                               {graphData.insights.rootCausePatterns.map((pattern, idx) => (
                                 <li key={idx} className="flex items-start gap-2 text-[11px] leading-tight text-foreground/80">
-                                  <span className="text-amber-500 text-[10px]">•</span>
+                                  <span className="text-indigo-500 text-[10px]">•</span>
                                   <span>{pattern}</span>
                                 </li>
                               ))}

@@ -227,13 +227,13 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
             >
               <ToggleGroupItem
                 value="private"
-                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
               >
                 Private
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="public"
-                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
               >
                 Public
               </ToggleGroupItem>
@@ -282,7 +282,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
               }
               setCreateDialogOpen(true)
             }}
-            className="w-full rounded-full px-4 sm:w-auto h-10"
+            className="w-full rounded-full px-4 sm:w-auto h-10 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <IconPlus className="size-4 mr-2" />
             Create Cluster
