@@ -1,6 +1,6 @@
 import { requireAuthForPage } from "@/lib"
-import { MyBugsPageContent } from "@/components/bugs/MyBugsPageContent"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { MyBugsPageContent } from "@/components/features/bugs/MyBugsPageContent"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function MyBugsPage() {
   const session = await requireAuthForPage()

@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ActivitySummary } from "@/components/activity/ActivitySummary"
-import { ActivityPageSkeleton } from "@/components/skeletons/ActivityPageSkeleton"
+import { ActivitySummary } from "@/components/features/activity/ActivitySummary"
+import { ActivityPageSkeleton } from "@/components/features/skeletons/ActivityPageSkeleton"
 import type { ActivitySummaryData } from "@/app/actions/activity"
 
 type ActivityPageClientProps = {

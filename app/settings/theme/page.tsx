@@ -1,5 +1,5 @@
-import { ThemePicker } from "@/components/settings/ThemePicker"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { ThemePicker } from "@/components/features/settings/ThemePicker"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default function SettingsThemePage() {
   return (

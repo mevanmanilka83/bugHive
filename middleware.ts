@@ -1,4 +1,5 @@
-import { auth } from "@/lib"
+import NextAuth from "next-auth"
+import { authConfig } from "@/lib/auth/auth.config"
 import { NextResponse } from "next/server"
 
 // Route patterns
@@ -22,7 +23,7 @@ function isPublicRoute(pathname: string): boolean {
   return ROUTE_PATTERNS.PUBLIC_ROUTES.some(route => pathname.startsWith(route))
 }
 
-export default auth((req) => {
+export default NextAuth(authConfig).auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
   const pathname = nextUrl.pathname

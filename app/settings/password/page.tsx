@@ -1,6 +1,6 @@
 import { requireAuthForPage } from "@/lib"
-import { PasswordForm } from "@/components/settings/PasswordForm"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { PasswordForm } from "@/components/features/settings/PasswordForm"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default async function SettingsPasswordPage() {
   const session = await requireAuthForPage()

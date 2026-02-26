@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { auth, getRecordOrNotFound, ensureValidUUID, supabase } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
-import { BugDetailsView } from "@/components/bugs/BugDetailsView"
-import { RelatedBugsPanel } from "@/components/bugs/RelatedBugsPanel"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { BugDetailsView } from "@/components/features/bugs/BugDetailsView"
+import { RelatedBugsPanel } from "@/components/features/bugs/RelatedBugsPanel"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 import { notFound, redirect } from "next/navigation"
 
 export default async function ClusterBugDetailsPage({

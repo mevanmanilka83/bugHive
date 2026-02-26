@@ -1,7 +1,7 @@
 import { Tag } from "lucide-react"
 import { auth } from "@/lib"
-import { TagsList } from "@/components/tags/TagsList"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { TagsList } from "@/components/features/tags/TagsList"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function TagsPage() {
   const session = await auth()

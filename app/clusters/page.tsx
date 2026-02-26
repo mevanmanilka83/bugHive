@@ -1,6 +1,6 @@
 import { auth } from "@/lib"
-import { ClustersList } from "@/components/clusters/ClustersList"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { ClustersList } from "@/components/features/clusters/ClustersList"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function ClustersPage() {
   const session = await auth()

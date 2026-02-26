@@ -36,67 +36,7 @@ export { env }
 // SUPABASE CONFIGURATION
 // ============================================================================
 
-function getSupabaseUrl(): string {
-  const url = env.supabaseUrl
-  if (!url) {
-    // Return a dummy URL for client-side imports (will fail if actually used)
-    if (typeof window !== 'undefined') {
-      return 'https://placeholder.supabase.co'
-    }
-    throw new Error('SUPABASE_URL environment variable is not set')
-  }
-  return url
-}
-
-function getSupabaseKey(): string {
-  const key = env.supabaseServiceKey || env.supabaseAnonKey
-  if (!key) {
-    // Return a dummy key for client-side imports (will fail if actually used)
-    if (typeof window !== 'undefined') {
-      return 'placeholder-key'
-    }
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY environment variable is not set')
-  }
-  return key
-}
-
-const supabaseUrl = getSupabaseUrl()
-const supabaseKey = getSupabaseKey()
-
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
-
-/** Server-only Supabase client using the service role key. Bypasses RLS. Use for server actions that already validate the user (e.g. voting). */
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null
-
-export function getSupabaseAdmin(): ReturnType<typeof createClient> {
-  if (typeof window !== 'undefined') {
-    throw new Error('getSupabaseAdmin() must only be used on the server')
-  }
-  const serviceKey = env.supabaseServiceKey
-  if (!serviceKey || !serviceKey.trim()) {
-    throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY is required for server-side operations that bypass RLS (e.g. voting). ' +
-      'Set it in your environment. Find it in Supabase Dashboard → Settings → API.'
-    )
-  }
-  if (serviceKey.startsWith('sb_publishable_')) {
-    throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY must be the service_role secret (long JWT starting with eyJ...), not the publishable key. ' +
-      'In Supabase Dashboard → Settings → API, use the "service_role" key (click Reveal), not the anon/publishable key.'
-    )
-  }
-  if (!_supabaseAdmin) {
-    _supabaseAdmin = createClient(supabaseUrl, serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
-  }
-  return _supabaseAdmin
-}
+export { supabase, getSupabaseAdmin } from "./supabase"
 
 // ============================================================================
 // AWS S3 CONFIGURATION

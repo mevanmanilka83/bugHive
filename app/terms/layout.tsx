@@ -1,6 +1,6 @@
 import { auth } from "@/lib"
-import { AppFooter } from "@/components/AppFooter"
-import { AppHeader } from "@/components/AppHeader"
+import { AppFooter } from "@/components/layout/app/AppFooter"
+import { AppHeader } from "@/components/layout/app/AppHeader"
 
 export default async function TermsLayout({
   children,

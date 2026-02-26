@@ -1,5 +1,5 @@
-import { ClusterViewPicker } from "@/components/settings/ClusterViewPicker"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { ClusterViewPicker } from "@/components/features/settings/ClusterViewPicker"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default function SettingsDisplayPage() {
   return (

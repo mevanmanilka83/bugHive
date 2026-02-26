@@ -1,6 +1,6 @@
 import { auth } from "@/lib"
-import { FAQClient } from "@/components/FAQClient"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { FAQClient } from "@/components/features/faq/FAQClient"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 import { FAQ_ITEMS } from "@/lib/faq"
 
 export default async function FAQPage() {

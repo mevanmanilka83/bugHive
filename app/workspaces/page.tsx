@@ -1,9 +1,9 @@
 import { requireAuthForPage, getSupabaseAdmin } from "@/lib"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
-import { WorkspaceSuccessBanner } from "@/components/workspaces/WorkspaceSuccessBanner"
-import { WorkspaceGraphList } from "@/components/workspaces/WorkspaceGraphList"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
+import { WorkspaceSuccessBanner } from "@/components/features/workspaces/WorkspaceSuccessBanner"
+import { WorkspaceGraphList } from "@/components/features/workspaces/WorkspaceGraphList"
 
 export default async function WorkspacesPage({
   searchParams,

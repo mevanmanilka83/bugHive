@@ -42,7 +42,7 @@ export function HomeHeaderStatsDialog() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="rounded-full p-1.5 text-orange-500 hover:bg-muted hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
+          className="rounded-full border-2 border-orange-500 p-1.5 text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
           aria-label="Community stats and quick links"
         >
           <Flame className="size-4" />

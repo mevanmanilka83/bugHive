@@ -1,4 +1,4 @@
-import { SettingsContent } from "@/components/settings/SettingsContent"
+import { SettingsContent } from "@/components/features/settings/SettingsContent"
 
 export default async function SettingsPage() {
   return (

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft, GalleryVerticalEnd } from "lucide-react"
-import { SignupForm } from "@/components/auth/SignupForm"
+import { SignupForm } from "@/components/features/auth/SignupForm"
 
 export default function SignupPage({
   searchParams,

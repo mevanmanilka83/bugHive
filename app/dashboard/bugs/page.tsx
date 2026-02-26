@@ -1,11 +1,11 @@
 import { requireAuthForPage } from "@/lib"
-import { AppSidebar } from "@/components/appSidebar"
-import { SiteHeader } from "@/components/SiteHeader"
+import { AppSidebar } from "@/components/layout/app/AppSidebar"
+import { PublicHeader } from "@/components/layout/public/PublicHeader"
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { BugExploreList } from "@/components/bugs/BugExploreList"
+import { BugExploreList } from "@/components/features/bugs/BugExploreList"
 
 export default async function BugExplorePage() {
   const session = await requireAuthForPage()
@@ -21,7 +21,7 @@ export default async function BugExplorePage() {
     >
       <AppSidebar variant="inset" user={session.user} />
       <SidebarInset>
-        <SiteHeader user={session.user} />
+        <PublicHeader user={session.user} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

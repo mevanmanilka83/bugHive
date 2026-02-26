@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { auth, getRecordOrNotFound, ensureValidUUID } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
-import { BugDetailsView } from "@/components/bugs/BugDetailsView"
-import { RelatedBugsPanel } from "@/components/bugs/RelatedBugsPanel"
-import { GraphButton } from "@/components/bugs/GraphButton"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { BugDetailsView } from "@/components/features/bugs/BugDetailsView"
+import { RelatedBugsPanel } from "@/components/features/bugs/RelatedBugsPanel"
+import { GraphButton } from "@/components/features/bugs/GraphButton"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function BugDetailsPage({
   params,

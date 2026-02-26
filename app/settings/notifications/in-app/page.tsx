@@ -1,5 +1,5 @@
-import { InAppNotificationPrefs } from "@/components/settings/InAppNotificationPrefs"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { InAppNotificationPrefs } from "@/components/features/settings/InAppNotificationPrefs"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default function SettingsInAppNotificationsPage() {
   return (

@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { requireAuthForPage, getSupabaseAdmin } from "@/lib"
 import { notFound } from "next/navigation"
-import { WorkspaceCanvas } from "@/components/workspaces/WorkspaceCanvas"
-import { CopyGraphButton } from "@/components/workspaces/CopyGraphButton"
+import { WorkspaceCanvas } from "@/components/features/workspaces/WorkspaceCanvas"
+import { CopyGraphButton } from "@/components/features/workspaces/CopyGraphButton"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 

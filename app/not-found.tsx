@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { auth } from "@/lib"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 import { Button } from "@/components/ui/button"
 import { FileQuestion } from "lucide-react"
 

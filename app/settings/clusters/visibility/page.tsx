@@ -1,5 +1,5 @@
-import { ClusterVisibilityDefaults } from "@/components/settings/ClusterVisibilityDefaults"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { ClusterVisibilityDefaults } from "@/components/features/settings/ClusterVisibilityDefaults"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default function SettingsClusterVisibilityPage() {
   return (

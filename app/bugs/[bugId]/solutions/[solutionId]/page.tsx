@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { auth, getRecordOrNotFound, ensureValidUUID, supabase } from "@/lib"
 import { incrementViewCount } from "@/lib/views"
-import { SolutionDetailsForm } from "@/components/bugs/SolutionDetailsForm"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { SolutionDetailsForm } from "@/components/features/bugs/SolutionDetailsForm"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 import { notFound } from "next/navigation"
 
 export default async function BugSolutionDetailsPage({

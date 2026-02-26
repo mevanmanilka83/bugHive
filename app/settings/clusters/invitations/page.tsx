@@ -1,5 +1,5 @@
-import { ClusterInvitationDefaults } from "@/components/settings/ClusterInvitationDefaults"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { ClusterInvitationDefaults } from "@/components/features/settings/ClusterInvitationDefaults"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default function SettingsClusterInvitationsPage() {
   return (

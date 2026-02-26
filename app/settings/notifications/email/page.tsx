@@ -1,5 +1,5 @@
-import { EmailNotificationPrefs } from "@/components/settings/EmailNotificationPrefs"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { EmailNotificationPrefs } from "@/components/features/settings/EmailNotificationPrefs"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default function SettingsEmailNotificationsPage() {
   return (

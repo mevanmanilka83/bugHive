@@ -1,5 +1,5 @@
-import { LanguagePicker } from "@/components/settings/LanguagePicker"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { LanguagePicker } from "@/components/features/settings/LanguagePicker"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default function SettingsLanguagePage() {
   return (

@@ -1,6 +1,6 @@
 import { auth } from "@/lib"
-import { ClusterBugsPage } from "@/components/clusters/ClusterBugsPage"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { ClusterBugsPage } from "@/components/features/clusters/ClusterBugsPage"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function ClusterDetailPage({
   params,

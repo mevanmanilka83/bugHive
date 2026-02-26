@@ -1,6 +1,6 @@
 import { requireAuthForPage } from "@/lib"
-import { SavedBugsList } from "@/components/saved/SavedBugsList"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { SavedBugsList } from "@/components/features/saved/SavedBugsList"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function SavedPage() {
   const session = await requireAuthForPage()

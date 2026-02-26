@@ -1,7 +1,7 @@
 import { requireAuthForPage } from "@/lib"
-import { ProfileVisibilitySettings } from "@/components/settings/ProfileVisibilitySettings"
+import { ProfileVisibilitySettings } from "@/components/features/settings/ProfileVisibilitySettings"
 import { getPrivacySettings } from "@/app/actions/privacy"
-import { SettingsSubpage } from "@/components/settings/SettingsSubpage"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default async function SettingsProfileVisibilityPage() {
   await requireAuthForPage()

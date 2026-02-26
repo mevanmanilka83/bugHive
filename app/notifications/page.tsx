@@ -1,6 +1,6 @@
 import { requireAuthForPage } from "@/lib"
-import { NotificationsList } from "@/components/notifications/NotificationsList"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { NotificationsList } from "@/components/features/notifications/NotificationsList"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function NotificationsPage() {
   const session = await requireAuthForPage()

@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { auth } from "@/lib"
-import { BugExploreList } from "@/components/bugs/BugExploreList"
+import { BugExploreList } from "@/components/features/bugs/BugExploreList"
 import { Button } from "@/components/ui/button"
-import { BugReportDialog } from "@/components/bugs/reports/BugReportDialog"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { BugReportDialog } from "@/components/features/bugs/reports/BugReportDialog"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 type HomeProps = { searchParams?: Promise<{ tag?: string }> }
 

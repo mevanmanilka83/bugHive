@@ -1,5 +1,5 @@
 import { requireAuthForPage } from "@/lib"
-import { PublicPageLayout } from "@/components/PublicPageLayout"
+import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
 export default async function ActivityLayout({
   children,
