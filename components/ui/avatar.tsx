@@ -23,13 +23,21 @@ function Avatar({
 
 function AvatarImage({
   className,
+  priority,
+  loading,
+  fetchPriority,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Image> & {
+  /** Hint the browser to load this image eagerly (e.g. above-the-fold avatars). */
+  priority?: boolean
+}) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn("aspect-square size-full", className)}
       {...props}
+      loading={priority ? "eager" : loading}
+      fetchPriority={priority ? "high" : fetchPriority}
     />
   )
 }

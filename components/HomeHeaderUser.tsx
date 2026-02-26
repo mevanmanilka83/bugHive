@@ -78,7 +78,7 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
           <div className="flex flex-col gap-4 pt-2">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={image} alt={name} />
+                <AvatarImage src={image} alt={name} priority />
                 <AvatarFallback className="text-lg">
                   {name.charAt(0).toUpperCase()}
                 </AvatarFallback>
@@ -116,7 +116,7 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
         <DropdownMenuTrigger asChild className="sm:hidden">
           <button type="button" className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={image} alt={name} />
+              <AvatarImage src={image} alt={name} priority />
               <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </button>
@@ -134,7 +134,7 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
       {/* Desktop: full pill */}
       <div className="hidden sm:flex items-center gap-3 rounded-full border bg-background px-3 py-1.5">
         <Avatar className="h-7 w-7">
-          <AvatarImage src={image} alt={name} />
+          <AvatarImage src={image} alt={name} priority />
           <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
