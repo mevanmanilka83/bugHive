@@ -90,7 +90,7 @@ export default function SolutionStep3Details({
         <Label className="flex items-center gap-2">
           <IconPaperclip className="size-4" /> Attachments
         </Label>
-        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+        <div className="border-2 border-dashed border-muted-foreground/25 rounded-none p-4">
           <input
             type="file"
             id="file-upload"
@@ -112,17 +112,17 @@ export default function SolutionStep3Details({
         {attachments.length > 0 && (
           <div className="space-y-2">
             <div className="text-sm font-medium">Attached Files ({attachments.length})</div>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {attachments.map((attachment) => (
-                <div key={attachment.id} className="flex items-center gap-3 p-2 border rounded-md">
+                <div key={attachment.id} className="flex items-center gap-3 p-2 border rounded-none">
                   {attachment.preview ? (
                     <img
                       src={attachment.preview}
                       alt={attachment.file.name}
-                      className="w-8 h-8 object-cover rounded"
+                      className="w-8 h-8 object-cover rounded-none"
                     />
                   ) : (
-                    <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                    <div className="w-8 h-8 bg-muted rounded-none flex items-center justify-center">
                       <IconPaperclip className="size-4" />
                     </div>
                   )}
@@ -136,7 +136,7 @@ export default function SolutionStep3Details({
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemoveAttachment(attachment.id)}
-                    className="h-8 w-8 p-0 rounded-full"
+                    className="h-8 w-8 p-0 "
                   >
                     <IconX className="size-4" />
                   </Button>
@@ -148,10 +148,10 @@ export default function SolutionStep3Details({
       </div>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-        <Button variant="outline" onClick={onBack} className="w-full rounded-full sm:w-auto">Back</Button>
+        <Button onClick={onBack} className="w-full  sm:w-auto">Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
-          <Button variant="outline" onClick={onCancel} className="w-full rounded-full sm:w-auto">Cancel</Button>
-          <Button onClick={onNext} className="w-full rounded-full sm:w-auto">Review</Button>
+          <Button onClick={onCancel} className="w-full  sm:w-auto">Cancel</Button>
+          <Button onClick={onNext} className="w-full  sm:w-auto">Review</Button>
         </div>
       </div>
     </div>

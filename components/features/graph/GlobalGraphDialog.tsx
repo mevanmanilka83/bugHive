@@ -79,7 +79,7 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
     return (
         <div
             className={cn(
-                "rounded-xl border backdrop-blur-md shadow-lg transition-all duration-300 relative",
+                "rounded-none border backdrop-blur-md shadow-lg transition-all duration-300 relative",
                 "w-[140px] sm:w-[180px] max-w-[240px]", // Responsive width
                 selected ? "ring-2 ring-primary border-primary shadow-primary/20 scale-105" : "hover:border-primary/50",
                 "bg-card/80"
@@ -87,7 +87,7 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
         >
             <Handle type="target" position={Position.Top} className="opacity-0" />
             <div className={cn("p-2 sm:p-3 flex items-start gap-2 sm:gap-3", styles)}>
-                <div className={cn("p-1.5 sm:p-2 rounded-lg bg-background/50 shadow-sm shrink-0 text-foreground")}>
+                <div className={cn("p-1.5 sm:p-2 rounded-none bg-background/50 shadow-sm shrink-0 text-foreground")}>
                     <div className="h-3 w-3 sm:h-4 sm:w-4 flex items-center justify-center">
                         {icon}
                     </div>
@@ -120,7 +120,7 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
             )}
 
             {data.description && (
-                <div className="px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-xs text-muted-foreground bg-muted/30 rounded-b-xl border-t border-border/10 line-clamp-2 hidden sm:block">
+                <div className="px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-xs text-muted-foreground bg-muted/30 rounded-none border-t border-border/10 line-clamp-2 hidden sm:block">
                     {data.description}
                 </div>
             )}
@@ -431,19 +431,19 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Legend</h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-full bg-blue-500" /> Bug
+                                            <div className="w-2 h-2 rounded-none bg-blue-500" /> Bug
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-full bg-primary" /> Cluster
+                                            <div className="w-2 h-2 rounded-none bg-muted" /> Cluster
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-full bg-slate-500" /> Cause
+                                            <div className="w-2 h-2 rounded-none bg-slate-500" /> Cause
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-full bg-cyan-500" /> Evidence
+                                            <div className="w-2 h-2 rounded-none bg-cyan-500" /> Evidence
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500" /> Solution
+                                            <div className="w-2 h-2 rounded-none bg-emerald-500" /> Solution
                                         </div>
                                     </div>
                                 </div>

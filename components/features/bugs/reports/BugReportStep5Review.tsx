@@ -65,8 +65,8 @@ export function BugReportStep5Review({
               <div>
                 <div className="font-medium text-sm">Description</div>
                 <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded max-h-20 overflow-y-auto">
-                <BugDescriptionContent content={description} fallback="(No description)" className="text-muted-foreground" />
-              </div>
+                  <BugDescriptionContent content={description} fallback="(No description)" className="text-muted-foreground" />
+                </div>
               </div>
             </div>
           </div>
@@ -179,10 +179,10 @@ export function BugReportStep5Review({
       </div>
 
       <div className="flex flex-col-reverse gap-2 pt-4 border-t sm:flex-row sm:justify-between">
-        <Button variant="outline" onClick={onBack} className="w-full rounded-full px-4 sm:w-auto">Back</Button>
+        <Button  onClick={onBack} className="w-full px-4 sm:w-auto">Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={isSubmitting} className="w-full rounded-full px-4 sm:w-auto">Cancel</Button>
-          <Button onClick={onSubmit} disabled={isSubmitting} className="w-full rounded-full px-4 sm:w-auto">
+          <Button  onClick={onCancel} disabled={isSubmitting} className="w-full px-4 sm:w-auto">Cancel</Button>
+          <Button onClick={onSubmit} disabled={isSubmitting} className="w-full px-4 sm:w-auto">
             {isSubmitting ? "Submitting..." : "Submit Bug Report"}
           </Button>
         </div>
@@ -190,8 +190,5 @@ export function BugReportStep5Review({
     </div>
   )
 }
-
-export default BugReportStep5Review
-
-
+export default BugReportStep5Review;
 

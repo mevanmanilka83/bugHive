@@ -103,10 +103,10 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
             </p>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-full">
+            <Button type="button" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !hasInput} className="rounded-full">
+            <Button type="submit" disabled={loading || !hasInput}>
               <IconMail className="size-4 mr-2" />
               {loading ? "Sending..." : "Send Invitation"}
             </Button>

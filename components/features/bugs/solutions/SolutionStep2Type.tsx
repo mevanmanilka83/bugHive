@@ -84,10 +84,10 @@ export default function SolutionStep2Type({
         </div>
       </div>
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-        <Button variant="outline" onClick={onBack} className="w-full rounded-full sm:w-auto">Back</Button>
+        <Button  onClick={onBack} className="w-full  sm:w-auto">Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
-          <Button variant="outline" onClick={onCancel} className="w-full rounded-full sm:w-auto">Cancel</Button>
-          <Button onClick={onNext} disabled={!canNext} className="w-full rounded-full sm:w-auto">Next</Button>
+          <Button  onClick={onCancel} className="w-full  sm:w-auto">Cancel</Button>
+          <Button onClick={onNext} disabled={!canNext} className="w-full  sm:w-auto">Next</Button>
         </div>
       </div>
     </div>

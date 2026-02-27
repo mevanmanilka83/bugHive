@@ -347,7 +347,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     return (
       <Button
         disabled
-        className="rounded-full px-4 bg-black text-white hover:bg-black/90"
+        className="px-4"
       >
         <IconReport className="size-4 mr-2" />
         Report Bug
@@ -358,7 +358,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
       <DialogTrigger asChild>
-        <Button className="rounded-full px-4 bg-black text-white hover:bg-black/90">
+        <Button className="px-4">
           <IconReport className="size-4 mr-2" />
           Report Bug
         </Button>
@@ -389,7 +389,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
                     <div className="flex h-7 items-center justify-center sm:h-9">
                       <div
                         className={`
-                          relative flex items-center justify-center size-7 rounded-full border-2 transition-all duration-300 ease-out sm:size-9
+                          relative flex items-center justify-center size-7  border-2 transition-all duration-300 ease-out sm:size-9
                           ${isCompleted
                             ? "bg-primary border-primary text-primary-foreground shadow-sm"
                             : ""
@@ -429,14 +429,14 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
                       aria-hidden
                     >
                       <div
-                        className="w-full overflow-hidden rounded-full"
+                        className="w-full overflow-hidden "
                         style={{
                           height: 2,
                           backgroundColor: "rgb(163 163 163)",
                         }}
                       >
                         <div
-                          className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+                          className="h-full  bg-primary transition-all duration-500 ease-out"
                           style={{ width: step > num ? "100%" : "0%" }}
                         />
                       </div>

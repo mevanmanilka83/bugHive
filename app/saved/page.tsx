@@ -8,14 +8,16 @@ export default async function SavedPage() {
 
   return (
     <PublicPageLayout session={session} sidebarActive="saved">
-      <div className="rounded-lg border border-border/40 bg-card p-6 mb-6">
-        <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Saved</h1>
-        <p className="text-sm text-muted-foreground">
-          Keep track of bugs you want to revisit.
-        </p>
-      </div>
-      <div className="rounded-lg bg-card">
-        <SavedBugsList userId={userId} />
+      <div className="max-w-4xl">
+        <div className="rounded-lg border border-border/40 bg-card p-6 mb-6 mt-4">
+          <h1 className="mb-1 text-xl font-semibold sm:text-2xl">Saved bugs</h1>
+          <p className="text-sm text-muted-foreground">
+            Bugs you&apos;ve saved to revisit later.
+          </p>
+        </div>
+        <div className="rounded-lg border border-border/40 bg-card">
+          <SavedBugsList userId={userId} />
+        </div>
       </div>
     </PublicPageLayout>
   )

@@ -79,12 +79,11 @@ export function LoginForm({
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Button 
-                  variant="outline" 
+                <Button
                   type="button"
                   onClick={handleGitHubSignIn}
                   disabled={isLoading}
-                  className="w-full rounded-full"
+                  className="w-full"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 mr-2">
                     <path
@@ -119,17 +118,17 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input 
-                  id="password" 
+                <Input
+                  id="password"
                   name="password"
-                  type="password" 
+                  type="password"
                   placeholder="Enter your password"
-                  required 
+                  required
                   disabled={isLoading}
                 />
               </Field>
               <Field>
-                <Button type="submit" disabled={isLoading} className="w-full rounded-full">
+                <Button type="submit" disabled={isLoading} className="w-full">
                   {isLoading ? "Signing in..." : "Login"}
                 </Button>
                 <FieldDescription className="text-center">

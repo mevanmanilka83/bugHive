@@ -21,7 +21,7 @@ export function MyBugsPageContent({
 
   return (
     <>
-      <div className="mb-4 rounded-lg border bg-background p-4">
+      <div className="mb-4 rounded-none border bg-background p-4">
         <div className="mb-3">
           <h1 className="mb-1 text-xl font-semibold sm:text-2xl">My Bugs</h1>
           <p className="text-sm text-muted-foreground">
@@ -44,13 +44,13 @@ export function MyBugsPageContent({
               >
                 <ToggleGroupItem
                   value="private"
-                  className="px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="px-3 py-1 text-xs"
                 >
                   Private
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="public"
-                  className="px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="px-3 py-1 text-xs"
                 >
                   Public
                 </ToggleGroupItem>
@@ -70,13 +70,13 @@ export function MyBugsPageContent({
               >
                 <ToggleGroupItem
                   value="cluster-private"
-                  className="px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="px-3 py-1 text-xs"
                 >
                   Private
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="cluster-public"
-                  className="px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="px-3 py-1 text-xs"
                 >
                   Public
                 </ToggleGroupItem>

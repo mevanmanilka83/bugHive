@@ -3,12 +3,13 @@ import Image from "next/image"
 import { ArrowLeft } from "lucide-react"
 import { SignupForm } from "@/components/features/auth/SignupForm"
 
-export default function SignupPage({
+export default async function SignupPage({
   searchParams,
 }: {
-  searchParams?: { callbackUrl?: string }
+  searchParams: Promise<{ callbackUrl?: string }>
 }) {
-  const callbackUrl = searchParams?.callbackUrl || "/"
+  const resolvedSearchParams = await searchParams
+  const callbackUrl = resolvedSearchParams.callbackUrl || "/"
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">

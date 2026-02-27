@@ -1,17 +1,15 @@
 import { SettingsContent } from "@/components/features/settings/SettingsContent"
+import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
 
 export default async function SettingsPage() {
   return (
-    <>
-      <div className="rounded-lg border border-border/40 bg-card p-6 mb-6">
-        <h1 className="mb-0.5 text-xl font-semibold sm:text-2xl">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Account, privacy, notifications, and display preferences.
-        </p>
-      </div>
-      <div className="rounded-lg border border-border/40 bg-card">
-        <SettingsContent />
-      </div>
-    </>
+    <SettingsSubpage
+      // Root settings page should not show the "Back to Settings" link
+      showBackLink={false}
+      title="Settings"
+      description="Account, privacy, notifications, and display preferences."
+    >
+      <SettingsContent />
+    </SettingsSubpage>
   )
 }

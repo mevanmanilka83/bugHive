@@ -298,7 +298,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
             {!isBugClosedOrResolved && isLoggedIn && (
               <Button
                 type="button"
-                className="rounded-full"
+                className=""
                 onClick={() => setSolutionOpen(true)}
               >
                 Add solution
@@ -441,7 +441,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                             {tags.slice(0, 5).map((tag) => (
                               <span
                                 key={tag}
-                                className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/80 cursor-pointer border-0"
+                                className="inline-flex items-center  bg-muted px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/80 cursor-pointer border-0"
                               >
                                 {tag}
                               </span>
@@ -472,13 +472,13 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                         )}
 
                         <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
-                          <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                          <div className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground">
                             <span className="font-semibold text-foreground">
                               {score > 0 ? `+${score}` : score}
                             </span>
                             <span>{score === 1 ? "vote" : "votes"}</span>
                           </div>
-                          <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                          <div className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground">
                             <IconEye className="size-3" />
                             <span className="font-medium text-foreground">
                               {views}
@@ -487,7 +487,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                           </div>
                           <button
                             type="button"
-                            className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
+                            className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
                             onClick={async (e) => {
                               e.stopPropagation()
                               if (typeof window !== "undefined") {

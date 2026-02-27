@@ -131,14 +131,14 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
 
   const currentBlock =
     activeStates?.isQuote ? "quote" :
-    activeStates?.isH1 ? "h1" : activeStates?.isH2 ? "h2" : activeStates?.isH3 ? "h3" :
-    activeStates?.isH4 ? "h4" : activeStates?.isH5 ? "h5" : activeStates?.isH6 ? "h6" : "p"
+      activeStates?.isH1 ? "h1" : activeStates?.isH2 ? "h2" : activeStates?.isH3 ? "h3" :
+        activeStates?.isH4 ? "h4" : activeStates?.isH5 ? "h5" : activeStates?.isH6 ? "h6" : "p"
 
   const applyBlock = (value: (typeof BLOCK_OPTIONS)[number]["value"]) => {
     if (!editor) return
-    
+
     setBlockOpen(false)
-    
+
     // Focus the editor root element to ensure commands work
     const rootElement = editor.getRootElement()
     if (rootElement) {
@@ -146,7 +146,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
     } else {
       editor.focus()
     }
-    
+
     // Small delay to ensure focus is set before applying format
     setTimeout(() => {
       // Apply the block format command
@@ -217,7 +217,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
   }
 
   const clearFormatting = () => {
-    ;(["bold", "italic", "underline", "strikethrough", "code"] as const).forEach((fmt) => {
+    ; (["bold", "italic", "underline", "strikethrough", "code"] as const).forEach((fmt) => {
       commands.formatText?.(fmt, false)
     })
     commands.removeLink?.()
@@ -233,7 +233,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
         <button
           type="button"
           onClick={() => setBlockOpen((o) => !o)}
-          className="rounded-md border border-input bg-background px-2.5 py-1 text-sm hover:bg-muted"
+          className="rounded-none border border-input bg-background px-2.5 py-1 text-sm hover:bg-muted"
           title="Text type"
           aria-expanded={blockOpen}
         >
@@ -242,7 +242,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
         {blockOpen && (
           <>
             <div className="fixed inset-0 z-10" aria-hidden onClick={() => setBlockOpen(false)} />
-            <div className="absolute left-0 top-full z-20 mt-0.5 min-w-[140px] rounded-md border border-input bg-popover py-1 shadow-md">
+            <div className="absolute left-0 top-full z-20 mt-0.5 min-w-[140px] rounded-none border border-input bg-popover py-1 shadow-md">
               {BLOCK_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -262,7 +262,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.toggleBold?.()}
-        className={`rounded-md p-1.5 hover:bg-muted ${activeStates?.bold ? "bg-muted font-bold" : ""}`}
+        className={`rounded-none p-1.5 hover:bg-muted ${activeStates?.bold ? "bg-muted font-bold" : ""}`}
         title="Bold"
         aria-pressed={!!activeStates?.bold}
       >
@@ -271,7 +271,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.toggleItalic?.()}
-        className={`rounded-md p-1.5 hover:bg-muted italic ${activeStates?.italic ? "bg-muted" : ""}`}
+        className={`rounded-none p-1.5 hover:bg-muted italic ${activeStates?.italic ? "bg-muted" : ""}`}
         title="Italic"
         aria-pressed={!!activeStates?.italic}
       >
@@ -280,7 +280,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.toggleUnderline?.()}
-        className={`rounded-md p-1.5 hover:bg-muted ${activeStates?.underline ? "bg-muted underline" : ""}`}
+        className={`rounded-none p-1.5 hover:bg-muted ${activeStates?.underline ? "bg-muted underline" : ""}`}
         title="Underline"
         aria-pressed={!!activeStates?.underline}
       >
@@ -289,7 +289,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.toggleStrikethrough?.()}
-        className={`rounded-md p-1.5 hover:bg-muted ${activeStates?.strikethrough ? "bg-muted line-through" : ""}`}
+        className={`rounded-none p-1.5 hover:bg-muted ${activeStates?.strikethrough ? "bg-muted line-through" : ""}`}
         title="Strikethrough"
         aria-pressed={!!activeStates?.strikethrough}
       >
@@ -298,7 +298,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.toggleCode?.()}
-        className={`rounded-md p-1.5 font-mono text-sm hover:bg-muted ${activeStates?.code ? "bg-muted" : ""}`}
+        className={`rounded-none p-1.5 font-mono text-sm hover:bg-muted ${activeStates?.code ? "bg-muted" : ""}`}
         title="Inline code"
         aria-pressed={!!activeStates?.code}
       >
@@ -309,7 +309,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => (linkOpen ? setLinkOpen(false) : openLinkCard())}
-        className={`rounded-md p-1.5 hover:bg-muted ${activeStates?.isLink ? "bg-muted" : ""}`}
+        className={`rounded-none p-1.5 hover:bg-muted ${activeStates?.isLink ? "bg-muted" : ""}`}
         title="Link"
         aria-pressed={!!activeStates?.isLink}
         aria-expanded={linkOpen}
@@ -321,7 +321,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       {linkOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40" aria-hidden onClick={() => setLinkOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 z-50 w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-input bg-popover p-4 shadow-lg">
+          <div className="fixed left-1/2 top-1/2 z-50 w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-none border border-input bg-popover p-4 shadow-lg">
             <div className="space-y-2">
               <label className="block text-xs font-medium text-muted-foreground" htmlFor="rte-link-url">
                 URL
@@ -335,7 +335,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
                   if (event.key === "Enter") insertLink()
                   if (event.key === "Escape") setLinkOpen(false)
                 }}
-                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                className="h-9 w-full rounded-none border border-input bg-background px-2 text-sm"
                 autoFocus
               />
             </div>
@@ -343,14 +343,14 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
               <button
                 type="button"
                 onClick={() => setLinkOpen(false)}
-                className="rounded-md border border-input px-2.5 py-1 text-sm"
+                className="rounded-none border border-input px-2.5 py-1 text-sm"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={insertLink}
-                className="rounded-md bg-primary px-2.5 py-1 text-sm text-primary-foreground"
+                className="rounded-none bg-primary px-2.5 py-1 text-sm text-primary-foreground"
               >
                 Insert
               </button>
@@ -363,7 +363,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.toggleUnorderedList?.()}
-        className={`rounded-md p-1.5 hover:bg-muted ${activeStates?.unorderedList ? "bg-muted" : ""}`}
+        className={`rounded-none p-1.5 hover:bg-muted ${activeStates?.unorderedList ? "bg-muted" : ""}`}
         title="Bullet list"
         aria-pressed={!!activeStates?.unorderedList}
       >
@@ -377,7 +377,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.toggleOrderedList?.()}
-        className={`rounded-md p-1.5 hover:bg-muted ${activeStates?.orderedList ? "bg-muted" : ""}`}
+        className={`rounded-none p-1.5 hover:bg-muted ${activeStates?.orderedList ? "bg-muted" : ""}`}
         title="Numbered list"
         aria-pressed={!!activeStates?.orderedList}
       >
@@ -391,7 +391,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.undo?.()}
-        className="rounded-md p-1.5 hover:bg-muted"
+        className="rounded-none p-1.5 hover:bg-muted"
         title="Undo"
         aria-label="Undo"
       >
@@ -402,7 +402,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={() => commands.redo?.()}
-        className="rounded-md p-1.5 hover:bg-muted"
+        className="rounded-none p-1.5 hover:bg-muted"
         title="Redo"
         aria-label="Redo"
       >
@@ -415,7 +415,7 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       <button
         type="button"
         onClick={clearFormatting}
-        className="rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+        className="rounded-none px-2 py-1.5 text-sm hover:bg-muted"
         title="Clear formatting"
       >
         Clear formatting
@@ -446,7 +446,7 @@ export function RichTextEditor({
   return (
     <Provider extensions={extensions}>
       <div
-        className={`rounded-md border bg-background ${hasError ? "border-red-500" : "border-input"} ${className}`}
+        className={`rounded-none border bg-background ${hasError ? "border-red-500" : "border-input"} ${className}`}
       >
         <Toolbar hasError={hasError} />
         <div style={{ minHeight, maxHeight }} className="px-3 py-2 overflow-y-auto">

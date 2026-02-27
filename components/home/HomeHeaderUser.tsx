@@ -38,7 +38,7 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
     return (
       <div className="flex items-center gap-2">
         <HomeHeaderStatsDialog />
-        <Button asChild size="sm" className="rounded-full px-4">
+        <Button asChild size="sm" className="px-4">
           <Link href="/auth/signup">Sign up</Link>
         </Button>
       </div>
@@ -62,9 +62,34 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
         <DialogTrigger asChild>
           <button
             type="button"
-            className="rounded-full border-2 border-icon-orange p-1.5 text-icon-orange hover:bg-icon-orange/10 hover:text-icon-orange/90 focus:outline-none focus:ring-2 focus:ring-icon-orange focus:ring-offset-2 transition-colors"
+            className="border-2 border-icon-orange p-1.5 text-icon-orange hover:bg-icon-orange/10 hover:text-icon-orange/90 focus:outline-none focus:ring-2 focus:ring-icon-orange focus:ring-offset-2 transition-colors relative group/btn"
             aria-label="Account details"
           >
+            {/* Add brackets manually */}
+            <div className="absolute -left-[1px] -top-[1px] z-10 font-[system-ui]">
+              <div className="relative">
+                <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute top-0" />
+                <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute left-0" />
+              </div>
+            </div>
+            <div className="absolute -right-[0px] -top-[1px] z-10 font-[system-ui]">
+              <div className="relative">
+                <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute top-0" />
+                <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute -left-[3.5px]" />
+              </div>
+            </div>
+            <div className="absolute -left-[1px] -bottom-[0px] z-10 font-[system-ui]">
+              <div className="relative">
+                <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute -top-[3.5px]" />
+                <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute left-0" />
+              </div>
+            </div>
+            <div className="absolute -right-[0px] -bottom-[0px] z-10 font-[system-ui]">
+              <div className="relative">
+                <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute -top-[3.5px]" />
+                <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute -left-[3.5px]" />
+              </div>
+            </div>
             <Info className="h-4 w-4" />
           </button>
         </DialogTrigger>
@@ -132,7 +157,33 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
         </DropdownMenuContent>
       </DropdownMenu>
       {/* Desktop: full pill */}
-      <div className="hidden sm:flex items-center gap-3 rounded-full border bg-background px-3 py-1.5">
+      <div className="hidden sm:flex items-center gap-3 rounded-none border border-border/60 bg-background px-3 py-1.5 relative group/pill">
+        {/* Brackets for profile pill */}
+        <div className="absolute -left-[1px] -top-[1px] z-10 font-[system-ui]">
+          <div className="relative">
+            <div className="bg-[#8B5E3C] w-[1px] h-[5px] absolute top-0" />
+            <div className="bg-[#8B5E3C] w-[5px] h-[1px] absolute left-0" />
+          </div>
+        </div>
+        <div className="absolute -right-[0px] -top-[1px] z-10 font-[system-ui]">
+          <div className="relative">
+            <div className="bg-[#8B5E3C] w-[1px] h-[5px] absolute top-0" />
+            <div className="bg-[#8B5E3C] w-[5px] h-[1px] absolute -left-[4.5px]" />
+          </div>
+        </div>
+        <div className="absolute -left-[1px] -bottom-[0px] z-10 font-[system-ui]">
+          <div className="relative">
+            <div className="bg-[#8B5E3C] w-[1px] h-[5px] absolute -top-[4.5px]" />
+            <div className="bg-[#8B5E3C] w-[5px] h-[1px] absolute left-0" />
+          </div>
+        </div>
+        <div className="absolute -right-[0px] -bottom-[0px] z-10 font-[system-ui]">
+          <div className="relative">
+            <div className="bg-[#8B5E3C] w-[1px] h-[5px] absolute -top-[4.5px]" />
+            <div className="bg-[#8B5E3C] w-[5px] h-[1px] absolute -left-[4.5px]" />
+          </div>
+        </div>
+
         <Avatar className="h-7 w-7">
           <AvatarImage src={image} alt={name} priority />
           <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
@@ -140,16 +191,15 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
         <div className="flex flex-col">
           <span className="text-xs font-medium leading-tight">{name}</span>
           {email && (
-            <span className="text-[11px] text-muted-foreground leading-tight">
+            <span className="text-[11px] text-muted-foreground leading-tight truncate max-w-[120px]">
               {email}
             </span>
           )}
         </div>
         <Button
           type="button"
-          variant="ghost"
           size="sm"
-          className="h-6 rounded-full px-2 text-[11px]"
+          className="h-6 px-2 text-[11px] bg-muted/30 hover:bg-muted text-foreground border-0 shadow-none"
           onClick={handleLogout}
         >
           Log out

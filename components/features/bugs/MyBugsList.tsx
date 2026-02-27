@@ -103,14 +103,14 @@ export function MyBugsList({
       }
       const sorted = Array.from(byDay.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
-      
+
       // Convert to cumulative (running total) - starts from flow (low) to high
       let cumulative = 0
       const cumulativeData = sorted.map(([date, count]) => {
         cumulative += count
         return { date, count: cumulative }
       })
-      
+
       setChartData(cumulativeData)
     } finally {
       setLoading(false)
@@ -180,7 +180,7 @@ export function MyBugsList({
         </p>
         {showVisibilityToggle && (
           <div className="grid w-full gap-2 sm:max-w-xl">
-            <div className="rounded-md border border-muted/60 bg-muted/30 p-2">
+            <div className="rounded-none border border-muted/60 bg-muted/30 p-2">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 View Filters
               </div>
@@ -196,19 +196,19 @@ export function MyBugsList({
               >
                 <ToggleGroupItem
                   value="private"
-                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="flex-1 px-3 py-1 text-xs"
                 >
                   Private
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="public"
-                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="flex-1 px-3 py-1 text-xs"
                 >
                   Public
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
-            <div className="rounded-md border border-muted/60 bg-muted/30 p-2">
+            <div className="rounded-none border border-muted/60 bg-muted/30 p-2">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Cluster Actions
               </div>
@@ -224,13 +224,13 @@ export function MyBugsList({
               >
                 <ToggleGroupItem
                   value="cluster-private"
-                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="flex-1 px-3 py-1 text-xs"
                 >
                   Cluster Private
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="cluster-public"
-                  className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-foreground data-[state=on]:text-background"
+                  className="flex-1 px-3 py-1 text-xs"
                 >
                   Cluster Public
                 </ToggleGroupItem>

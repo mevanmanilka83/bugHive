@@ -146,7 +146,6 @@ export function ClusterBugsPage({
       <div className="text-center py-12 text-muted-foreground">
         <p>Cluster not found</p>
         <Button
-          variant="outline"
           className="mt-4"
           onClick={() => router.push(clustersHref)}
         >
@@ -211,10 +210,9 @@ export function ClusterBugsPage({
           <div className="flex w-full items-center justify-end gap-2 shrink-0 sm:w-auto">
             {isOwner && (
               <Button
-                variant="outline"
                 size="icon"
                 onClick={() => setEditDialogOpen(true)}
-                className="h-9 w-9 rounded-full shrink-0"
+                className="h-9 w-9 shrink-0"
                 aria-label="Edit cluster"
               >
                 <IconPencil className="size-4" />
@@ -222,7 +220,7 @@ export function ClusterBugsPage({
             )}
             {canReportBug && <BugReportDialog clusterId={clusterId} />}
             {!isMember && isPublic && !myJoinRequest && (
-              <Button onClick={handleRequestJoin} disabled={requestingJoin} className="rounded-full shrink-0">
+              <Button onClick={handleRequestJoin} disabled={requestingJoin} className="shrink-0">
                 <IconUserPlus className="size-4 mr-2" />
                 {requestingJoin ? "Sending..." : "Request to join"}
               </Button>
@@ -246,8 +244,7 @@ export function ClusterBugsPage({
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="rounded-full"
+                    className=""
                     disabled={respondingTo !== null}
                     onClick={() => handleRespondToRequest(req.id, "decline")}
                   >
@@ -256,7 +253,6 @@ export function ClusterBugsPage({
                   </Button>
                   <Button
                     size="sm"
-                    className="rounded-full"
                     disabled={respondingTo !== null}
                     onClick={() => handleRespondToRequest(req.id, "accept")}
                   >

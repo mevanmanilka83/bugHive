@@ -46,6 +46,8 @@ interface BugDetailedListProps {
   /** When the bug creator is the current user, use this name if batch user fetch didn't return them */
   currentUserName?: string
   currentUserImage?: string
+  /** Visual/layout variant. "saved" is a simplified header for the Saved page. */
+  variant?: "default" | "saved"
 }
 
 type SortOption =
@@ -68,6 +70,7 @@ export function BugDetailedList({
   renderFiltersPanel,
   currentUserName,
   currentUserImage,
+  variant = "default",
 }: BugDetailedListProps) {
   const [sortBy, setSortBy] = React.useState<SortOption>("newest")
 
@@ -370,110 +373,125 @@ export function BugDetailedList({
           </div>
         )}
 
-        {/* Count, tabs, and filter – styled similar to StackOverflow */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 sm:flex-1">
+        {variant === "saved" ? (
+          // Simplified header for Saved page (no tabs, no filters)
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="shrink-0 text-sm text-muted-foreground">
-              {displayCount.toLocaleString()} bugs
+              {displayCount === 0
+                ? "No saved bugs yet"
+                : `${displayCount.toLocaleString()} saved bug${
+                    displayCount === 1 ? "" : "s"
+                  }`}
             </p>
+          </div>
+        ) : (
+          <>
+            {/* Count, tabs, and filter – styled similar to StackOverflow */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 sm:flex-1">
+                <p className="shrink-0 text-sm text-muted-foreground">
+                  {displayCount.toLocaleString()} bugs
+                </p>
 
-            {/* Tabs group – horizontal scroll on mobile */}
-            <div className="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
-              <div className="inline-flex flex-nowrap items-center gap-1 rounded-md border bg-background px-1 py-1 min-w-0">
-                <button
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                    sortBy === "newest"
-                      ? "bg-muted font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  onClick={() => setSortBy("newest")}
-                >
-                  Newest
-                </button>
-                <button
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                    sortBy === "active"
-                      ? "bg-muted font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  onClick={() => setSortBy("active")}
-                >
-                  Active
-                </button>
-                <button
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                    sortBy === "votes"
-                      ? "bg-muted font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  onClick={() => setSortBy("votes")}
-                >
-                  Most voted
-                </button>
-                <button
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                    sortBy === "unanswered"
-                      ? "bg-muted font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  onClick={() => setSortBy("unanswered")}
-                >
-                  Unanswered
-                </button>
-
-                {/* More dropdown for extra, project-specific modes */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                {/* Tabs group – horizontal scroll on mobile */}
+                <div className="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
+                  <div className="inline-flex flex-nowrap items-center gap-1 rounded-none border bg-background px-1 py-1 min-w-0">
                     <button
                       className={cn(
-                        "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer inline-flex items-center gap-1",
-                        sortBy === "most_viewed" || sortBy === "my_bugs"
+                        "px-3 py-1.5 text-sm font-normal rounded-none transition-colors cursor-pointer",
+                        sortBy === "newest"
                           ? "bg-muted font-semibold"
                           : "text-muted-foreground hover:text-foreground"
                       )}
+                      onClick={() => setSortBy("newest")}
                     >
-                      More
-                      <IconChevronDown className="size-3" />
+                      Newest
                     </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setSortBy("most_viewed")}>
-                      Most viewed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy("my_bugs")}>
-                      My reported bugs
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <button
+                      className={cn(
+                        "px-3 py-1.5 text-sm font-normal rounded-none transition-colors cursor-pointer",
+                        sortBy === "active"
+                          ? "bg-muted font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => setSortBy("active")}
+                    >
+                      Active
+                    </button>
+                    <button
+                      className={cn(
+                        "px-3 py-1.5 text-sm font-normal rounded-none transition-colors cursor-pointer",
+                        sortBy === "votes"
+                          ? "bg-muted font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => setSortBy("votes")}
+                    >
+                      Most voted
+                    </button>
+                    <button
+                      className={cn(
+                        "px-3 py-1.5 text-sm font-normal rounded-none transition-colors cursor-pointer",
+                        sortBy === "unanswered"
+                          ? "bg-muted font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => setSortBy("unanswered")}
+                    >
+                      Unanswered
+                    </button>
+
+                    {/* More dropdown for extra, project-specific modes */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className={cn(
+                            "px-3 py-1.5 text-sm font-normal rounded-none transition-colors cursor-pointer inline-flex items-center gap-1",
+                            sortBy === "most_viewed" || sortBy === "my_bugs"
+                              ? "bg-muted font-semibold"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          More
+                          <IconChevronDown className="size-3" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setSortBy("most_viewed")}>
+                          Most viewed
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortBy("my_bugs")}>
+                          My reported bugs
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Filter Button */}
-          {onOpenFilters && (
-            <div className="flex justify-end sm:justify-end">
-              <Button
-                type="button"
-                size="sm"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full px-4 bg-black text-white hover:bg-black/90"
-                onClick={onOpenFilters}
-              >
-                <IconFilter className="size-4" />
-                Filter
-              </Button>
+              {/* Filter Button */}
+              {onOpenFilters && (
+                <div className="flex justify-end sm:justify-end">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="inline-flex items-center justify-center gap-1.5 px-4"
+                    onClick={onOpenFilters}
+                  >
+                    <IconFilter className="size-4" />
+                    Filter
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Filters panel (rendered directly under tabs when open) */}
-        {filtersOpen && renderFiltersPanel && (
-          <div className="mt-3">
-            {renderFiltersPanel()}
-          </div>
+            {/* Filters panel (rendered directly under tabs when open) */}
+            {filtersOpen && renderFiltersPanel && (
+              <div className="mt-3">
+                {renderFiltersPanel()}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -538,7 +556,7 @@ export function BugDetailedList({
                   {clusterName && (
                     <Badge
                       variant="secondary"
-                      className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200"
+                      className="inline-flex items-center  bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200"
                     >
                       {String(clusterName)}
                     </Badge>
@@ -547,7 +565,7 @@ export function BugDetailedList({
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/80 cursor-pointer border-0"
+                      className="inline-flex items-center  bg-muted px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/80 cursor-pointer border-0"
                     >
                       {tag}
                     </Badge>
@@ -559,20 +577,20 @@ export function BugDetailedList({
 
                 {/* Engagement pills – votes, answers, views, share */}
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                  <div className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground">
                     <span className="font-semibold text-foreground">
                       {score > 0 ? `+${score}` : score}
                     </span>
                     <span>{score === 1 ? "vote" : "votes"}</span>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                  <div className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground">
                     <IconMessageCircle className="size-3" />
                     <span className="font-medium text-foreground">
                       {solutionCount ?? 0}
                     </span>
                     <span>{solutionCount === 1 ? "answer" : "answers"}</span>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                  <div className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground">
                     <IconEye className="size-3" />
                     <span className="font-medium text-foreground">
                       {views}
@@ -582,7 +600,7 @@ export function BugDetailedList({
                   <button
                     type="button"
                     className={cn(
-                      "inline-flex items-center gap-2 rounded-full px-3 py-1",
+                      "inline-flex items-center gap-2  px-3 py-1",
                       savedBugIds.has(bug.id)
                         ? "bg-primary/10 text-primary"
                         : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -605,7 +623,7 @@ export function BugDetailedList({
                   </button>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
+                    className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground hover:bg-muted/80"
                     onClick={async (e) => {
                       e.stopPropagation()
                       if (typeof window !== "undefined") {

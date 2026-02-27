@@ -25,7 +25,7 @@ interface EditClusterDialogProps {
   onOpenChange: (open: boolean) => void
   cluster: any | null
   onSuccess?: (updated: {
-    visibility: "private" | "public"; name: string; description: string | null 
+    visibility: "private" | "public"; name: string; description: string | null
   }) => void
 }
 
@@ -100,7 +100,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 w-full rounded-none border border-input bg-background px-3 text-sm"
             />
           </div>
           <div className="space-y-2 pt-1">
@@ -110,7 +110,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
               onValueChange={(value) => setVisibility(value === "public" ? "public" : "private")}
               className="grid gap-2"
             >
-              <label className="flex items-start gap-3 rounded-md border bg-background p-3 hover:border-primary/40">
+              <label className="flex items-start gap-3 rounded-none border bg-background p-3 hover:border-primary/40">
                 <RadioGroupItem value="private" className="mt-0.5" />
                 <span className="grid gap-1">
                   <span className="text-sm font-medium">Private</span>
@@ -119,7 +119,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
                   </span>
                 </span>
               </label>
-              <label className="flex items-start gap-3 rounded-md border bg-background p-3 hover:border-primary/40">
+              <label className="flex items-start gap-3 rounded-none border bg-background p-3 hover:border-primary/40">
                 <RadioGroupItem value="public" className="mt-0.5" />
                 <span className="grid gap-1">
                   <span className="text-sm font-medium">Public</span>
@@ -134,7 +134,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
             <label className="text-sm font-medium" htmlFor="edit-cluster-description">
               Description
             </label>
-            <div className="rounded-md border border-input">
+            <div className="rounded-none border border-input">
               <RichTextEditor
                 value={description}
                 onChange={setDescription}
@@ -150,17 +150,15 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
         </div>
         <DialogFooter>
           <Button
-            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={saving}
-            className="rounded-full"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+            className="px-5"
           >
             {saving ? "Saving..." : "Save & Exit"}
           </Button>

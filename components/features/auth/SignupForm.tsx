@@ -94,12 +94,11 @@ export function SignupForm({
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Button 
-                  variant="outline" 
+                <Button
                   type="button"
                   onClick={handleGitHubSignIn}
                   disabled={isLoading}
-                  className="w-full rounded-full"
+                  className="w-full"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 mr-2">
                     <path
@@ -115,12 +114,12 @@ export function SignupForm({
               </FieldSeparator>
               <Field>
                 <FieldLabel htmlFor="name">Name</FieldLabel>
-                <Input 
-                  id="name" 
+                <Input
+                  id="name"
                   name="name"
-                  type="text" 
-                  placeholder="Your name" 
-                  required 
+                  type="text"
+                  placeholder="Your name"
+                  required
                   disabled={isLoading}
                 />
               </Field>
@@ -137,17 +136,17 @@ export function SignupForm({
               </Field>
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input 
-                  id="password" 
+                <Input
+                  id="password"
                   name="password"
-                  type="password" 
+                  type="password"
                   placeholder="Create a password"
-                  required 
+                  required
                   disabled={isLoading}
                 />
               </Field>
               <Field>
-                <Button type="submit" disabled={isLoading} className="w-full rounded-full">
+                <Button type="submit" disabled={isLoading} className="w-full">
                   {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
                 <FieldDescription className="text-center">

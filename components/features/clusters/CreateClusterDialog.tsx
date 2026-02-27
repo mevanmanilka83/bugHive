@@ -32,7 +32,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full max-w-full rounded-full px-5 sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90"
+      className="px-5"
     >
       {pending ? "Creating..." : "Create Cluster"}
     </Button>
@@ -62,10 +62,10 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
   React.useEffect(() => {
     // Create a unique key for this state to prevent duplicate processing
     const stateKey = state?.success ? 'success' : state?.error ? `error-${state.error}` : null
-    
+
     if (stateKey && state && hasProcessedRef.current !== stateKey) {
       hasProcessedRef.current = stateKey
-      
+
       if (state.success) {
         toast.success("Cluster created successfully")
         onSuccessRef.current?.()
@@ -101,7 +101,7 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
                 maxLength={100}
               />
             </div>
-            <div className="grid gap-2 rounded-lg border bg-muted/20 p-2 sm:gap-3 sm:p-3">
+            <div className="grid gap-2 rounded-none border bg-muted/20 p-2 sm:gap-3 sm:p-3">
               <div className="flex items-center justify-between">
                 <Label>Visibility</Label>
                 <span className="text-xs text-muted-foreground">Required</span>
@@ -116,7 +116,7 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
                 }}
                 className="grid gap-2"
               >
-                <label className="flex items-start gap-3 rounded-md border bg-background p-2 hover:border-primary/40">
+                <label className="flex items-start gap-3 rounded-none border bg-background p-2 hover:border-primary/40">
                   <RadioGroupItem value="private" className="mt-0.5" />
                   <span className="grid gap-1">
                     <span className="text-sm font-medium">Private</span>
@@ -125,7 +125,7 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
                     </span>
                   </span>
                 </label>
-                <label className="flex items-start gap-3 rounded-md border bg-background p-2 hover:border-primary/40">
+                <label className="flex items-start gap-3 rounded-none border bg-background p-2 hover:border-primary/40">
                   <RadioGroupItem value="public" className="mt-0.5" />
                   <span className="grid gap-1">
                     <span className="text-sm font-medium">Public</span>
@@ -138,7 +138,7 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <div className="rounded-md border border-input">
+              <div className="rounded-none border border-input">
                 <RichTextEditor
                   value={description}
                   onChange={setDescription}
@@ -154,18 +154,15 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
               </p>
             </div>
           </div>
-          <DialogFooter className="shrink-0 flex flex-wrap gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:justify-end">
+          <DialogFooter className="shrink-0 flex items-center justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur mt-auto">
             <Button
               type="button"
-              variant="outline"
               onClick={() => onOpenChange(false)}
-              className="w-full max-w-full rounded-full px-4 sm:w-auto"
+              className="px-4"
             >
               Cancel
             </Button>
-            <div className="w-full max-w-full sm:w-auto">
-              <SubmitButton />
-            </div>
+            <SubmitButton />
           </DialogFooter>
         </form>
       </DialogContent>

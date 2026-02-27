@@ -48,29 +48,14 @@ export function WorkspaceGraphList({
       {/* Search Bar */}
       <div className="px-4 pt-3 pb-2 border-b">
         <div className="relative w-full">
-          <IconSearch className="absolute left-4 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-muted-foreground/50 pointer-events-none" />
+          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Search graphs by title or description..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="h-10 w-full rounded-full pl-11 pr-4 text-sm bg-background border border-border/60 placeholder:text-muted-foreground/60 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 transition-all shadow-sm"
+            className="h-10 w-full pl-10"
           />
-        </div>
-        {/* Tabs group */}
-        <div className="mt-3 inline-flex items-center gap-1 rounded-full border bg-background px-1 py-1 text-xs">
-          <button
-            className={`px-3 py-1.5 rounded-full transition-colors ${sortBy === "newest" ? "bg-foreground text-background font-semibold" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setSortBy("newest")}
-          >
-            Newest
-          </button>
-          <button
-            className={`px-3 py-1.5 rounded-full transition-colors ${sortBy === "oldest" ? "bg-foreground text-background font-semibold" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setSortBy("oldest")}
-          >
-            Oldest
-          </button>
         </div>
       </div>
 

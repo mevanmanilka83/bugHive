@@ -52,8 +52,8 @@ export function BugReportStep1Basic({
         {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
       </div>
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button variant="outline" onClick={onCancel} className="w-full rounded-full px-4 sm:w-auto">Cancel</Button>
-        <Button onClick={onNext} disabled={!canNext} className="w-full rounded-full px-4 sm:w-auto">Next</Button>
+        <Button  onClick={onCancel} className="w-full px-4 sm:w-auto">Cancel</Button>
+        <Button onClick={onNext} disabled={!canNext} className="w-full px-4 sm:w-auto">Next</Button>
       </div>
     </div>
   )

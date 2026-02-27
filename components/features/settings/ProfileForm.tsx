@@ -79,11 +79,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
   const initials = user.name
     ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : user.email?.[0]?.toUpperCase() || "U"
 
   return (
@@ -182,16 +182,15 @@ export function ProfileForm({ user }: ProfileFormProps) {
         {/* Section 3: Form actions */}
         <section className="pt-12" aria-label="Form actions">
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={isSubmitting} className="rounded-full">
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <IconLoader2 className="size-4 mr-2 animate-spin" />}
               Save changes
             </Button>
             <Button
               type="button"
-              variant="outline"
               onClick={() => router.push("/settings")}
               disabled={isSubmitting}
-              className="rounded-full font-semibold bg-background border-border hover:bg-muted/50"
+              className="font-semibold bg-background border-border hover:bg-muted/50"
             >
               Cancel
             </Button>

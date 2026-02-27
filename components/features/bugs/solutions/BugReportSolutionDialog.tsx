@@ -369,7 +369,7 @@ export function SolutionDialog({
                       <div className="flex h-7 items-center justify-center sm:h-9">
                         <div
                           className={`
-                          relative flex items-center justify-center size-7 rounded-full border-2 transition-all duration-300 ease-out sm:size-9
+                          relative flex items-center justify-center size-7  border-2 transition-all duration-300 ease-out sm:size-9
                           ${isCompleted ? "bg-primary border-primary text-primary-foreground shadow-sm" : ""}
                           ${isCurrent ? "bg-primary/10 border-primary text-primary font-semibold scale-110 ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : ""}
                           ${isFuture ? "border-muted-foreground/25 bg-muted/40 text-muted-foreground" : ""}
@@ -401,14 +401,14 @@ export function SolutionDialog({
                         aria-hidden
                       >
                         <div
-                          className="w-full overflow-hidden rounded-full"
+                          className="w-full overflow-hidden "
                           style={{
                             height: 2,
                             backgroundColor: "rgb(163 163 163)",
                           }}
                         >
                           <div
-                            className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+                            className="h-full  bg-primary transition-all duration-500 ease-out"
                             style={{ width: step > num ? "100%" : "0%" }}
                           />
                         </div>

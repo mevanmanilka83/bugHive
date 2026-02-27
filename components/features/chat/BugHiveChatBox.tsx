@@ -197,16 +197,15 @@ export function BugHiveChatBox() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] bg-primary text-primary-foreground border border-primary/70 hover:bg-primary/90 hover:text-primary-foreground [&_svg]:text-primary-foreground",
+          "focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 bg-clip-padding text-xs/relaxed font-medium focus-visible:ring-[2px] aria-invalid:ring-[2px] inline-flex items-center justify-center whitespace-nowrap disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none group/button select-none gap-2! aria-expanded:ring-[2px] aria-expanded:ring-ring/30 cursor-pointer bg-linear-to-t hover:to-muted to-sidebar from-muted dark:from-muted/50 dark:border-border shadow-zinc-950/10 size-7 active:scale-[0.97] transition-all duration-150 fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] bg-chatbot-bg text-primary-foreground border border-chatbot-bg/70 hover:bg-chatbot-bg/90 hover:text-primary-foreground [&_svg]:text-icon-orange",
           isOpen && "scale-95"
         )}
-        size="icon"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
-          <X className="h-6 w-6" stroke="currentColor" />
+          <X className="h-6 w-6 text-icon-orange" stroke="currentColor" />
         ) : (
-          <Bug className="h-6 w-6 text-primary-foreground" aria-hidden />
+          <Bug className="h-6 w-6 text-icon-orange" aria-hidden />
         )}
       </Button>
 
@@ -239,6 +238,7 @@ export function BugHiveChatBox() {
               {messages.map((message, index) => (
                 <div
                   key={index}
+                  ref={index === messages.length - 1 ? messagesEndRef : undefined}
                   className={cn(
                     "flex gap-3",
                     message.role === "user" ? "flex-row-reverse" : "flex-row"
@@ -268,7 +268,7 @@ export function BugHiveChatBox() {
                   >
                     <div
                       className={cn(
-                        "inline-block p-3 rounded-lg text-sm whitespace-pre-wrap",
+                        "inline-block p-3 rounded-none text-sm whitespace-pre-wrap",
                         message.role === "user"
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted"
@@ -286,7 +286,7 @@ export function BugHiveChatBox() {
               {messages.length > 0 &&
                 messages[messages.length - 1].role === "assistant" &&
                 !isLoading && (
-                  <div className="flex flex-wrap gap-2 mt-4 p-3 rounded-lg bg-muted/50">
+                  <div className="flex flex-wrap gap-2 mt-4 p-3 rounded-none bg-muted/50">
                     <p className="w-full text-xs text-muted-foreground mb-2 font-medium">
                       Quick questions:
                     </p>
@@ -297,7 +297,7 @@ export function BugHiveChatBox() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="text-xs px-3 py-1.5 h-auto rounded-full text-foreground hover:bg-muted"
+                        className="text-xs px-3 py-1.5 h-auto rounded-none text-foreground hover:bg-muted"
                       >
                         {suggestion}
                       </Button>
@@ -325,8 +325,6 @@ export function BugHiveChatBox() {
                   </div>
                 </div>
               )}
-
-              <div ref={messagesEndRef} />
             </div>
 
             <div className="p-4 border-t shrink-0">

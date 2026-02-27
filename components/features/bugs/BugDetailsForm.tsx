@@ -179,7 +179,7 @@ export function BugDetailsForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <Label>Description</Label>
-        <div className="rounded-md border border-input bg-background px-3 py-2 min-h-[100px] opacity-50 cursor-not-allowed">
+        <div className="rounded-none border border-input bg-background px-3 py-2 min-h-[100px] opacity-50 cursor-not-allowed">
           <BugDescriptionContent content={bug.description ?? ""} fallback="—" />
         </div>
       </div>
@@ -217,7 +217,7 @@ export function BugDetailsForm({
           {sourceUrls.length === 0 ? (
             <Input value="—" disabled />
           ) : (
-            <div className="flex flex-col gap-2 rounded-md border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
+            <div className="flex flex-col gap-2 rounded-none border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
               {sourceUrls.map((url) => {
                 const valid = linkValidity[url]
                 const isValid = valid === true
@@ -238,7 +238,7 @@ export function BugDetailsForm({
                     >
                       <span
                         className={cn(
-                          "h-2 w-2 shrink-0 rounded-full",
+                          "h-2 w-2 shrink-0 ",
                           isPending && "bg-muted-foreground/50",
                           isValid && "bg-green-500",
                           isInvalid && "bg-red-500"
@@ -295,7 +295,7 @@ export function BugDetailsForm({
                         <img
                           src={url}
                           alt={String(filename)}
-                          className="max-h-20 max-w-[120px] rounded-sm object-contain"
+                          className="max-h-20 max-w-[120px] rounded-none object-contain"
                         />
                       </TooltipContent>
                     </Tooltip>

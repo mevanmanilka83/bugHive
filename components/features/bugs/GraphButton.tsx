@@ -11,14 +11,13 @@ export function GraphButton({ bugId }: { bugId: string }) {
   return (
     <>
       <Button
-        variant="ghost"
         size="icon"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-black/70 bg-black text-white shadow-none transition-none hover:bg-black hover:text-white dark:border-white/70 dark:bg-white dark:text-black dark:hover:bg-white dark:hover:text-black"
+        className="border-2 border-icon-orange p-1.5 text-icon-orange hover:bg-icon-orange/10 hover:text-icon-orange/90 focus:outline-none focus:ring-2 focus:ring-icon-orange focus:ring-offset-2 transition-colors"
         title="View bug relationship graph"
         aria-label="View bug relationship graph"
       >
-        <BarChart3 className="h-5 w-5" />
+        <BarChart3 className="size-4" />
       </Button>
       <BugGraphDialog open={open} onOpenChange={setOpen} bugId={bugId} />
     </>

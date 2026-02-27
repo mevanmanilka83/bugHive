@@ -42,9 +42,34 @@ export function HomeHeaderStatsDialog() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="rounded-full border-2 border-icon-orange p-1.5 text-icon-orange hover:bg-icon-orange/10 hover:text-icon-orange/90 focus:outline-none focus:ring-2 focus:ring-icon-orange focus:ring-offset-2 transition-colors"
+          className="border-2 border-icon-orange p-1.5 text-icon-orange hover:bg-icon-orange/10 hover:text-icon-orange/90 focus:outline-none focus:ring-2 focus:ring-icon-orange focus:ring-offset-2 transition-colors relative group/btn"
           aria-label="Community stats and quick links"
         >
+          {/* Add brackets manually since it's a native button tag, or change to Button component */}
+          <div className="absolute -left-[1px] -top-[1px] z-10">
+            <div className="relative">
+              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute top-0" />
+              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute left-0" />
+            </div>
+          </div>
+          <div className="absolute -right-[0px] -top-[1px] z-10">
+            <div className="relative">
+              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute top-0" />
+              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute -left-[3.5px]" />
+            </div>
+          </div>
+          <div className="absolute -left-[1px] -bottom-[0px] z-10">
+            <div className="relative">
+              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute -top-[3.5px]" />
+              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute left-0" />
+            </div>
+          </div>
+          <div className="absolute -right-[0px] -bottom-[0px] z-10">
+            <div className="relative">
+              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute -top-[3.5px]" />
+              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute -left-[3.5px]" />
+            </div>
+          </div>
           <Flame className="size-4" />
         </button>
       </DialogTrigger>

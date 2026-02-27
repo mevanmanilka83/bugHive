@@ -46,7 +46,7 @@ export default async function Home({ searchParams }: HomeProps) {
           {session ? (
             <BugReportDialog />
           ) : (
-            <Button asChild className="rounded-full px-4 sm:w-auto">
+            <Button asChild className="px-4 sm:w-auto">
               <Link href="/auth/signin">Report Bug</Link>
             </Button>
           )}

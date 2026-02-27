@@ -61,7 +61,7 @@ function resolveHref(
 
 function navLinkClass(isActive: boolean) {
   return [
-    "flex items-center gap-2 rounded-full px-3 py-2 text-sm",
+    "flex items-center gap-2 rounded-none px-3 py-2 text-sm",
     isActive ? "bg-muted font-medium text-foreground" : "hover:bg-muted",
   ].join(" ")
 }

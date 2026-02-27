@@ -32,9 +32,18 @@ interface ClustersListProps {
   basePath?: string
   title?: string
   description?: string
+  /** Layout variant: default = standalone card, embedded = inside another card (e.g. /clusters page) */
+  variant?: "default" | "embedded"
 }
 
-export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard", title, description }: ClustersListProps) {
+export function ClustersList({
+  userId,
+  isAuthenticated,
+  basePath = "/dashboard",
+  title,
+  description,
+  variant = "default",
+}: ClustersListProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -197,7 +206,13 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
 
   return (
     <div>
-      <div className="mb-4 rounded-lg border bg-background p-4">
+      <div
+        className={
+          variant === "default"
+            ? "mb-4 rounded-none border bg-background p-4"
+            : "mb-4 pb-4 border-b border-border/40"
+        }
+      >
         {(title || description) && (
           <div className="mb-3">
             {title && <h1 className="mb-1 text-xl font-semibold sm:text-2xl">{title}</h1>}
@@ -227,13 +242,13 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
             >
               <ToggleGroupItem
                 value="private"
-                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                className="flex-1 px-3 py-1 text-xs"
               >
                 Private
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="public"
-                className="flex-1 px-3 py-1 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                className="flex-1 px-3 py-1 text-xs"
               >
                 Public
               </ToggleGroupItem>
@@ -282,7 +297,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
               }
               setCreateDialogOpen(true)
             }}
-            className="w-full rounded-full px-4 sm:w-auto h-10 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="w-full px-4 sm:w-auto h-10"
           >
             <IconPlus className="size-4 mr-2" />
             Create Cluster
@@ -338,7 +353,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-muted-foreground hover:text-foreground"
+                          className="inline-flex items-center gap-1 border bg-muted/40 px-2.5 py-1 text-muted-foreground hover:text-foreground"
                           onClick={(event) => {
                             event.stopPropagation()
                             handleMembersClick(cluster)
@@ -350,7 +365,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
                         {inviteCount > 0 && (
                           <button
                             type="button"
-                            className="inline-flex items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-muted-foreground hover:text-foreground"
+                            className="inline-flex items-center gap-1 border bg-muted/40 px-2.5 py-1 text-muted-foreground hover:text-foreground"
                             onClick={(event) => {
                               event.stopPropagation()
                               handlePendingClick(cluster)
@@ -361,12 +376,12 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
                           </button>
                         )}
                         {isOwner && (
-                          <Badge variant="secondary" className="rounded-full text-[11px]">Owner</Badge>
+                          <Badge variant="secondary" className="text-[11px]">Owner</Badge>
                         )}
                       </div>
                     </div>
                     {isOwner && (
-                      <div className="flex w-fit shrink-0 items-center gap-0.5 rounded-full border bg-muted/40 p-1">
+                      <div className="flex w-fit shrink-0 items-center gap-0.5 border bg-muted/40 p-1">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -407,9 +422,7 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
                     )}
                     {canRequestJoin && (
                       <Button
-                        variant="outline"
                         size="sm"
-                        className="rounded-full"
                         onClick={(event) => {
                           event.stopPropagation()
                           handleRequestJoin(cluster.id)
@@ -492,14 +505,13 @@ export function ClustersList({ userId, isAuthenticated, basePath = "/dashboard",
                   setClusterToDelete(null)
                 }}
                 disabled={deleting}
-                className="rounded-full"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteCluster}
                 disabled={deleting}
-                className="rounded-full bg-foreground text-background hover:bg-foreground/90"
+                className="bg-foreground text-background hover:bg-foreground/90"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </Button>

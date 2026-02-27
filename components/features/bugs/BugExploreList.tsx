@@ -105,7 +105,7 @@ export function BugExploreList({
         return visibility !== "private"
       })
       setAllBugs(publicBugs)
-      
+
       // Extract unique tags and assignees
       const tagSet = new Set<string>()
       const assigneeSet = new Set<string>()
@@ -327,7 +327,7 @@ export function BugExploreList({
             variant="outline"
             size="sm"
             onClick={clearAllFilters}
-            className="h-7 rounded-full px-4 text-xs"
+            className="h-7 px-4 text-xs"
           >
             Clear All
           </Button>
@@ -568,23 +568,19 @@ export function BugExploreList({
         onOpenFilters={() => setFiltersOpen((open) => !open)}
         filtersOpen={filtersOpen}
         renderFiltersPanel={() => (
-          <div className="rounded-lg border bg-muted/60 px-4 py-4">
+          <div className="rounded-none border bg-muted/60 px-4 py-4">
             <FilterContent />
             <div className="mt-4 flex items-center justify-end gap-2">
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-full px-4"
+                className="px-4"
                 onClick={clearAllFilters}
               >
                 Clear filters
               </Button>
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-full px-4"
+                className="px-4"
                 onClick={() => setFiltersOpen(false)}
               >
                 Cancel
@@ -592,7 +588,7 @@ export function BugExploreList({
               <Button
                 type="button"
                 size="sm"
-                className="rounded-full px-4"
+                className="px-4"
                 onClick={() => {
                   applyFilters()
                   setFiltersOpen(false)

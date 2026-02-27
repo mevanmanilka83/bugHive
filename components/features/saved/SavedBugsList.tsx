@@ -68,6 +68,7 @@ export function SavedBugsList({ userId }: SavedBugsListProps) {
       totalCount={bugs.length}
       showTitle={false}
       showReportButton={false}
+      variant="saved"
     />
   )
 }

@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
-import { Poppins, Geist_Mono } from "next/font/google";
+import { Manrope, Bricolage_Grotesque, ADLaM_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { BugHiveChatBox } from "@/components/features/chat/BugHiveChatBox";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
+const fontSans = Manrope({
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-sans",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fontSerif = Bricolage_Grotesque({
   subsets: ["latin"],
+  variable: "--font-serif",
+});
+
+const fontMono = ADLaM_Display({
+  weight: "400",
+  subsets: ["adlam"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
+        className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased overflow-x-hidden`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {children}

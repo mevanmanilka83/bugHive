@@ -94,7 +94,7 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
 
       <div className="flex flex-col gap-1.5">
         <Label>Description</Label>
-        <div className="rounded-md border border-input bg-background px-3 py-2 min-h-[100px] opacity-50 cursor-not-allowed">
+        <div className="rounded-none border border-input bg-background px-3 py-2 min-h-[100px] opacity-50 cursor-not-allowed">
           <BugDescriptionContent content={solution.description ?? ""} fallback="—" />
         </div>
       </div>
@@ -164,7 +164,7 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
                         <img
                           src={url}
                           alt={String(filename)}
-                          className="max-h-20 max-w-[120px] rounded-sm object-contain"
+                          className="max-h-20 max-w-[120px] rounded-none object-contain"
                         />
                       </TooltipContent>
                     </Tooltip>

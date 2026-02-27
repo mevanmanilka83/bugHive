@@ -206,7 +206,7 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
     >
       <FlowHandle type="target" position={Position.Top} className="!w-2.5 !h-2.5 !bg-muted-foreground/30 !border-[1.5px] !border-background !top-[-5px]" />
       <div className={cn("text-white p-2 rounded-t-xl flex items-center gap-2", colorClass)}>
-        <div className="bg-white/20 p-1 rounded-full backdrop-blur-sm">{icon}</div>
+        <div className="bg-white/20 p-1  backdrop-blur-sm">{icon}</div>
         <span className="text-xs font-bold uppercase tracking-wider text-white/90">
           {nodeType.replace(/_/g, " ")}
         </span>
@@ -512,9 +512,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
             </DialogTitle>
             <div className="flex items-center gap-2 shrink-0 flex-shrink-0 relative z-10">
               <Button
-                variant="default"
-                size="default"
-                className="shrink-0 gap-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className="shrink-0 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 onClick={openSaveDialog}
                 disabled={saving || nodes.length === 0}
               >
@@ -522,7 +520,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                 Save relationship diagram
               </Button>
               <DialogClose asChild>
-                <Button variant="outline" size="default" className="shrink-0 gap-2 rounded-full">
+                <Button size="default" className="shrink-0 gap-2">
                   <X className="h-4 w-4" />
                   Close
                 </Button>
@@ -541,7 +539,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
               ) : error ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-50 bg-background/80 backdrop-blur-sm p-4">
                   <p className="text-destructive font-medium text-center">{error}</p>
-                  <Button variant="outline" size="sm" onClick={() => { setError(null); fetchGraphData(); }}>
+                  <Button size="sm" onClick={() => { setError(null); fetchGraphData(); }}>
                     Retry
                   </Button>
                 </div>
@@ -577,7 +575,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                     <div className="grid grid-cols-1 gap-1.5">
                       {Object.entries(nodeTypeColors).slice(0, 8).map(([type, color]) => (
                         <div key={type} className="flex items-center gap-2">
-                          <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", color.split(" ")[0])} />
+                          <div className={cn("w-2.5 h-2.5  shrink-0", color.split(" ")[0])} />
                           <span className="capitalize text-[10px] text-muted-foreground">{type.replace(/_/g, " ")}</span>
                         </div>
                       ))}
@@ -682,10 +680,10 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-5">
-            <Button variant="outline" onClick={() => setSaveDialogOpen(false)} className="rounded-full">
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)} className="">
               Cancel
             </Button>
-            <Button onClick={handleSaveWorkspace} disabled={saving} className="rounded-full bg-primary text-primary-foreground font-semibold shadow-md px-6 py-2">
+            <Button onClick={handleSaveWorkspace} disabled={saving} className=" bg-primary text-primary-foreground font-semibold shadow-md px-6 py-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save
             </Button>

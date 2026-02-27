@@ -404,16 +404,16 @@ export function WorkspaceCanvas({ initialWorkspace, isOwner }: { initialWorkspac
             <Panel position="top-right" className="bg-background/80 backdrop-blur-sm p-2 rounded-xl border flex gap-2 flex-wrap">
                 {isOwner && (
                     <>
-                        <Button variant="outline" size="sm" onClick={handleOpenAddIdea}>
+                        <Button size="sm" onClick={handleOpenAddIdea}>
                             <Plus className="h-4 w-4 mr-1" /> Idea Node
                         </Button>
-                        <Button variant="default" size="sm" onClick={() => handleSave(false)} disabled={saving}>
+                        <Button size="sm" onClick={() => handleSave(false)} disabled={saving}>
                             {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
                             Save Changes
                         </Button>
                     </>
                 )}
-                <Button variant="outline" size="sm" onClick={() => router.push("/workspaces")}>
+                <Button size="sm" onClick={() => router.push("/workspaces")}>
                     <X className="h-4 w-4 mr-1" /> Cancel
                 </Button>
             </Panel>

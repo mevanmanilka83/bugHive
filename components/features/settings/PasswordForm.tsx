@@ -164,16 +164,15 @@ export function PasswordForm({ authProvider }: PasswordFormProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 pt-10">
-            <Button type="submit" disabled={isSubmitting} className="rounded-full">
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <IconLoader2 className="size-4 mr-2 animate-spin" />}
               Change password
             </Button>
             <Button
               type="button"
-              variant="outline"
               onClick={() => router.push("/settings")}
               disabled={isSubmitting}
-              className="rounded-full font-semibold bg-background border-border hover:bg-muted/50"
+              className="font-semibold bg-background border-border hover:bg-muted/50"
             >
               Cancel
             </Button>
@@ -182,27 +181,27 @@ export function PasswordForm({ authProvider }: PasswordFormProps) {
       )}
 
       {canChangePassword && (
-      <div className="border-t border-border/60 pt-10">
-        <h3 className="text-sm font-medium text-foreground mb-5">Password security tips</h3>
-        <ul className="space-y-2.5 text-xs text-muted-foreground">
-          <li className="flex items-start gap-2">
-            <span className="text-primary">•</span>
-            <span>Use a unique password that you don't use elsewhere</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-primary">•</span>
-            <span>Make it at least 12 characters long</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-primary">•</span>
-            <span>Include a mix of letters, numbers, and symbols</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-primary">•</span>
-            <span>Consider using a password manager</span>
-          </li>
-        </ul>
-      </div>
+        <div className="border-t border-border/60 pt-10">
+          <h3 className="text-sm font-medium text-foreground mb-5">Password security tips</h3>
+          <ul className="space-y-2.5 text-xs text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>Use a unique password that you don't use elsewhere</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>Make it at least 12 characters long</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>Include a mix of letters, numbers, and symbols</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary">•</span>
+              <span>Consider using a password manager</span>
+            </li>
+          </ul>
+        </div>
       )}
     </div>
   )
