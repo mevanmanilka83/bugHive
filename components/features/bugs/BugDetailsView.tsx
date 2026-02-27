@@ -426,7 +426,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/bugs/${currentBug.id}/solutions/${solution.id}`}
-                          className="text-base font-semibold text-blue-600 hover:text-blue-800 mb-1.5 cursor-pointer line-clamp-2"
+                          className="text-base font-semibold text-brand-blue hover:underline mb-1.5 cursor-pointer line-clamp-2 transition-all"
                         >
                           {solution.title || "Untitled solution"}
                         </Link>
@@ -462,7 +462,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                                   href={String(link)}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                  className="text-xs text-brand-blue hover:underline break-all"
                                 >
                                   {String(link)}
                                 </a>
@@ -516,7 +516,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col items-start">
-                            <span className="text-blue-600 text-xs">
+                            <span className="text-blue-600 text-xs text-right">
                               {authorName}
                             </span>
                           </div>

@@ -87,7 +87,7 @@ export function BugDetailedList({
         const ids = Array.isArray(data?.savedBugIds) ? data.savedBugIds : []
         setSavedBugIds(new Set(ids))
       })
-      .catch(() => {})
+      .catch(() => { })
     return () => {
       cancelled = true
     }
@@ -102,7 +102,7 @@ export function BugDetailedList({
           const ids = Array.isArray(data?.savedBugIds) ? data.savedBugIds : []
           setSavedBugIds(new Set(ids))
         })
-        .catch(() => {})
+        .catch(() => { })
     }
     window.addEventListener("saved:changed", onSavedChange)
     return () => window.removeEventListener("saved:changed", onSavedChange)
@@ -140,7 +140,7 @@ export function BugDetailedList({
       const counts: Record<string, number> = {}
       const users: Record<string, { name?: string; image?: string; reputation?: number }> = {}
       const uniqueUserIds = new Set<string>()
-      
+
       // Collect unique user IDs
       bugs.forEach(bug => {
         if (bug.created_by) {
@@ -380,75 +380,75 @@ export function BugDetailedList({
             {/* Tabs group – horizontal scroll on mobile */}
             <div className="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
               <div className="inline-flex flex-nowrap items-center gap-1 rounded-md border bg-background px-1 py-1 min-w-0">
-              <button
-                className={cn(
-                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                  sortBy === "newest"
-                    ? "bg-muted font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                onClick={() => setSortBy("newest")}
-              >
-                Newest
-              </button>
-              <button
-                className={cn(
-                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                  sortBy === "active"
-                    ? "bg-muted font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                onClick={() => setSortBy("active")}
-              >
-                Active
-              </button>
-              <button
-                className={cn(
-                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                  sortBy === "votes"
-                    ? "bg-muted font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                onClick={() => setSortBy("votes")}
-              >
-                Most voted
-              </button>
-              <button
-                className={cn(
-                  "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
-                  sortBy === "unanswered"
-                    ? "bg-muted font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                onClick={() => setSortBy("unanswered")}
-              >
-                Unanswered
-              </button>
+                <button
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                    sortBy === "newest"
+                      ? "bg-muted font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setSortBy("newest")}
+                >
+                  Newest
+                </button>
+                <button
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                    sortBy === "active"
+                      ? "bg-muted font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setSortBy("active")}
+                >
+                  Active
+                </button>
+                <button
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                    sortBy === "votes"
+                      ? "bg-muted font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setSortBy("votes")}
+                >
+                  Most voted
+                </button>
+                <button
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer",
+                    sortBy === "unanswered"
+                      ? "bg-muted font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setSortBy("unanswered")}
+                >
+                  Unanswered
+                </button>
 
-              {/* More dropdown for extra, project-specific modes */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={cn(
-                      "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer inline-flex items-center gap-1",
-                      sortBy === "most_viewed" || sortBy === "my_bugs"
-                        ? "bg-muted font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    More
-                    <IconChevronDown className="size-3" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSortBy("most_viewed")}>
-                    Most viewed
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy("my_bugs")}>
-                    My reported bugs
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                {/* More dropdown for extra, project-specific modes */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={cn(
+                        "px-3 py-1.5 text-sm font-normal rounded-md transition-colors cursor-pointer inline-flex items-center gap-1",
+                        sortBy === "most_viewed" || sortBy === "my_bugs"
+                          ? "bg-muted font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      More
+                      <IconChevronDown className="size-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortBy("most_viewed")}>
+                      Most viewed
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy("my_bugs")}>
+                      My reported bugs
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
@@ -485,8 +485,8 @@ export function BugDetailedList({
           const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
           const description = bug.description || ""
           const plainDescription = stripHtml(description)
-          const descriptionSnippet = plainDescription.length > 200 
-            ? plainDescription.substring(0, 200) + "..." 
+          const descriptionSnippet = plainDescription.length > 200
+            ? plainDescription.substring(0, 200) + "..."
             : plainDescription
           const tags = Array.isArray(bug.tags) ? bug.tags : []
           const clusterName = bug.cluster_name || bug.clusterName || bug.cluster?.name
@@ -523,8 +523,8 @@ export function BugDetailedList({
 
               {/* Main Content Area */}
               <div className="flex-1 min-w-0">
-                <h3 
-                  className="text-base font-semibold text-blue-600 hover:text-blue-800 mb-1.5 cursor-pointer line-clamp-2"
+                <h3
+                  className="text-base font-semibold text-brand-blue hover:underline mb-1.5 cursor-pointer line-clamp-2 transition-all"
                   onClick={() => onBugClick?.(bug.id)}
                 >
                   {bugTitle}
@@ -635,9 +635,9 @@ export function BugDetailedList({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start">
-                    <a 
-                      href="#" 
-                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    <a
+                      href="#"
+                      className="text-brand-blue hover:underline text-xs transition-all"
                       onClick={(e) => {
                         e.stopPropagation()
                         // Navigate to user profile if needed

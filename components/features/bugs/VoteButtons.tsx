@@ -115,7 +115,7 @@ export function VoteButtons({
           size="sm"
           className={cn(
             "h-6 w-6 p-0",
-            userVote === "downvote" && "text-blue-500 hover:text-blue-600"
+            userVote === "downvote" && "text-brand-blue hover:text-brand-blue/80 transition-all font-bold"
           )}
           onClick={() => handleVote("downvote")}
           disabled={isVoting || !userId}
@@ -146,7 +146,7 @@ export function VoteButtons({
         className={cn(
           "text-sm font-semibold min-w-[3ch] text-center",
           score > 0 && "text-primary",
-          score < 0 && "text-blue-500"
+          score < 0 && "text-brand-blue"
         )}
       >
         {score > 0 ? `+${score}` : score}
@@ -155,8 +155,8 @@ export function VoteButtons({
         variant="ghost"
         size="sm"
         className={cn(
-          "h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-950",
-          userVote === "downvote" && "text-blue-500 bg-blue-50 dark:bg-blue-950"
+          "h-8 w-8 p-0 hover:bg-brand-blue/10 transition-all",
+          userVote === "downvote" && "text-brand-blue bg-brand-blue/10 font-bold"
         )}
         onClick={() => handleVote("downvote")}
         disabled={isVoting || !userId}

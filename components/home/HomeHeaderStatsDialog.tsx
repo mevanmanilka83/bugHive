@@ -64,7 +64,7 @@ export function HomeHeaderStatsDialog() {
           </div>
           <button
             onClick={() => setOpen(false)}
-            className="rounded-full p-2 text-muted-foreground/70 hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-icon-orange"
+            className="rounded-full p-2 text-muted-foreground/70 hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue"
             aria-label="Close dialog"
           >
             <XIcon className="size-4" />
@@ -82,7 +82,7 @@ export function HomeHeaderStatsDialog() {
                 {/* Community Stats Section */}
                 <section>
                   <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
-                    <div className="size-1 rounded-full bg-icon-orange" />
+                    <div className="size-1 rounded-full bg-brand-blue" />
                     Community stats
                   </h2>
                   <div className="grid grid-cols-2 gap-3">
@@ -128,7 +128,7 @@ export function HomeHeaderStatsDialog() {
                 {/* Teams & Clusters Section */}
                 <section>
                   <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
-                    <div className="size-1 rounded-full bg-icon-orange" />
+                    <div className="size-1 rounded-full bg-brand-blue" />
                     Teams & clusters
                   </h2>
                   {data.clusters.length === 0 ? (
@@ -143,10 +143,10 @@ export function HomeHeaderStatsDialog() {
                             onClick={() => setOpen(false)}
                           >
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="truncate text-sm text-foreground/90 group-hover:text-icon-orange transition-colors">{c.name}</span>
-                              <span className="text-[10px] uppercase font-semibold text-icon-orange/70 bg-icon-orange/5 px-1.5 py-px rounded-sm opacity-70 group-hover:opacity-100 transition-opacity">Open</span>
+                              <span className="truncate text-sm text-foreground/90 group-hover:text-brand-blue transition-colors">{c.name}</span>
+                              <span className="text-[10px] uppercase font-semibold text-brand-blue/70 bg-brand-blue/5 px-1.5 py-px rounded-sm opacity-70 group-hover:opacity-100 transition-opacity">Open</span>
                             </div>
-                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-icon-orange/50 transition-colors" />
+                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-brand-blue/50 transition-colors" />
                           </Link>
                         </li>
                       ))}
@@ -154,10 +154,10 @@ export function HomeHeaderStatsDialog() {
                   )}
                   <Link
                     href="/clusters"
-                    className="text-xs font-medium text-muted-foreground hover:text-icon-orange transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
+                    className="text-xs font-medium text-muted-foreground hover:text-brand-blue transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
                     onClick={() => setOpen(false)}
                   >
-                    View all clusters <ArrowRight className="size-3 text-icon-orange" />
+                    View all clusters <ArrowRight className="size-3 text-brand-blue" />
                   </Link>
                 </section>
               </div>
@@ -167,7 +167,7 @@ export function HomeHeaderStatsDialog() {
                 {/* Popular Unanswered Section */}
                 <section>
                   <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground/80 mb-2.5 flex items-center gap-2">
-                    <div className="size-1 rounded-full bg-icon-orange" />
+                    <div className="size-1 rounded-full bg-brand-blue" />
                     Popular unanswered
                   </h2>
                   {data.unansweredBugs.length === 0 ? (
@@ -183,9 +183,9 @@ export function HomeHeaderStatsDialog() {
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className="size-1.5 rounded-full bg-foreground/20 shrink-0" />
-                              <span className="truncate text-sm text-foreground/90 group-hover:text-icon-orange transition-colors">{b.title}</span>
+                              <span className="truncate text-sm text-foreground/90 group-hover:text-brand-blue transition-colors">{b.title}</span>
                             </div>
-                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-icon-orange/50 transition-colors" />
+                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-brand-blue/50 transition-colors" />
                           </Link>
                         </li>
                       ))}
@@ -193,10 +193,10 @@ export function HomeHeaderStatsDialog() {
                   )}
                   <Link
                     href="/?sort=unanswered"
-                    className="text-xs font-medium text-muted-foreground hover:text-icon-orange transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
+                    className="text-xs font-medium text-muted-foreground hover:text-brand-blue transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
                     onClick={() => setOpen(false)}
                   >
-                    View all unanswered <ArrowRight className="size-3 text-icon-orange" />
+                    View all unanswered <ArrowRight className="size-3 text-brand-blue" />
                   </Link>
                 </section>
 
@@ -218,10 +218,10 @@ export function HomeHeaderStatsDialog() {
                             onClick={() => setOpen(false)}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0 group-hover:bg-icon-orange/50 transition-colors" />
-                              <span className="truncate text-sm text-foreground/90 group-hover:text-icon-orange transition-colors">{b.title}</span>
+                              <div className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0 group-hover:bg-brand-blue/50 transition-colors" />
+                              <span className="truncate text-sm text-foreground/90 group-hover:text-brand-blue transition-colors">{b.title}</span>
                             </div>
-                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-icon-orange/50 transition-colors" />
+                            <ChevronRight className="size-3.5 text-muted-foreground/30 group-hover:text-brand-blue/50 transition-colors" />
                           </Link>
                         </li>
                       ))}
@@ -229,10 +229,10 @@ export function HomeHeaderStatsDialog() {
                   )}
                   <Link
                     href="/"
-                    className="text-xs font-medium text-muted-foreground hover:text-icon-orange transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
+                    className="text-xs font-medium text-muted-foreground hover:text-brand-blue transition-colors mt-1.5 inline-flex items-center gap-1 px-1"
                     onClick={() => setOpen(false)}
                   >
-                    Return to feed <ArrowRight className="size-3 text-icon-orange" />
+                    Return to feed <ArrowRight className="size-3 text-brand-blue" />
                   </Link>
                 </section>
               </div>

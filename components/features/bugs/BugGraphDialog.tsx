@@ -613,7 +613,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                       {graphData.insights.recurringEnvironments.length > 0 && (
                         <Card className="bg-background/90 backdrop-blur-md border-blue-200/50 shadow-sm animate-in fade-in slide-in-from-left-4 duration-700">
                           <CardHeader className="p-3 pb-1">
-                            <CardTitle className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-2">
+                            <CardTitle className="text-xs font-bold uppercase tracking-wider text-brand-blue flex items-center gap-2">
                               <Globe className="h-3 w-3" />
                               Affected Envs
                             </CardTitle>
@@ -621,7 +621,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                           <CardContent className="p-3 pt-1">
                             <div className="flex flex-wrap gap-2">
                               {graphData.insights.recurringEnvironments.map((env, idx) => (
-                                <Badge key={idx} variant="outline" className="text-[10px] h-5 px-1.5 bg-blue-50/50 text-blue-700 border-blue-100">
+                                <Badge key={idx} variant="outline" className="text-[10px] h-5 px-1.5 bg-brand-blue/5 text-brand-blue border-brand-blue/20">
                                   {env.environment}: {env.count}
                                 </Badge>
                               ))}
@@ -727,7 +727,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
             {/* Helper Metrics */}
             <div className="flex flex-wrap gap-2">
               {selectedNodeData?.confidence && (
-                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0">
+                <Badge className="bg-brand-blue text-white hover:bg-brand-blue/90 border-0">
                   Confidence: {Math.round(selectedNodeData.confidence * 100)}%
                 </Badge>
               )}

@@ -106,8 +106,8 @@ export function RelatedBugsPanel({
   const linkBaseClass = cn(
     "flex items-start w-full min-w-0 rounded-md px-2 py-2 text-left text-sm leading-normal",
     "transition-colors duration-150",
-    "text-blue-600 dark:text-blue-400 hover:bg-blue-50/80 dark:hover:bg-blue-950/30 hover:underline",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+    "text-brand-blue hover:underline",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/60 focus-visible:ring-offset-2",
     "break-words whitespace-normal"
   )
 
@@ -182,7 +182,6 @@ export function RelatedBugsPanel({
                           className={linkBaseClass}
                           title={decodeHtml(item.title)}
                         >
-                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
                           <span className="flex-1">{decodeHtml(item.title)}</span>
                         </a>
                       </li>
@@ -207,7 +206,6 @@ export function RelatedBugsPanel({
                           className={linkBaseClass}
                           title={decodeHtml(item.title)}
                         >
-                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
                           <span className="flex-1">{decodeHtml(item.title)}</span>
                         </a>
                       </li>
@@ -232,7 +230,6 @@ export function RelatedBugsPanel({
                           className={linkBaseClass}
                           title={decodeHtml(item.title)}
                         >
-                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
                           <span className="flex-1">{decodeHtml(item.title)}</span>
                         </a>
                       </li>
@@ -256,7 +253,6 @@ export function RelatedBugsPanel({
                           title={decodeHtml(item.title)}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span className="mr-2.5 mt-1.5 size-1.5 rounded-full bg-blue-500/40 shrink-0" aria-hidden="true" />
                           <span className="flex-1">{decodeHtml(item.title)}</span>
                         </Link>
                       </li>

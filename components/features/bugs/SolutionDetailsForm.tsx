@@ -113,7 +113,7 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
               return (
                 <a
                   key={idx}
-                  className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                  className="underline underline-offset-4 break-all text-brand-blue transition-all"
                   href={linkStr}
                   target="_blank"
                   rel="noreferrer"
@@ -138,9 +138,9 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
                 typeof att === "string"
                   ? att.split("/").pop() || att
                   : (att as { name?: string; filename?: string })?.name ||
-                    (att as { name?: string; filename?: string })?.filename ||
-                    url?.split("/").pop() ||
-                    url
+                  (att as { name?: string; filename?: string })?.filename ||
+                  url?.split("/").pop() ||
+                  url
               const showPreview = isImageUrl(url)
               return (
                 <div key={idx} className="inline-flex">
@@ -148,7 +148,7 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                          className="underline underline-offset-4 break-all text-icon-orange hover:underline transition-all"
                           href={url}
                           target="_blank"
                           rel="noreferrer"
@@ -170,7 +170,7 @@ export function SolutionDetailsForm({ solution, userId }: SolutionDetailsFormPro
                     </Tooltip>
                   ) : (
                     <a
-                      className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                      className="underline underline-offset-4 break-all text-brand-blue transition-all"
                       href={url}
                       target="_blank"
                       rel="noreferrer"

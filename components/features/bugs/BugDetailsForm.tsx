@@ -279,7 +279,7 @@ export function BugDetailsForm({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                          className="underline underline-offset-4 break-all text-brand-blue transition-all"
                           href={url}
                           target="_blank"
                           rel="noreferrer"
@@ -301,7 +301,7 @@ export function BugDetailsForm({
                     </Tooltip>
                   ) : (
                     <a
-                      className="underline underline-offset-4 break-all text-blue-600 hover:text-blue-800"
+                      className="underline underline-offset-4 break-all text-brand-blue transition-all"
                       href={url}
                       target="_blank"
                       rel="noreferrer"

@@ -98,7 +98,7 @@ export function WorkspaceGraphList({
               >
                 {/* Main Content Area */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold text-blue-600 group-hover:text-blue-800 mb-1.5 line-clamp-2">
+                  <h3 className="text-base font-semibold text-brand-blue group-hover:underline mb-1.5 line-clamp-2 transition-all">
                     {g.title || "Untitled graph"}
                   </h3>
                   {g.description && (
