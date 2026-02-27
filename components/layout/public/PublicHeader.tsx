@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { GalleryVerticalEnd } from "lucide-react"
+import Image from "next/image"
 
 export function PublicHeader({
   user
@@ -23,9 +23,13 @@ export function PublicHeader({
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <div className="flex items-center gap-2">
-          <div className="bg-icon-orange text-white flex size-5 items-center justify-center rounded-md">
-            <GalleryVerticalEnd className="size-3" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="BugHive Logo"
+            width={20}
+            height={20}
+            className="rounded-md"
+          />
           <h1 className="text-base font-medium">BugHive Dashboard</h1>
         </div>
         <div className="ml-auto flex items-center gap-2">

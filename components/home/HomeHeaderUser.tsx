@@ -23,14 +23,14 @@ import { signOut } from "next-auth/react"
 
 interface HomeHeaderUserProps {
   session:
-    | {
-        user?: {
-          name?: string | null
-          email?: string | null
-          image?: string | null
-        } | null
-      }
-    | null
+  | {
+    user?: {
+      name?: string | null
+      email?: string | null
+      image?: string | null
+    } | null
+  }
+  | null
 }
 
 export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
@@ -62,7 +62,7 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
         <DialogTrigger asChild>
           <button
             type="button"
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="rounded-full border-2 border-icon-orange p-1.5 text-icon-orange hover:bg-icon-orange/10 hover:text-icon-orange/90 focus:outline-none focus:ring-2 focus:ring-icon-orange focus:ring-offset-2 transition-colors"
             aria-label="Account details"
           >
             <Info className="h-4 w-4" />

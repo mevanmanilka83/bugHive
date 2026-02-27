@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { ArrowLeft, GalleryVerticalEnd } from "lucide-react"
+import Image from "next/image"
+import { ArrowLeft } from "lucide-react"
 import { SignupForm } from "@/components/features/auth/SignupForm"
 
 export default function SignupPage({
@@ -19,9 +20,13 @@ export default function SignupPage({
           <span>Back</span>
         </Link>
         <a href="/" className="flex items-center gap-2 self-center font-medium">
-          <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-            <GalleryVerticalEnd className="size-4" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="BugHive Logo"
+            width={24}
+            height={24}
+            className="rounded-md"
+          />
           BugHive
         </a>
         <SignupForm callbackUrl={callbackUrl} />
