@@ -176,3 +176,88 @@
 .lexkit-list-ul { @apply list-disc pl-6 my-1; }
 .lexkit-list-ol { @apply list-decimal pl-6 my-1; }
 .lexkit-link { @apply text-primary underline cursor-pointer; }
+
+/* Global icon animation (lucide + tabler) */
+@keyframes icon-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-0.6px) scale(1.02);
+  }
+}
+
+.lucide,
+.icon-tabler,
+[class*="icon-tabler-"] {
+  transform-origin: center;
+  animation: icon-breathe 2.2s ease-in-out infinite;
+  transition: transform 180ms ease;
+}
+
+.lucide:hover,
+.icon-tabler:hover,
+[class*="icon-tabler-"]:hover,
+button:hover .lucide,
+a:hover .lucide,
+[role="button"]:hover .lucide,
+button:hover .icon-tabler,
+a:hover .icon-tabler,
+[role="button"]:hover .icon-tabler,
+button:hover [class*="icon-tabler-"],
+a:hover [class*="icon-tabler-"],
+[role="button"]:hover [class*="icon-tabler-"] {
+  transform: scale(1.08) translateY(-1px);
+}
+
+.lucide:active,
+.icon-tabler:active,
+[class*="icon-tabler-"]:active,
+button:active .lucide,
+a:active .lucide,
+[role="button"]:active .lucide,
+button:active .icon-tabler,
+a:active .icon-tabler,
+[role="button"]:active .icon-tabler,
+button:active [class*="icon-tabler-"],
+a:active [class*="icon-tabler-"],
+[role="button"]:active [class*="icon-tabler-"] {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lucide,
+  .icon-tabler,
+  [class*="icon-tabler-"] {
+    animation: none;
+    transition: none;
+  }
+
+  .lucide:hover,
+  .icon-tabler:hover,
+  [class*="icon-tabler-"]:hover,
+  button:hover .lucide,
+  a:hover .lucide,
+  [role="button"]:hover .lucide,
+  button:hover .icon-tabler,
+  a:hover .icon-tabler,
+  [role="button"]:hover .icon-tabler,
+  button:hover [class*="icon-tabler-"],
+  a:hover [class*="icon-tabler-"],
+  [role="button"]:hover [class*="icon-tabler-"],
+  .lucide:active,
+  .icon-tabler:active,
+  [class*="icon-tabler-"]:active,
+  button:active .lucide,
+  a:active .lucide,
+  [role="button"]:active .lucide,
+  button:active .icon-tabler,
+  a:active .icon-tabler,
+  [role="button"]:active .icon-tabler,
+  button:active [class*="icon-tabler-"],
+  a:active [class*="icon-tabler-"],
+  [role="button"]:active [class*="icon-tabler-"] {
+    transform: none;
+  }
+}

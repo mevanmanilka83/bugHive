@@ -39,14 +39,33 @@ export const authConfig = {
             email: userEmail,
             name: userName || extractUsernameFromEmail(userEmail),
             image: userImage,
-            email_verified: account?.provider === 'github' ? new Date().toISOString() : null,
+            email_verified: account?.provider === "github" ? new Date().toISOString() : null,
           }
         }
-        token.provider = account?.provider ?? 'credentials'
+        token.provider = account?.provider ?? "credentials"
       } else if (token.email && !token.id) {
         token.id = generateUUIDFromEmailSync(token.email as string)
       } else if (token.email && token.id) {
         token.id = generateUUIDFromEmailSync(token.email as string)
+      }
+      // Attach role from database to token on every JWT callback
+      if (token.id) {
+        try {
+          const db = getSupabaseAdmin()
+          const { data: userRow } = await db
+            .from("users")
+            .select("role")
+            .eq("id", token.id as string)
+            .maybeSingle()
+          if (userRow && typeof userRow.role === "string") {
+            ;(token as any).role = userRow.role
+          }
+        } catch {
+          // ignore role fetch errors; default will be used
+        }
+      }
+      if (!(token as any).role) {
+        ;(token as any).role = "user"
       }
       return token
     },
@@ -61,7 +80,10 @@ export const authConfig = {
           session.user.email = token.email as string
         }
         if (token.provider) {
-          (session.user as { provider?: string }).provider = token.provider as string
+          ;(session.user as { provider?: string }).provider = token.provider as string
+        }
+        if ((token as any).role) {
+          ;(session.user as { role?: string }).role = (token as any).role as string
         }
 
         if (session?.user?.id) {
@@ -69,13 +91,14 @@ export const authConfig = {
             const db = getSupabaseAdmin()
             const { data: userRow } = await db
               .from("users")
-              .select("name, image")
+              .select("name, image, role")
               .eq("id", session.user.id)
               .single()
-            const data = userRow as { name: string | null; image: string | null } | null
+            const data = userRow as { name: string | null; image: string | null; role?: string | null } | null
             if (data) {
               if (data.name != null) session.user.name = data.name
               if (data.image != null) session.user.image = data.image
+              if (data.role) (session.user as { role?: string }).role = data.role
             }
           } catch {
           }

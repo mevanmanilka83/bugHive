@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ThumbsDown, ThumbsUp, Save } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ArrowDown, ArrowUp, Save } from "lucide-react"
 import {
     ReactFlow,
     Node,
@@ -106,13 +106,13 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
                 <div className="px-2 py-1 flex items-center gap-2 bg-muted/10 border-t border-border/10">
                     {data.upvotes > 0 && (
                         <div className="flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-500 font-medium tracking-tight">
-                            <ThumbsUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            <ArrowUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             {data.upvotes}
                         </div>
                     )}
                     {data.downvotes > 0 && (
                         <div className="flex items-center gap-1 text-[10px] sm:text-xs text-red-600 dark:text-red-500 font-medium tracking-tight">
-                            <ThumbsDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            <ArrowDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             {data.downvotes}
                         </div>
                     )}

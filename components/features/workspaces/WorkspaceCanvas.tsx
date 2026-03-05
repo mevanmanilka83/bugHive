@@ -36,7 +36,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Loader2, Save, Plus, Lightbulb, Wrench, Sparkles, X, Trash2, Pencil } from "lucide-react"
+import { Loader2, Save, Plus, Lightbulb, Wrench, Sparkles, X, Pencil } from "lucide-react"
+import { DeleteIcon } from "@/components/ui/delete"
 import { useRouter } from "next/navigation"
 import { cn, stripHtml } from "@/lib/utils-client"
 import { Badge } from "@/components/ui/badge"
@@ -119,7 +120,7 @@ function IdeaNode({ id, data, selected }: { id: string; data: any; selected: boo
                     }}
                     className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-background/70 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground shadow-sm transition-colors"
                 >
-                    <Trash2 className="h-3 w-3" />
+                    <DeleteIcon size={12} className="h-3 w-3" />
                 </button>
             </div>
             <Handle type="target" position={Position.Top} className="opacity-0" />
@@ -488,7 +489,7 @@ export function WorkspaceCanvas({ initialWorkspace, isOwner }: { initialWorkspac
                                                     }}
                                                     className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <DeleteIcon size={12} className="h-3 w-3" />
                                                 </button>
                                             </div>
                                         </div>

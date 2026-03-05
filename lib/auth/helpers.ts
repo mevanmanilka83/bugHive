@@ -17,6 +17,7 @@ export type AuthenticatedSession = Awaited<ReturnType<typeof auth>> & {
     email?: string | null
     name?: string | null
     image?: string | null
+    role?: string | null
   }
 }
 
@@ -118,6 +119,31 @@ export async function getAuthenticatedUserId(): Promise<string | null> {
 export function getUsernameFromSession(session: AuthenticatedSession): string {
   if (!session?.user) return 'User'
   return session.user.name || extractUsernameFromEmail(session.user.email)
+}
+
+/**
+ * Role helpers
+ */
+export type UserRole = "user" | "admin"
+
+export function userHasRole(session: AuthenticatedSession | null | undefined, role: UserRole): boolean {
+  const userRole = (session as AuthenticatedSession | null | undefined)?.user?.role ?? "user"
+  if (role === "user") return !!session?.user?.id
+  return userRole === role
+}
+
+export async function requireRole(role: UserRole): Promise<
+  | { success: false; error: string; session: null }
+  | { success: true; session: AuthenticatedSession }
+> {
+  const base = await requireAuth()
+  if (!base.success) return base
+  const session = base.session
+  const userRole = session.user.role ?? "user"
+  if (role === "admin" && userRole !== "admin") {
+    return { success: false, error: "Forbidden", session: null }
+  }
+  return { success: true, session }
 }
 
 /**

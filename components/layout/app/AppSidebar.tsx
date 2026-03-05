@@ -3,14 +3,14 @@
 import * as React from "react"
 import {
   IconDashboard,
-  IconBell,
   IconFileDescription,
   IconSearch,
-  IconSettings,
-  IconUsers,
   IconGitBranch,
 } from "@tabler/icons-react"
 import { GalleryVerticalEnd, Share2 } from "lucide-react"
+import { BellIcon } from "@/components/ui/bell"
+import { SettingsIcon } from "@/components/ui/settings"
+import { UsersIcon } from "@/components/ui/users"
 
 import { GlobalGraphDialog } from "@/components/features/graph/GlobalGraphDialog"
 import { NavMain } from "@/components/navigation/NavMain"
@@ -36,6 +36,25 @@ export function AppSidebar({
     image?: string | null
   }
 }) {
+  const BellNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <BellIcon size={16} className={className} />
+    ),
+    []
+  )
+  const SettingsNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <SettingsIcon size={16} className={className} />
+    ),
+    []
+  )
+  const ClustersNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <UsersIcon size={16} className={className} />
+    ),
+    []
+  )
+
   const [notificationCount, setNotificationCount] = React.useState(0)
   const [graphOpen, setGraphOpen] = React.useState(false)
 
@@ -96,7 +115,7 @@ export function AppSidebar({
     {
       title: "Team Clusters",
       url: "/dashboard/clusters",
-      icon: IconUsers,
+      icon: ClustersNavIcon,
     },
     {
       title: "Saved Graphs",
@@ -109,13 +128,13 @@ export function AppSidebar({
     {
       title: "Notifications",
       url: "/notifications",
-      icon: IconBell,
+      icon: BellNavIcon,
       notificationCount,
     },
     {
       title: "Settings",
       url: "/settings",
-      icon: IconSettings,
+      icon: SettingsNavIcon,
     },
   ]
 

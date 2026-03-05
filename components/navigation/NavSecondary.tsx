@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { type Icon } from "@tabler/icons-react"
 import { NotificationBadge } from "@/components/dashboard/NotificationBadge"
 
 import {
@@ -19,7 +18,7 @@ export function NavSecondary({
   items: {
     title: string
     url: string
-    icon: Icon
+    icon: React.ComponentType<{ className?: string }>
     notificationCount?: number
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
@@ -31,7 +30,7 @@ export function NavSecondary({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
                 <a href={item.url} className="flex items-center w-full">
-                  <item.icon />
+                  <item.icon className="size-4" />
                   <span>{item.title}</span>
                   {item.notificationCount !== undefined && (
                     <NotificationBadge count={item.notificationCount} />

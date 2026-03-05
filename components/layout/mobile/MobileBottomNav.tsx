@@ -4,15 +4,15 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
-  IconActivity,
-  IconBell,
-  IconBookmark,
   IconBug,
-  IconHome2,
   IconLogin,
-  IconSettings,
-  IconUsersGroup,
 } from "@tabler/icons-react"
+import { ActivityIcon } from "@/components/ui/activity"
+import { BellIcon } from "@/components/ui/bell"
+import { BookmarkIcon } from "@/components/ui/bookmark"
+import { HomeIcon } from "@/components/ui/home"
+import { SettingsIcon } from "@/components/ui/settings"
+import { UsersIcon } from "@/components/ui/users"
 
 type NavKey =
   | "home"
@@ -59,6 +59,43 @@ export function MobileBottomNav({
   isAuthenticated,
   useAuthFallback = false,
 }: MobileBottomNavProps) {
+  const BellNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <BellIcon size={20} className={className} />
+    ),
+    []
+  )
+  const BookmarkNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <BookmarkIcon size={20} className={className} />
+    ),
+    []
+  )
+  const HomeNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <HomeIcon size={20} className={className} />
+    ),
+    []
+  )
+  const SettingsNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <SettingsIcon size={20} className={className} />
+    ),
+    []
+  )
+  const ActivityNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <ActivityIcon size={20} className={className} />
+    ),
+    []
+  )
+  const ClustersNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <UsersIcon size={20} className={className} />
+    ),
+    []
+  )
+
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const returnTo = React.useMemo(() => {
@@ -68,7 +105,7 @@ export function MobileBottomNav({
   const authFallbackHref = `/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`
 
   const items: NavItem[] = [
-    { key: "home", title: "Home", href: "/", icon: IconHome2 },
+    { key: "home", title: "Home", href: "/", icon: HomeNavIcon },
     {
       key: "mybugs",
       title: "My Bugs",
@@ -80,41 +117,41 @@ export function MobileBottomNav({
       key: "clusters",
       title: "Clusters",
       href: "/clusters",
-      icon: IconUsersGroup,
+      icon: ClustersNavIcon,
     },
     {
       key: "notifications",
       title: "Alerts",
       href: "/notifications",
-      icon: IconBell,
+      icon: BellNavIcon,
       requiresAuth: true,
     },
     {
       key: "saved",
       title: "Saved",
       href: "/saved",
-      icon: IconBookmark,
+      icon: BookmarkNavIcon,
       requiresAuth: true,
     },
     {
       key: "workspaces",
       title: "Workspaces",
       href: "/workspaces",
-      icon: IconBookmark,
+      icon: BookmarkNavIcon,
       requiresAuth: true,
     },
     {
       key: "activity",
       title: "Activity",
       href: "/activity",
-      icon: IconActivity,
+      icon: ActivityNavIcon,
       requiresAuth: true,
     },
     {
       key: "settings",
       title: "Settings",
       href: "/settings",
-      icon: IconSettings,
+      icon: SettingsNavIcon,
       requiresAuth: true,
     },
   ]

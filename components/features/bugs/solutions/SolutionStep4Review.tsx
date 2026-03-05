@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { BugDescriptionContent } from "@/components/features/bugs/BugDescriptionContent"
+import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 
@@ -90,7 +91,7 @@ export default function SolutionStep4Review({
       </div>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-        <Button  onClick={onBack} className="w-full  sm:w-auto">Back</Button>
+        <Button onClick={onBack} className="w-full  sm:w-auto"><ArrowLeftIcon size={16} className="size-4 mr-2" />Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
           <Button  onClick={onCancel} disabled={isSubmitting} className="w-full  sm:w-auto">Cancel</Button>
           <Button onClick={onSubmit} disabled={isSubmitting || !title.trim() || !description.trim() || !solutionType} className="w-full  sm:w-auto">

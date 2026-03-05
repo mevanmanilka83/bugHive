@@ -2,6 +2,7 @@
 
 import { type BugDialogErrors } from "@/lib"
 import { IconAlertTriangle, IconEye, IconLock } from "@tabler/icons-react"
+import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -79,7 +80,7 @@ export function BugReportStep2Priority({
         </div>
       )}
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-        <Button  onClick={onBack} className="w-full px-4 sm:w-auto">Back</Button>
+        <Button onClick={onBack} className="w-full px-4 sm:w-auto"><ArrowLeftIcon size={16} className="size-4 mr-2" />Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
           <Button  onClick={onCancel} className="w-full px-4 sm:w-auto">Cancel</Button>
           <Button onClick={onNext} disabled={!canNext} className="w-full px-4 sm:w-auto">Next</Button>

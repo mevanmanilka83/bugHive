@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { IconReport } from "@tabler/icons-react"
 import { Check } from "lucide-react"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -9,6 +8,7 @@ import { getBugReportSchema } from "@/lib/schemas/zod"
 import { type BugPayload, type BugDialogErrors } from "@/lib/schemas/types"
 import { createBugReport } from "@/app/actions/bug/BugReport"
 import { Button } from "@/components/ui/button"
+import { GitForkIcon } from "@/components/ui/git-fork"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import BugReportStep1Basic from "@/components/features/bugs/reports/BugReportStep1Basic"
 import BugReportStep2Priority from "@/components/features/bugs/reports/BugReportStep2Priority"
@@ -349,7 +349,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         disabled
         className="px-4"
       >
-        <IconReport className="size-4 mr-2" />
+        <GitForkIcon size={16} className="size-4 mr-2" />
         Report Bug
       </Button>
     )
@@ -359,7 +359,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
       <DialogTrigger asChild>
         <Button className="px-4">
-          <IconReport className="size-4 mr-2" />
+          <GitForkIcon size={16} className="size-4 mr-2" />
           Report Bug
         </Button>
       </DialogTrigger>

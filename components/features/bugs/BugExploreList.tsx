@@ -540,6 +540,19 @@ export function BugExploreList({
     router.push(`/bugs/${bugId}`)
   }
 
+  const searchSuggestions = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return []
+    const titles = new Set<string>()
+    allBugs.forEach((bug) => {
+      const t = (bug.title || "").toString().trim()
+      if (t && t.toLowerCase().includes(q)) {
+        titles.add(t)
+      }
+    })
+    return Array.from(titles).slice(0, 6)
+  }, [searchQuery, allBugs])
+
   return (
     <div>
       {/* Search Bar */}
@@ -553,6 +566,34 @@ export function BugExploreList({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-10"
           />
+          {searchSuggestions.length > 0 && (
+            <div className="absolute z-20 mt-1 w-full rounded-none border border-border bg-card shadow-sm max-h-48 overflow-y-auto">
+              {searchSuggestions.map((title) => (
+                <button
+                  key={title}
+                  type="button"
+                  className="w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    setSearchQuery(title)
+                    // Immediately apply filters with the selected title
+                    const fakeEvent = { target: { value: title } } as React.ChangeEvent<HTMLInputElement>
+                    setSearchQuery(title)
+                    // reuse applyFilters logic with updated query
+                    const q = title.toLowerCase()
+                    const matches = allBugs.filter((bug) => {
+                      const t = (bug.title || "").toLowerCase()
+                      const d = (bug.description || "").toLowerCase()
+                      return t.includes(q) || d.includes(q)
+                    })
+                    setBugs(matches)
+                  }}
+                >
+                  {title}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

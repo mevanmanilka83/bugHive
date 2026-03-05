@@ -2,7 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { BugDescriptionContent } from "@/components/features/bugs/BugDescriptionContent"
-import { IconAlertTriangle, IconDeviceDesktop, IconEye, IconLock, IconReport, IconTags, IconUsers } from "@tabler/icons-react"
+import { ArrowLeftIcon } from "@/components/ui/arrow-left"
+import { GitForkIcon } from "@/components/ui/git-fork"
+import { IconAlertTriangle, IconDeviceDesktop, IconEye, IconLock, IconTags, IconUsers } from "@tabler/icons-react"
 
 type Props = {
   title: string
@@ -54,7 +56,7 @@ export function BugReportStep5Review({
         <div className="space-y-4">
           <div className="rounded-lg border p-4">
             <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-              <IconReport className="size-4" />
+              <GitForkIcon size={16} className="size-4" />
               Basic Information
             </h3>
             <div className="space-y-3">
@@ -179,7 +181,7 @@ export function BugReportStep5Review({
       </div>
 
       <div className="flex flex-col-reverse gap-2 pt-4 border-t sm:flex-row sm:justify-between">
-        <Button  onClick={onBack} className="w-full px-4 sm:w-auto">Back</Button>
+        <Button onClick={onBack} className="w-full px-4 sm:w-auto"><ArrowLeftIcon size={16} className="size-4 mr-2" />Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
           <Button  onClick={onCancel} disabled={isSubmitting} className="w-full px-4 sm:w-auto">Cancel</Button>
           <Button onClick={onSubmit} disabled={isSubmitting} className="w-full px-4 sm:w-auto">

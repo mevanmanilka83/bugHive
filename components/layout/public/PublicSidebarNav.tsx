@@ -4,17 +4,16 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
-  IconActivity,
-  IconBell,
-  IconBookmark,
   IconBug,
-  IconHelpCircle,
-  IconHome2,
-  IconSettings,
   IconTag,
-  IconUsersGroup,
-  type Icon,
 } from "@tabler/icons-react"
+import { ActivityIcon } from "@/components/ui/activity"
+import { BellIcon } from "@/components/ui/bell"
+import { BookmarkIcon } from "@/components/ui/bookmark"
+import { CircleHelpIcon } from "@/components/ui/circle-help"
+import { HomeIcon } from "@/components/ui/home"
+import { SettingsIcon } from "@/components/ui/settings"
+import { UsersIcon } from "@/components/ui/users"
 import { SidebarDashboardActions } from "@/components/layout/app/SidebarDashboardActions"
 import { NotificationBadge } from "@/components/dashboard/NotificationBadge"
 
@@ -35,7 +34,7 @@ type NavItem = {
   key: NavKey
   title: string
   href: string
-  icon: Icon
+  icon: React.ComponentType<{ className?: string }>
   requiresAuth?: boolean
 }
 
@@ -72,6 +71,49 @@ export function PublicSidebarNav({
   useAuthFallback = false,
   className,
 }: SidebarPublicNavProps) {
+  const BellNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <BellIcon size={16} className={className} />
+    ),
+    []
+  )
+  const BookmarkNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <BookmarkIcon size={16} className={className} />
+    ),
+    []
+  )
+  const HomeNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <HomeIcon size={16} className={className} />
+    ),
+    []
+  )
+  const SettingsNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <SettingsIcon size={16} className={className} />
+    ),
+    []
+  )
+  const FaqNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <CircleHelpIcon size={16} className={className} />
+    ),
+    []
+  )
+  const ActivityNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <ActivityIcon size={16} className={className} />
+    ),
+    []
+  )
+  const ClustersNavIcon = React.useCallback(
+    ({ className }: { className?: string }) => (
+      <UsersIcon size={16} className={className} />
+    ),
+    []
+  )
+
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const returnTo = React.useMemo(() => {
@@ -124,7 +166,7 @@ export function PublicSidebarNav({
   }, [isAuthenticated])
 
   const primaryItems: NavItem[] = [
-    { key: "home", title: "Home", href: "/", icon: IconHome2 },
+    { key: "home", title: "Home", href: "/", icon: HomeNavIcon },
     { key: "public", title: "Public bugs", href: "/", icon: IconBug },
     {
       key: "mybugs",
@@ -134,7 +176,7 @@ export function PublicSidebarNav({
       requiresAuth: true,
     },
     { key: "tags", title: "Tags", href: "/tags", icon: IconTag },
-    { key: "clusters", title: "Teams & clusters", href: "/clusters", icon: IconUsersGroup },
+    { key: "clusters", title: "Teams & clusters", href: "/clusters", icon: ClustersNavIcon },
   ]
 
   const secondaryItems: NavItem[] = [
@@ -142,42 +184,42 @@ export function PublicSidebarNav({
       key: "notifications",
       title: "Notifications",
       href: "/notifications",
-      icon: IconBell,
+      icon: BellNavIcon,
       requiresAuth: true,
     },
     {
       key: "workspaces",
       title: "Workspaces",
       href: "/workspaces",
-      icon: IconBookmark,
+      icon: BookmarkNavIcon,
       requiresAuth: true,
     },
     {
       key: "saved",
       title: "Saved",
       href: "/saved",
-      icon: IconBookmark,
+      icon: BookmarkNavIcon,
       requiresAuth: true,
     },
     {
       key: "activity",
       title: "Activity",
       href: "/activity",
-      icon: IconActivity,
+      icon: ActivityNavIcon,
       requiresAuth: true,
     },
     {
       key: "settings",
       title: "Settings",
       href: "/settings",
-      icon: IconSettings,
+      icon: SettingsNavIcon,
       requiresAuth: true,
     },
     {
       key: "faq",
       title: "FAQ",
       href: "/settings/faq",
-      icon: IconHelpCircle,
+      icon: FaqNavIcon,
       requiresAuth: true,
     },
   ]

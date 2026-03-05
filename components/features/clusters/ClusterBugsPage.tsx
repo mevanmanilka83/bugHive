@@ -3,7 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { IconReport, IconArrowLeft, IconUsers, IconPencil, IconUserPlus, IconCheck, IconX } from "@tabler/icons-react"
+import { ArrowLeftIcon } from "@/components/ui/arrow-left"
+import { IconReport, IconUsers, IconPencil, IconUserPlus, IconCheck, IconX } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -149,7 +150,7 @@ export function ClusterBugsPage({
           className="mt-4"
           onClick={() => router.push(clustersHref)}
         >
-          <IconArrowLeft className="size-4 mr-2" />
+          <ArrowLeftIcon size={16} className="size-4 mr-2" />
           {backLabel}
         </Button>
       </div>
@@ -170,7 +171,7 @@ export function ClusterBugsPage({
           href={clustersHref}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
-          <IconArrowLeft className="size-4" />
+          <ArrowLeftIcon size={16} className="size-4" />
           {backLabel}
         </Link>
       </div>

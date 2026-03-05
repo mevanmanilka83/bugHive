@@ -69,6 +69,9 @@ export function GraphIdeaStep1Basics({
           placeholder="Short, descriptive title"
           value={title}
           onChange={(e) => onChangeTitle(e.target.value)}
+          autoComplete="on"
+          autoCorrect="on"
+          spellCheck
         />
       </div>
 

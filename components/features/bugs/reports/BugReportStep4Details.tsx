@@ -2,6 +2,7 @@
 
 import React from "react"
 import { type BugDialogErrors } from "@/lib"
+import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -146,12 +147,17 @@ export function BugReportStep4Details({
       <Separator />
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="bug-steps">Steps to Reproduce <span className="text-red-500">*</span></Label>
+        <Label htmlFor="bug-steps">
+          Steps to Reproduce <span className="text-red-500">*</span>
+        </Label>
         <Textarea
           id="bug-steps"
           placeholder={"1) Go to ...\n2) Click ...\n3) Observe ..."}
           value={stepsToReproduce}
           onChange={(e) => onChangeSteps(e.target.value)}
+          autoComplete="on"
+          autoCorrect="on"
+          spellCheck
           rows={5}
           className={errors.steps_to_reproduce ? "border-red-500" : ""}
         />
@@ -246,7 +252,7 @@ export function BugReportStep4Details({
       </div>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-        <Button onClick={onBack} className="w-full px-4 sm:w-auto">Back</Button>
+        <Button onClick={onBack} className="w-full px-4 sm:w-auto"><ArrowLeftIcon size={16} className="size-4 mr-2" />Back</Button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
           <Button onClick={onCancel} className="w-full px-4 sm:w-auto">Cancel</Button>
           <Button onClick={onReview} disabled={!canNext} className="w-full px-4 sm:w-auto">Review</Button>

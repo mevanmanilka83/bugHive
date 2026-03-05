@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ThumbsUp, ThumbsDown, X, Save } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ArrowUp, ArrowDown, X, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
   ReactFlow,
@@ -237,13 +237,13 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
           )}
           {data.upvotes !== undefined && data.upvotes > 0 && (
             <Badge variant="outline" className="text-[10px] h-5 px-1 flex items-center gap-1 border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-400">
-              <ThumbsUp className="w-2.5 h-2.5" />
+              <ArrowUp className="w-2.5 h-2.5" />
               {data.upvotes}
             </Badge>
           )}
           {data.downvotes !== undefined && data.downvotes > 0 && (
             <Badge variant="outline" className="text-[10px] h-5 px-1 flex items-center gap-1 border-red-200 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-400">
-              <ThumbsDown className="w-2.5 h-2.5" />
+              <ArrowDown className="w-2.5 h-2.5" />
               {data.downvotes}
             </Badge>
           )}
@@ -504,13 +504,13 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent showCloseButton={false} className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-[100vw] min-w-full h-screen max-w-none sm:max-w-none max-h-none translate-x-0 translate-y-0 rounded-none flex flex-col p-0 gap-0 overflow-hidden outline-none !left-0 !top-0">
+        <DialogContent showCloseButton={false} className="fixed inset-0  right-0 bottom-0 w-[100vw] min-w-full h-screen max-w-none sm:max-w-none max-h-none translate-x-0 translate-y-0 rounded-none flex flex-col p-0 gap-0 overflow-hidden outline-none !left-0 !top-0">
           <DialogHeader className="px-6 py-4 border-b shrink-0 bg-background z-10 flex flex-row items-center justify-between gap-4 min-h-14">
             <DialogTitle className="flex items-center gap-2 min-w-0 truncate">
               <GitBranch className="h-5 w-5 text-primary shrink-0" />
               <span className="truncate">Bug Relationship Graph</span>
             </DialogTitle>
-            <div className="flex items-center gap-2 shrink-0 flex-shrink-0 relative z-10">
+            <div className="flex items-center gap-2  relative z-10">
               <Button
                 className="shrink-0 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 onClick={openSaveDialog}

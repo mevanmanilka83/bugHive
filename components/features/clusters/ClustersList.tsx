@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { IconPlus, IconUsers, IconMail, IconTrash, IconSettings, IconAlertTriangle, IconPencil, IconUserPlus, IconLayoutGrid, IconList, IconLayoutRows } from "@tabler/icons-react"
+import { PlusIcon } from "@/components/ui/plus"
+import { DeleteIcon } from "@/components/ui/delete"
+import { IconUsers, IconMail, IconSettings, IconAlertTriangle, IconPencil, IconUserPlus, IconLayoutGrid, IconList, IconLayoutRows } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -299,7 +301,7 @@ export function ClustersList({
             }}
             className="w-full px-4 sm:w-auto h-10"
           >
-            <IconPlus className="size-4 mr-2" />
+            <PlusIcon size={16} className="size-4 mr-2" />
             Create Cluster
           </Button>
         </div>
@@ -416,7 +418,7 @@ export function ClustersList({
                           className="h-8 w-8 text-destructive hover:text-destructive"
                           aria-label="Delete cluster"
                         >
-                          <IconTrash className="size-4" />
+                          <DeleteIcon size={16} className="size-4" />
                         </Button>
                       </div>
                     )}

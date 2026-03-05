@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
-  Flame,
   MessageCircle,
   ArrowUp,
   HelpCircle,
@@ -19,6 +18,7 @@ import {
   ChevronRight,
   ArrowRight,
 } from "lucide-react"
+import { FlameIcon } from "@/components/ui/flame"
 import type { OverviewResponse } from "@/app/api/overview/route"
 import { HomeHeaderStatsDialogSkeleton } from "@/components/features/skeletons/HomeHeaderStatsDialogSkeleton"
 
@@ -70,7 +70,7 @@ export function HomeHeaderStatsDialog() {
               <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute -left-[3.5px]" />
             </div>
           </div>
-          <Flame className="size-4" />
+          <FlameIcon className="size-4" size={16} />
         </button>
       </DialogTrigger>
       <DialogContent
@@ -89,7 +89,7 @@ export function HomeHeaderStatsDialog() {
           </div>
           <button
             onClick={() => setOpen(false)}
-            className="rounded-full p-2 text-muted-foreground/70 hover:bg-muted hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue"
+            className="rounded-full p-2 text-muted-foreground/70 hover:bg-muted hover:text-foreground transition-colors focus:outline-none"
             aria-label="Close dialog"
           >
             <XIcon className="size-4" />

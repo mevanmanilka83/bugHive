@@ -10,7 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Send, X, Bot, User, Bug } from "lucide-react"
+import { X, User } from "lucide-react"
+import { BotMessageSquareIcon } from "@/components/ui/bot-message-square"
+import { SendIcon } from "@/components/ui/send"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils-client"
 
@@ -205,7 +207,7 @@ export function BugHiveChatBox() {
         {isOpen ? (
           <X className="h-6 w-6 text-icon-orange" stroke="currentColor" />
         ) : (
-          <Bug className="h-6 w-6 text-icon-orange" aria-hidden />
+          <BotMessageSquareIcon size={24} className="h-6 w-6 text-icon-orange" aria-hidden />
         )}
       </Button>
 
@@ -218,7 +220,7 @@ export function BugHiveChatBox() {
         >
           <CardHeader className="pb-3 border-b shrink-0 flex flex-row items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Bug className="h-5 w-5 text-primary" />
+              <BotMessageSquareIcon size={20} className="h-5 w-5 text-primary" />
               BugHive Assistant
             </CardTitle>
             <Button
@@ -256,7 +258,7 @@ export function BugHiveChatBox() {
                       {message.role === "user" ? (
                         <User className="h-4 w-4" />
                       ) : (
-                        <Bot className="h-4 w-4" />
+                        <BotMessageSquareIcon size={16} className="h-4 w-4" />
                       )}
                     </AvatarFallback>
                   </Avatar>
@@ -309,7 +311,7 @@ export function BugHiveChatBox() {
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8 shrink-0">
                     <AvatarFallback className="bg-muted">
-                      <Bot className="h-4 w-4" />
+                      <BotMessageSquareIcon size={16} className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="bg-muted p-3 rounded-lg">
@@ -344,7 +346,7 @@ export function BugHiveChatBox() {
                   size="icon"
                   aria-label="Send"
                 >
-                  <Send className="h-4 w-4" />
+                  <SendIcon size={16} className="h-4 w-4" />
                 </Button>
               </div>
             </div>
