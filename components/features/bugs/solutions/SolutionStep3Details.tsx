@@ -57,6 +57,9 @@ export default function SolutionStep3Details({
             placeholder="Developer name or team"
             value={assignee}
             onChange={(e) => onChangeAssignee(e.target.value)}
+            autoComplete="on"
+            autoCorrect="on"
+            spellCheck
           />
         </div>
         <div className="flex flex-col gap-2">

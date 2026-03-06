@@ -11,7 +11,6 @@ import { RelatedBugsPanelSkeleton } from "@/components/features/skeletons/Relate
 export type RelatedBugSource =
   | "github_issue"
   | "github_repo"
-  | "bugzilla_bug"
   | "bughive_public"
   | "bughive_cluster"
   | "stack_overflow_question"
@@ -26,7 +25,6 @@ export type RelatedBugItem = {
 
 const GITHUB_SOURCES: RelatedBugSource[] = ["github_issue", "github_repo"]
 const STACK_SOURCES: RelatedBugSource[] = ["stack_overflow_question"]
-const BUGZILLA_SOURCES: RelatedBugSource[] = ["bugzilla_bug"]
 const BUGHIVE_SOURCES: RelatedBugSource[] = ["bughive_public", "bughive_cluster"]
 
 function isGitHub(item: RelatedBugItem) {
@@ -35,10 +33,6 @@ function isGitHub(item: RelatedBugItem) {
 
 function isStackOverflow(item: RelatedBugItem) {
   return STACK_SOURCES.includes(item.source)
-}
-
-function isBugzilla(item: RelatedBugItem) {
-  return BUGZILLA_SOURCES.includes(item.source)
 }
 
 function isBugHive(item: RelatedBugItem) {
@@ -100,7 +94,6 @@ export function RelatedBugsPanel({
 
   const githubItems = React.useMemo(() => items.filter(isGitHub), [items])
   const stackItems = React.useMemo(() => items.filter(isStackOverflow), [items])
-  const bugzillaItems = React.useMemo(() => items.filter(isBugzilla), [items])
   const bughiveItems = React.useMemo(() => items.filter(isBugHive), [items])
 
   const linkBaseClass = cn(
@@ -158,7 +151,6 @@ export function RelatedBugsPanel({
             </p>
           ) : githubItems.length === 0 &&
             stackItems.length === 0 &&
-            bugzillaItems.length === 0 &&
             bughiveItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center px-4">
               <p className="text-sm font-medium text-foreground/80">No related bugs found</p>
@@ -199,30 +191,6 @@ export function RelatedBugsPanel({
                   <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
                     {stackItems.map((item) => (
                       <li key={`so-${item.id}`}>
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className={linkBaseClass}
-                          title={decodeHtml(item.title)}
-                        >
-                          <span className="flex-1">{decodeHtml(item.title)}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {/* Bugzilla bugs */}
-              {bugzillaItems.length > 0 && (
-                <section aria-label="Bugzilla bugs" className="w-full">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
-                    Bugzilla bugs
-                  </h4>
-                  <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
-                    {bugzillaItems.map((item) => (
-                      <li key={`bz-${item.id}`}>
                         <a
                           href={item.url}
                           target="_blank"

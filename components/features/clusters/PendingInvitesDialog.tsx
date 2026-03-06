@@ -19,6 +19,7 @@ interface PendingInvitesDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   cluster: any | null
+  onInvitesChanged?: () => void
 }
 
 type PendingInvite = {
@@ -32,11 +33,13 @@ export function PendingInvitesDialog({
   open,
   onOpenChange,
   cluster,
+  onInvitesChanged,
 }: PendingInvitesDialogProps) {
   const [pendingUsers, setPendingUsers] = React.useState<PendingInvite[]>([])
   const [loading, setLoading] = React.useState(false)
   const [query, setQuery] = React.useState("")
   const [reRequesting, setReRequesting] = React.useState<string | null>(null)
+  const [revoking, setRevoking] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     async function fetchPending() {
@@ -113,6 +116,32 @@ export function PendingInvitesDialog({
     }
   }
 
+  const handleRevoke = async (userId: string) => {
+    if (!cluster) return
+
+    try {
+      setRevoking(userId)
+      const res = await fetch(`/api/clusters/${cluster.id}/revoke-invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || "Failed to revoke invitation")
+      }
+
+      setPendingUsers((prev) => prev.filter((user) => user.id !== userId))
+      toast.success("Invitation revoked")
+      onInvitesChanged?.()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to revoke invitation")
+    } finally {
+      setRevoking(null)
+    }
+  }
+
   if (!cluster) return null
 
   return (
@@ -168,16 +197,27 @@ export function PendingInvitesDialog({
                         <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleReRequest(user.id)}
-                      disabled={reRequesting === user.id}
-                      className="w-full shrink-0 sm:w-auto sm:self-center"
-                    >
-                      <IconMail className="size-4 mr-1" />
-                      {reRequesting === user.id ? "Sending..." : "Re-request"}
-                    </Button>
+                    <div className="flex w-full gap-2 sm:w-auto sm:self-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleReRequest(user.id)}
+                        disabled={reRequesting === user.id || revoking === user.id}
+                        className="w-full shrink-0 sm:w-auto"
+                      >
+                        <IconMail className="size-4 mr-1" />
+                        {reRequesting === user.id ? "Sending..." : "Re-request"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevoke(user.id)}
+                        disabled={revoking === user.id || reRequesting === user.id}
+                        className="w-full shrink-0 text-destructive hover:text-destructive sm:w-auto"
+                      >
+                        {revoking === user.id ? "Revoking..." : "Revoke"}
+                      </Button>
+                    </div>
                   </div>
                 )
               })}

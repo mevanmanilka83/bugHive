@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react"
 import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 import { WorkspaceSuccessBanner } from "@/components/features/workspaces/WorkspaceSuccessBanner"
 import { WorkspaceGraphsPanel } from "@/components/features/workspaces/WorkspaceGraphsPanel"
+import { Button } from "@/components/ui/button"
 
 export default async function WorkspacesPage({
   searchParams,
@@ -43,9 +44,14 @@ export default async function WorkspacesPage({
         <WorkspaceSuccessBanner show={showSuccess} />
 
         <div className="rounded-lg border border-border/40 bg-card p-6 mb-6 mt-4">
-          <h1 className="mb-1 text-xl font-semibold sm:text-2xl">
-            Saved relationship graphs
-          </h1>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h1 className="text-xl font-semibold sm:text-2xl">
+              Saved relationship graphs
+            </h1>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/workspaces/overview">Open overview</Link>
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground">
             Save a bug relationship diagram from a bug page, then open it here to add
             ideas and solutions. Public graphs can be copied to your list to build on.

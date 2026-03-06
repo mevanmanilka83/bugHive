@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content:
-            "You are a helpful AI assistant for BugHive, a collaborative bug tracking platform. You help users understand how to report bugs, use clusters, view related bugs (GitHub, Jira, Stack Overflow, Bugzilla), manage reports, and other platform features. Be friendly, concise, and helpful. When users ask about errors or bugs in their code, you can give general debugging tips but remind them they can create a bug report in BugHive.",
+            "You are a helpful AI assistant for BugHive, a collaborative bug tracking platform. You help users understand how to report bugs, use clusters, and view related bugs from GitHub and Stack Overflow. Be friendly, concise, and helpful. When users ask about errors or bugs in their code, you can give general debugging tips but remind them they can create a bug report in BugHive.",
         },
         ...messages,
       ],
@@ -69,20 +69,20 @@ export async function POST(req: NextRequest) {
 
         if (
           /bug|report|issue|error|crash/i.test(messageContent) &&
-          !/related|github|jira|stack/i.test(messageContent)
+          !/related|github|stack/i.test(messageContent)
         ) {
           fallbackResponse =
-            "In BugHive you can create and manage bug reports. Each bug has a title, description, steps to reproduce, expected vs actual behavior, and optional attachments. You can make bugs public or private, and group them into clusters. Use the bug detail page to see related issues from GitHub, Jira, Stack Overflow, and Bugzilla!"
+            "In BugHive you can create and manage bug reports. Each bug has a title, description, steps to reproduce, expected vs actual behavior, and optional attachments. You can make bugs public or private, and group them into clusters. Use the bug detail page to see related issues from GitHub and Stack Overflow."
         } else if (
           /cluster|group|team/i.test(messageContent)
         ) {
           fallbackResponse =
-            "Clusters in BugHive let you group related bugs and collaborate with others. You can create a cluster, invite members, and manage join requests. Cluster bugs appear together and you can see related bugs from external sources (GitHub, Jira, etc.) on each bug's page."
+            "Clusters in BugHive let you group related bugs and collaborate with others. You can create a cluster, invite members, and manage join requests. Cluster bugs appear together and you can see related bugs from external sources such as GitHub and Stack Overflow on each bug's page."
         } else if (
-          /related|github|jira|stack|bugzilla|external/i.test(messageContent)
+          /related|github|stack|external/i.test(messageContent)
         ) {
           fallbackResponse =
-            "Related bugs are shown on each bug's detail page. BugHive fetches similar issues from GitHub Issues, Jira, Stack Overflow, and Bugzilla (when configured). The Related Bugs panel on the right shows these in sections. Use the Refresh button to reload them."
+            "Related bugs are shown on each bug's detail page. BugHive fetches similar issues from GitHub Issues and Stack Overflow (when configured). The Related Bugs panel on the right shows these in sections. Use the Refresh button to reload them."
         } else if (
           /report|submit|create|add/i.test(messageContent)
         ) {
@@ -102,10 +102,10 @@ export async function POST(req: NextRequest) {
           /search|find|browse/i.test(messageContent)
         ) {
           fallbackResponse =
-            "You can browse public bugs on the home page and use filters or search if available. From a bug page you can see related bugs from GitHub, Jira, Stack Overflow, and Bugzilla in the Related Bugs panel."
+            "You can browse public bugs on the home page and use filters or search if available. From a bug page you can see related bugs from GitHub and Stack Overflow in the Related Bugs panel."
         } else {
           fallbackResponse =
-            "I'm here to help with BugHive! Ask me about reporting bugs, clusters, related bugs (GitHub, Jira, Stack Overflow, Bugzilla), solutions, voting, or how to get started."
+            "I'm here to help with BugHive! Ask me about reporting bugs, clusters, related bugs (GitHub, Stack Overflow), solutions, voting, or how to get started."
         }
 
         return NextResponse.json({ response: fallbackResponse })

@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { IconPaperclip, IconUpload, IconX, IconDeviceDesktop } from "@tabler/icons-react"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils-client"
+import { isValidUrl } from "@/lib/schemas/zod/shared"
 
 type AttachmentFile = {
   file: File
@@ -42,6 +44,7 @@ type Props = {
   onReview: () => void
   onBack: () => void
   onCancel: () => void
+  aiTagValidity?: Record<string, { valid: boolean; reason?: string }>
 }
 
 export function BugReportStep4Details({
@@ -68,6 +71,7 @@ export function BugReportStep4Details({
   onReview,
   onBack,
   onCancel,
+  aiTagValidity = {},
 }: Props) {
   const osOptions = ["Windows", "macOS", "Linux", "iOS", "Android", "Other"]
 
@@ -77,6 +81,24 @@ export function BugReportStep4Details({
       : environmentOs.filter((value) => value !== os)
     onChangeEnvironmentOs(next)
   }
+
+  const parsedTags = React.useMemo(
+    () =>
+      tagsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+    [tagsInput]
+  )
+
+  const parsedSources = React.useMemo(
+    () =>
+      sourcesInput
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    [sourcesInput]
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -176,6 +198,38 @@ export function BugReportStep4Details({
             value={tagsInput}
             onChange={(e) => onChangeTags(e.target.value)}
           />
+          {parsedTags.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {parsedTags.map((tag) => {
+                const valid =
+                  tag.length > 0 &&
+                  tag.length <= 50 &&
+                  /^[a-z0-9][a-z0-9-]*$/i.test(tag)
+
+                const ai = aiTagValidity[tag]
+                const combinedValid = valid && (ai ? ai.valid : true)
+
+                return (
+                  <span
+                    key={tag}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                      valid
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300"
+                        : "border-red-300 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"
+                    )}
+                  >
+                    <span className="truncate max-w-[140px]">{tag}</span>
+                    {!combinedValid && (
+                      <span className="text-[9px] font-semibold uppercase tracking-wide">
+                        Invalid tag
+                      </span>
+                    )}
+                  </span>
+                )
+              })}
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="bug-sources" className="flex items-center gap-2">
@@ -187,6 +241,31 @@ export function BugReportStep4Details({
             value={sourcesInput}
             onChange={(e) => onChangeSources(e.target.value)}
           />
+          {parsedSources.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {parsedSources.map((source) => {
+                const valid = isValidUrl(source)
+                return (
+                  <span
+                    key={source}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                      valid
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300"
+                        : "border-red-300 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"
+                    )}
+                  >
+                    <span className="truncate max-w-[140px]">{source}</span>
+                    {!valid && (
+                      <span className="text-[9px] font-semibold uppercase tracking-wide">
+                        Invalid source
+                      </span>
+                    )}
+                  </span>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 

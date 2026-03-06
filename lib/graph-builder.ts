@@ -10,7 +10,7 @@ export type SubgraphOptions = {
   similarityThreshold?: number
   /** Max internal similar bugs to add. Default 8. */
   internalLimit?: number
-  /** Max external refs (GitHub/SO/Bugzilla). Default 6. */
+  /** Max external refs (GitHub/Stack Overflow). Default 6. */
   externalLimit?: number
   /** Min confidence (0–1) for stored relationships. Default 0.5. */
   relationshipConfidenceMin?: number
@@ -168,7 +168,7 @@ export async function buildBugSubgraph(
     })
   }
 
-  // 4. External refs (GitHub, Stack Overflow, Bugzilla) — only top N
+  // 4. External refs (GitHub, Stack Overflow) — only top N
   let externalAdded = 0
   for (const ext of external) {
     if (nodes.length >= opts.limit || externalAdded >= opts.externalLimit) break
@@ -180,9 +180,6 @@ export async function buildBugSubgraph(
     if (ext.source === "stack_overflow_question") {
       nType = "stack_overflow"
       eType = "SOLUTION_FOR"
-    } else if (ext.source === "bugzilla_bug") {
-      nType = "bugzilla"
-      eType = "SIMILAR"
     }
     nodes.push({
       id: ext.id,

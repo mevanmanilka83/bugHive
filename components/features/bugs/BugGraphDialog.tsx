@@ -59,7 +59,6 @@ type NodeType =
   | "component"
   | "github_issue"
   | "stack_overflow"
-  | "bugzilla"
   | "cause"
   | "evidence"
   | "solution"
@@ -139,7 +138,6 @@ const nodeTypeColors: Record<string, string> = {
   component: "bg-pink-500 border-pink-600",
   github_issue: "bg-gray-700 border-gray-800",
   stack_overflow: "bg-slate-600 border-slate-700",
-  bugzilla: "bg-red-500 border-red-600",
   cause: "bg-indigo-500 border-indigo-600",
   solution: "bg-emerald-500 border-emerald-600",
   evidence: "bg-cyan-500 border-cyan-600",
@@ -153,7 +151,6 @@ const nodeTypeIcons: Record<string, React.ReactNode> = {
   component: <Code className="h-4 w-4" />,
   github_issue: <Github className="h-4 w-4" />,
   stack_overflow: <MessageSquare className="h-4 w-4" />,
-  bugzilla: <Bug className="h-4 w-4" />,
   cause: <Search className="h-4 w-4" />,
   solution: <Lightbulb className="h-4 w-4" />,
   evidence: <ShieldAlert className="h-4 w-4" />,
@@ -263,7 +260,6 @@ const nodeTypes: NodeTypes = {
   github_issue: CustomNode,
   stack_overflow: CustomNode,
   cluster: CustomNode,
-  bugzilla: CustomNode,
 }
 
 function CustomBadgeEdge({

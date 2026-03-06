@@ -162,6 +162,24 @@
   }
 }
 
+.scrollbar-narrow {
+  scrollbar-width: thin;
+}
+
+.scrollbar-narrow::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-narrow::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-narrow::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+
 /* LexKit/Lexical editor theme */
 .lexkit-text-bold { @apply font-bold; }
 .lexkit-text-italic { @apply italic; }

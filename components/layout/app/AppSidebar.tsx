@@ -118,6 +118,11 @@ export function AppSidebar({
       icon: ClustersNavIcon,
     },
     {
+      title: "Admin",
+      url: "/admin",
+      icon: IconDashboard,
+    },
+    {
       title: "Saved Graphs",
       url: "/workspaces",
       icon: IconGitBranch,

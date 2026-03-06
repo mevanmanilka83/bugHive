@@ -5,6 +5,7 @@ import { BugDescriptionContent } from "@/components/features/bugs/BugDescription
 import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { GitForkIcon } from "@/components/ui/git-fork"
 import { IconAlertTriangle, IconDeviceDesktop, IconEye, IconLock, IconTags, IconUsers } from "@tabler/icons-react"
+import { cn } from "@/lib/utils-client"
 
 type Props = {
   title: string
@@ -26,6 +27,7 @@ type Props = {
   onCancel: () => void
   onSubmit: () => void
   hideVisibility?: boolean
+  aiTagValidity?: Record<string, { valid: boolean; reason?: string }>
 }
 
 export function BugReportStep5Review({
@@ -48,7 +50,13 @@ export function BugReportStep5Review({
   onCancel,
   onSubmit,
   hideVisibility = false,
+  aiTagValidity = {},
 }: Props) {
+  const parsedTags = tagsInput
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean)
+
   return (
     <div className="flex flex-col gap-4">
       <div className="text-sm font-medium text-muted-foreground mb-2">Review your bug report before submitting:</div>
@@ -163,7 +171,44 @@ export function BugReportStep5Review({
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <div className="font-medium text-sm">Tags</div>
-                  <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{tagsInput || "—"}</div>
+                  {parsedTags.length === 0 ? (
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+                      —
+                    </div>
+                  ) : (
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {parsedTags.map((tag) => {
+                        const valid =
+                          tag.length > 0 &&
+                          tag.length <= 50 &&
+                          /^[a-z0-9][a-z0-9-]*$/i.test(tag)
+
+                        const ai = aiTagValidity[tag]
+                        const combinedValid = valid && (ai ? ai.valid : true)
+
+                        return (
+                          <span
+                            key={tag}
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                              valid
+                                ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300"
+                                : "border-red-300 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"
+                            )}
+                          >
+                            <span className="truncate max-w-[140px]">
+                              {tag}
+                            </span>
+                            {!combinedValid && (
+                              <span className="text-[9px] font-semibold uppercase tracking-wide">
+                                Invalid tag
+                              </span>
+                            )}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="font-medium text-sm">Sources</div>

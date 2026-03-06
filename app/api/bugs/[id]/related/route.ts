@@ -25,7 +25,6 @@ export type RelatedResult = {
   | "github_issue"
   | "github_repo"
   | "stack_overflow_question"
-  | "bugzilla_bug"
   | "bughive_public"
   | "bughive_cluster"
   snippet: string
@@ -42,12 +41,6 @@ type StackOverflowQuestion = {
   tags: string[]
 }
 
-type BugzillaBug = {
-  id: number
-  summary: string
-  whiteboard?: string
-}
-
 // ... (Add normalizeStackOverflowQuestion)
 function normalizeStackOverflowQuestion(item: StackOverflowQuestion): RelatedResult {
   const tagStr = item.tags && item.tags.length > 0 ? `Tags: ${item.tags.join(", ")}` : ""
@@ -59,21 +52,6 @@ function normalizeStackOverflowQuestion(item: StackOverflowQuestion): RelatedRes
     title: stripHtml(item.title),
     url: item.link,
     source: "stack_overflow_question",
-    snippet,
-  }
-}
-
-function normalizeBugzillaBug(baseUrl: string, item: BugzillaBug): RelatedResult {
-  const cleanBase = (baseUrl || "").replace(/\/+$/, "")
-  const url = cleanBase ? `${cleanBase}/show_bug.cgi?id=${item.id}` : ""
-  const extra = item.whiteboard ? ` (${item.whiteboard})` : ""
-  const snippet = toSnippet(item.whiteboard) || "Bugzilla bug"
-
-  return {
-    id: `bz-${item.id}`,
-    title: `${item.summary}${extra}`,
-    url,
-    source: "bugzilla_bug",
     snippet,
   }
 }
@@ -652,12 +630,6 @@ export async function GET(
 
     const githubToken = process.env.GITHUB_TOKEN
     const stackExchangeKey = process.env.STACK_EXCHANGE_API
-    const bugzillaBaseUrl = process.env.BUGZILLA_BASE_URL || "https://bugzilla.mozilla.org"
-    const bugzillaApiKey = process.env.BUGZILLA_API_KEY
-    const bugzillaHeaders: Record<string, string> = {
-      Accept: "application/json",
-      "User-Agent": "BugHive/1.0 (Related Bugs)",
-    }
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
@@ -786,98 +758,7 @@ export async function GET(
 
     const stackQuestions = stackItems.map(normalizeStackOverflowQuestion)
 
-    // Bugzilla fetch (default: bugzilla.mozilla.org when BUGZILLA_BASE_URL not set)
-    let bugzillaItems: BugzillaBug[] = []
-    try {
-      const cleanBase = bugzillaBaseUrl.replace(/\/+$/, "")
-      const bzUrl = new URL(`${cleanBase}/rest/bug`)
-      let quickSearch = truncateQuery(
-        [
-          signature.hardError,
-          signature.languageTerms[0],
-          title,
-        ]
-          .filter(Boolean)
-          .join(" ")
-      )
-      if (!quickSearch && description) {
-        quickSearch = truncateQuery(
-          description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80)
-        )
-      }
-      if (!quickSearch) quickSearch = "bug"
-
-      bzUrl.searchParams.set("quicksearch", quickSearch)
-      bzUrl.searchParams.set("limit", "10")
-      if (bugzillaApiKey) {
-        bzUrl.searchParams.set("api_key", bugzillaApiKey)
-      }
-
-      const bzRes = await fetch(bzUrl.toString(), { headers: bugzillaHeaders })
-      if (bzRes.ok) {
-        const bzData = await bzRes.json()
-        bugzillaItems = Array.isArray(bzData?.bugs)
-          ? (bzData.bugs as BugzillaBug[])
-          : []
-      } else {
-        console.error(`Bugzilla API Error: ${bzRes.status}`, await bzRes.text())
-      }
-
-      // Fallback 1: Signature-based (Language + Error)
-      if (bugzillaItems.length === 0) {
-        const fallbackTerms = [
-          signature.languageTerms[0],
-          signature.hardError
-        ].filter(Boolean)
-        if (fallbackTerms.length > 0) {
-          const fallbackQ = fallbackTerms.join(" ")
-          if (fallbackQ && fallbackQ !== quickSearch) {
-            bzUrl.searchParams.set("quicksearch", fallbackQ)
-            try {
-              const fbRes = await fetch(bzUrl.toString(), { headers: bugzillaHeaders })
-              if (fbRes.ok) {
-                const fbData = await fbRes.json()
-                bugzillaItems = Array.isArray(fbData?.bugs)
-                  ? (fbData.bugs as BugzillaBug[])
-                  : []
-              }
-            } catch (e) { console.error("Bugzilla Fallback 1 failed", e) }
-          }
-        }
-      }
-
-      // Fallback 2: Title-based keyword search
-      if (bugzillaItems.length === 0 && title) {
-        const cleanTitle = title
-          .replace(/bug|issue|problem|error|fail|failure|crash/gi, "")
-          .replace(/\s+/g, " ")
-          .trim()
-        if (cleanTitle && cleanTitle !== quickSearch) {
-          bzUrl.searchParams.set("quicksearch", cleanTitle)
-          try {
-            const fb2Res = await fetch(bzUrl.toString(), { headers: bugzillaHeaders })
-            if (fb2Res.ok) {
-              const fb2Data = await fb2Res.json()
-              bugzillaItems = Array.isArray(fb2Data?.bugs)
-                ? (fb2Data.bugs as BugzillaBug[])
-                : []
-            }
-          } catch (e) { console.error("Bugzilla Fallback 2 failed", e) }
-        }
-      }
-    } catch (error) {
-      console.error("Bugzilla fetch error:", error)
-      bugzillaItems = []
-    }
-
-    const bugzillaResults =
-      bugzillaItems.length > 0
-        ? bugzillaItems.map((bug) =>
-          normalizeBugzillaBug(bugzillaBaseUrl.replace(/\/+$/, ""), bug)
-        )
-        : []
-
-    const rawIssues = [...githubIssues, ...stackQuestions, ...bugzillaResults]
+    const rawIssues = [...githubIssues, ...stackQuestions]
 
 
     function relevanceScore(item: RelatedResult): number {
@@ -892,7 +773,7 @@ export async function GET(
     }
 
     function matchesHardError(item: RelatedResult): boolean {
-      if (item.source === "stack_overflow_question" || item.source === "bugzilla_bug") return true
+      if (item.source === "stack_overflow_question") return true
       if (!signature.hardError) return true
       const text = `${item.title} ${item.snippet}`.toLowerCase()
       return text.includes(signature.hardError.toLowerCase())
@@ -1002,19 +883,7 @@ export async function GET(
         )
         : []
 
-    // Ensure Bugzilla results are surfaced
-    const hasBugzillaInIssues = issues.some(
-      (item) => item.source === "bugzilla_bug"
-    )
-    const extraBugzilla =
-      !hasBugzillaInIssues && bugzillaResults.length > 0
-        ? bugzillaResults.slice(
-          0,
-          Math.max(1, MAX_RESULTS_PER_SOURCE - issues.length)
-        )
-        : []
-
-    const finalIssues = [...issues, ...extraStack, ...extraBugzilla]
+    const finalIssues = [...issues, ...extraStack]
 
     const allBugs = await getMultipleRecords("bugs")
     const publicBugs = allBugs.filter((record) => {

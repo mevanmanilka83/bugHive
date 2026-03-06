@@ -191,7 +191,6 @@ const nodeTypes: NodeTypes = {
     cluster: LegacyCustomNode,
     github_issue: LegacyCustomNode,
     stack_overflow: LegacyCustomNode,
-    bugzilla: LegacyCustomNode,
     default: LegacyCustomNode,
 }
 

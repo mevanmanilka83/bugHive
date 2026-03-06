@@ -4,6 +4,7 @@ export { inviteUserToCluster } from "./inviteUser"
 export { acceptClusterInvite } from "./acceptInvite"
 export { getClusters } from "./getClusters"
 export { deleteCluster } from "./deleteCluster"
+export { duplicateCluster } from "./duplicateCluster"
 
 
 

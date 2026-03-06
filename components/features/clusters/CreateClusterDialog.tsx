@@ -42,6 +42,7 @@ function SubmitButton() {
 export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClusterDialogProps) {
   const [state, formAction] = useActionState(createCluster, null)
   const [description, setDescription] = React.useState("")
+  const [inviteEmails, setInviteEmails] = React.useState("")
   const [visibility, setVisibility] = React.useState<ClusterVisibility>("private")
   const hasProcessedRef = React.useRef<string | null>(null)
   const onSuccessRef = React.useRef(onSuccess)
@@ -56,6 +57,7 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
     if (!open) {
       hasProcessedRef.current = null
       setDescription("")
+      setInviteEmails("")
     }
   }, [open])
 
@@ -81,15 +83,15 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-hidden p-4 sm:p-6">
-        <form action={formAction} className="flex h-full max-h-[85vh] flex-col">
+      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden p-4 sm:p-6">
+        <form action={formAction} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader className="shrink-0">
             <DialogTitle>Create New Cluster</DialogTitle>
             <DialogDescription>
               Create a new team cluster to collaborate on bugs and projects.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid flex-1 min-h-0 gap-4 overflow-y-auto py-3 pr-1 sm:py-5">
+          <div className="scrollbar-narrow grid min-h-0 flex-1 gap-4 overflow-y-auto py-3 pr-1 sm:py-5">
             <div className="grid gap-2">
               <Label htmlFor="name">Cluster Name *</Label>
               <Input
@@ -153,8 +155,21 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
                 You can format text and add links. Keep it concise.
               </p>
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="invite-emails">Invite by email</Label>
+              <Input
+                id="invite-emails"
+                name="inviteEmails"
+                placeholder="alice@example.com, bob@example.com"
+                value={inviteEmails}
+                onChange={(event) => setInviteEmails(event.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional. Separate multiple emails with commas.
+              </p>
+            </div>
           </div>
-          <DialogFooter className="shrink-0 flex items-center justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur mt-auto">
+          <DialogFooter className="mt-auto flex shrink-0 items-center justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur">
             <Button
               type="button"
               onClick={() => onOpenChange(false)}

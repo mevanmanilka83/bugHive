@@ -18,7 +18,6 @@ export type RelatedResult = {
     | "github_issue"
     | "github_repo"
     | "stack_overflow_question"
-    | "bugzilla_bug"
     | "bughive_public"
     | "bughive_cluster"
     snippet: string

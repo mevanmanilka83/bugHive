@@ -69,14 +69,6 @@ export function BugReportStep1Basic({
       .slice(0, 6)
   }, [title, allTitles])
 
-  const applySnippet = (snippetHtml: string) => {
-    const trimmed = description.trim()
-    const combined = trimmed
-      ? `${trimmed}\n\n${snippetHtml}`
-      : snippetHtml
-    onChangeDescription(combined)
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
@@ -96,6 +88,8 @@ export function BugReportStep1Basic({
             }}
             className={errors.title ? "border-red-500" : ""}
             autoComplete="on"
+            autoCorrect="on"
+            spellCheck
           />
           {showTitleSuggestions && titleSuggestions.length > 0 && (
             <div className="absolute z-20 mt-1 w-full rounded-none border border-border bg-card shadow-sm max-h-48 overflow-y-auto">
@@ -124,26 +118,9 @@ export function BugReportStep1Basic({
         {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
       </div>
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
-          <Label htmlFor="bug-desc">
-            Description <span className="text-red-500">*</span>
-          </Label>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="hidden sm:inline-flex rounded-none px-2 text-xs"
-              onClick={() =>
-                applySnippet(
-                  "<p><strong>Summary:</strong> Describe the main problem.</p><p><strong>Expected behavior:</strong> What you expected to happen.</p><p><strong>Actual behavior:</strong> What actually happened.</p>"
-                )
-              }
-            >
-              Insert template
-            </Button>
-          </div>
-        </div>
+        <Label htmlFor="bug-desc">
+          Description <span className="text-red-500">*</span>
+        </Label>
         <RichTextEditor
           value={description}
           onChange={onChangeDescription}

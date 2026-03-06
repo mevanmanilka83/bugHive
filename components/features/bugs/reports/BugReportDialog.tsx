@@ -50,6 +50,8 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   const [tagsInput, setTagsInput] = React.useState("")
   const [sourcesInput, setSourcesInput] = React.useState("")
   const [attachments, setAttachments] = React.useState<AttachmentFile[]>([])
+  const [aiTagValidity, setAiTagValidity] = React.useState<Record<string, { valid: boolean; reason?: string }>>({})
+  const aiTagAbortRef = React.useRef<AbortController | null>(null)
 
   function resetForm() {
     setStep(1)
@@ -67,6 +69,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     setTagsInput("")
     setSourcesInput("")
     setAttachments([])
+    setAiTagValidity({})
     setErrors({})
   }
 
@@ -112,6 +115,60 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     4: ['steps_to_reproduce'], // Details step: require steps to reproduce
     5: [] // Review step
   }
+
+  // AI-based tag validation (Gemini) – debounce while typing
+  React.useEffect(() => {
+    const trimmedTitle = title.trim()
+    const plainDescription = description.trim()
+    const tags = tagsInput
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+
+    if (!trimmedTitle || !plainDescription || tags.length === 0) {
+      setAiTagValidity({})
+      return
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        aiTagAbortRef.current?.abort()
+        const controller = new AbortController()
+        aiTagAbortRef.current = controller
+
+        const res = await fetch("/api/bugs/validate-tags", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: trimmedTitle,
+            description: plainDescription,
+            tags,
+          }),
+          signal: controller.signal,
+        })
+        if (!res.ok) {
+          return
+        }
+        const data = await res.json().catch(() => null)
+        const list: Array<{ tag: string; valid: boolean; reason?: string }> =
+          Array.isArray(data?.tags) ? data.tags : []
+        const next: Record<string, { valid: boolean; reason?: string }> = {}
+        list.forEach((entry) => {
+          const key = String(entry.tag || "").trim()
+          if (!key) return
+          next[key] = { valid: !!entry.valid, reason: entry.reason }
+        })
+        setAiTagValidity(next)
+      } catch {
+        // ignore errors / aborts
+      }
+    }, 600)
+
+    return () => {
+      clearTimeout(timeout)
+      aiTagAbortRef.current?.abort()
+    }
+  }, [title, description, tagsInput])
 
   function validateStep(stepNumber: number): boolean {
     const payload = getPayload()
@@ -527,6 +584,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
               onReview={() => { if (validateStepWithErrors(4)) setStep(5) }}
               onBack={() => setStep(3)}
               onCancel={() => setOpen(false)}
+              aiTagValidity={aiTagValidity}
             />
           </div>
         )}
@@ -553,6 +611,7 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
               onCancel={() => setOpen(false)}
               onSubmit={handleSubmit}
               hideVisibility={!!clusterId}
+              aiTagValidity={aiTagValidity}
             />
           </div>
         )}

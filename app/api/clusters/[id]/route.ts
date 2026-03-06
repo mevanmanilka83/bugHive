@@ -1,4 +1,4 @@
-import { auth, checkAuth, addTimestamps, ensureValidUUID, getSingleRecord, updateRecord, deleteRecord, supabase } from "@/lib"
+import { auth, checkAuth, addTimestamps, ensureValidUUID, getSingleRecord, updateRecord, deleteRecord, supabase, normalizeClusterDescription } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'
@@ -49,9 +49,51 @@ export async function PATCH(
 
   const allowedFields = ['name', 'description', 'visibility']
   const updateData: any = {}
+
+  if (body.name !== undefined) {
+    const nextName = String(body.name).trim()
+    if (nextName.length < 3) {
+      return NextResponse.json({ error: "Cluster name must be at least 3 characters" }, { status: 400 })
+    }
+    if (nextName.length > 100) {
+      return NextResponse.json({ error: "Cluster name must be less than 100 characters" }, { status: 400 })
+    }
+    updateData.name = nextName
+  }
+
+  if (body.description !== undefined) {
+    const descriptionResult = normalizeClusterDescription(body.description)
+    if (!descriptionResult.success) {
+      return NextResponse.json({ error: descriptionResult.error }, { status: 400 })
+    }
+    updateData.description = descriptionResult.value
+  }
+
+  if (body.visibility !== undefined) {
+    const nextVisibility = String(body.visibility).toLowerCase().trim()
+    if (nextVisibility !== "private" && nextVisibility !== "public") {
+      return NextResponse.json({ error: "Visibility must be private or public" }, { status: 400 })
+    }
+
+    const currentVisibility = (cluster.visibility || "private").toString().toLowerCase().trim()
+    const isVisibilityChanged = nextVisibility !== currentVisibility
+    const hasConfirmedChange = body.confirmVisibilityChange === true
+
+    if (isVisibilityChanged && !hasConfirmedChange) {
+      return NextResponse.json(
+        {
+          error: `You are changing visibility from ${currentVisibility} to ${nextVisibility}. Please confirm to continue.`,
+          code: "VISIBILITY_CONFIRM_REQUIRED",
+        },
+        { status: 409 }
+      )
+    }
+
+    updateData.visibility = nextVisibility
+  }
   
   for (const field of allowedFields) {
-    if (body[field] !== undefined) {
+    if (body[field] !== undefined && updateData[field] === undefined) {
       updateData[field] = body[field]
     }
   }

@@ -28,6 +28,17 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
   const [username, setUsername] = React.useState("")
   const [loading, setLoading] = React.useState(false)
 
+  const parseEmailList = React.useCallback((value: string) => {
+    return Array.from(
+      new Set(
+        value
+          .split(/[\n,;]+/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    )
+  }, [])
+
   React.useEffect(() => {
     if (!open) {
       setEmail("")
@@ -41,21 +52,60 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
 
     setLoading(true)
     try {
-      const result = await inviteUserToCluster(
-        cluster.id,
-        email.trim() || undefined,
-        username.trim() || undefined
-      )
+      const inviteTasks: Array<() => Promise<{ success: boolean; error?: string }>> = []
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send invitation')
+      const trimmedUsername = username.trim()
+      if (trimmedUsername) {
+        inviteTasks.push(async () => {
+          const result = await inviteUserToCluster(cluster.id, undefined, trimmedUsername)
+          return { success: !!result.success, error: result.success ? undefined : result.error }
+        })
       }
 
-      toast.success(result.message || "Invitation sent successfully")
+      const emails = parseEmailList(email)
+      emails.forEach((address) => {
+        inviteTasks.push(async () => {
+          const result = await inviteUserToCluster(cluster.id, address, undefined)
+          return { success: !!result.success, error: result.success ? undefined : result.error }
+        })
+      })
+
+      if (inviteTasks.length === 0) {
+        throw new Error("Enter at least one email or username")
+      }
+
+      let successCount = 0
+      const failures: string[] = []
+
+      for (const task of inviteTasks) {
+        const outcome = await task()
+        if (outcome.success) {
+          successCount += 1
+        } else if (outcome.error) {
+          failures.push(outcome.error)
+        }
+      }
+
+      if (successCount === 0) {
+        throw new Error(failures[0] || "Failed to send invitations")
+      }
+
+      if (successCount === 1) {
+        toast.success("Invitation sent successfully")
+      } else {
+        toast.success(`${successCount} invitations sent successfully`)
+      }
+
+      if (failures.length > 0) {
+        toast.error(`${failures.length} invite${failures.length > 1 ? "s" : ""} failed. ${failures[0]}`)
+      }
+
       setEmail("")
       setUsername("")
       onSuccess?.()
-      onOpenChange(false)
+      if (failures.length === 0) {
+        onOpenChange(false)
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send invitation")
     } finally {
@@ -82,8 +132,8 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
               <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
-                type="email"
-                placeholder="user@example.com"
+                type="text"
+                placeholder="user1@example.com, user2@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -99,7 +149,7 @@ export function InviteUserDialog({ open, onOpenChange, cluster, onSuccess }: Inv
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Provide either an email address or username (or both).
+              Provide one username and/or multiple emails separated by commas.
             </p>
           </div>
           <DialogFooter>

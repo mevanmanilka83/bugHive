@@ -98,9 +98,9 @@ export default function TermsPage() {
                 Related Bugs &amp; External Links
               </h3>
               <p className="text-base text-muted-foreground">
-                BugHive may surface related issues from GitHub, Stack Overflow,
-                Jira, or Bugzilla when configured. Those services have their
-                own terms. We do not control external content or APIs.
+                BugHive may surface related issues from GitHub or Stack Overflow
+                when configured. Those services have their own terms. We do not
+                control external content or APIs.
               </p>
             </div>
           </div>

@@ -4,10 +4,11 @@ import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { PlusIcon } from "@/components/ui/plus"
 import { DeleteIcon } from "@/components/ui/delete"
-import { IconUsers, IconMail, IconSettings, IconAlertTriangle, IconPencil, IconUserPlus, IconLayoutGrid, IconList, IconLayoutRows } from "@tabler/icons-react"
+import { IconUsers, IconMail, IconSettings, IconAlertTriangle, IconPencil, IconUserPlus, IconLayoutGrid, IconList, IconLayoutRows, IconCopy } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggleGroup"
 import { ClustersListSkeleton } from "@/components/features/skeletons/ClustersListSkeleton"
@@ -24,7 +25,7 @@ import { EditClusterDialog } from "./EditClusterDialog"
 import { InviteUserDialog } from "./InviteUserDialog"
 import { PendingInvitesDialog } from "./PendingInvitesDialog"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
-import { deleteCluster } from "@/app/actions/cluster"
+import { deleteCluster, duplicateCluster } from "@/app/actions/cluster"
 import { stripHtml, getClusterViewMode, setClusterViewMode } from "@/lib/utils-client"
 
 interface ClustersListProps {
@@ -60,6 +61,7 @@ export function ClustersList({
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [clusterToDelete, setClusterToDelete] = React.useState<any | null>(null)
   const [deleting, setDeleting] = React.useState(false)
+  const [duplicatingClusterId, setDuplicatingClusterId] = React.useState<string | null>(null)
   const [selectedCluster, setSelectedCluster] = React.useState<any | null>(null)
   const [pendingDialogOpen, setPendingDialogOpen] = React.useState(false)
   const [pendingCluster, setPendingCluster] = React.useState<any | null>(null)
@@ -68,6 +70,7 @@ export function ClustersList({
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [clusterToEdit, setClusterToEdit] = React.useState<any | null>(null)
   const [visibilityFilter, setVisibilityFilter] = React.useState<"private" | "public">("private")
+  const [searchQuery, setSearchQuery] = React.useState("")
   const [viewMode, setViewMode] = React.useState<"grid" | "list" | "compact">("list")
   const [requestingClusterId, setRequestingClusterId] = React.useState<string | null>(null)
   const [requestedClusters, setRequestedClusters] = React.useState<Set<string>>(new Set())
@@ -163,6 +166,26 @@ export function ClustersList({
     setInviteDialogOpen(true)
   }
 
+  const handleDuplicateCluster = async (cluster: any) => {
+    if (!cluster?.id) return
+
+    try {
+      setDuplicatingClusterId(cluster.id)
+      const result = await duplicateCluster(cluster.id)
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to duplicate cluster")
+      }
+
+      toast.success(result.message || "Cluster duplicated")
+      fetchClusters()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to duplicate cluster")
+    } finally {
+      setDuplicatingClusterId(null)
+    }
+  }
+
   const handlePendingClick = (cluster: any) => {
     setPendingCluster(cluster)
     setPendingDialogOpen(true)
@@ -201,10 +224,21 @@ export function ClustersList({
   }
 
   const filteredClusters = React.useMemo(() => {
+    const term = searchQuery.trim().toLowerCase()
+
     return clusters.filter((cluster) => {
-      return normalizeVisibility(cluster.visibility) === visibilityFilter
+      const visibilityMatch = normalizeVisibility(cluster.visibility) === visibilityFilter
+      if (!visibilityMatch) return false
+
+      if (!term) return true
+
+      const name = String(cluster.name || "").toLowerCase()
+      const description = stripHtml(String(cluster.description || "")).toLowerCase()
+      const owner = String(cluster.owner_username || "").toLowerCase()
+
+      return name.includes(term) || description.includes(term) || owner.includes(term)
     })
-  }, [clusters, visibilityFilter, normalizeVisibility])
+  }, [clusters, visibilityFilter, normalizeVisibility, searchQuery])
 
   return (
     <div>
@@ -232,6 +266,12 @@ export function ClustersList({
                 ? "— cluster(s)"
                 : `${filteredClusters.length} ${visibilityFilter} cluster${filteredClusters.length !== 1 ? "s" : ""}`}
             </p>
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search clusters"
+              className="h-8 w-full sm:w-[220px]"
+            />
             <ToggleGroup
               type="single"
               variant="outline"
@@ -413,6 +453,19 @@ export function ClustersList({
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation()
+                            handleDuplicateCluster(cluster)
+                          }}
+                          className="h-8 w-8"
+                          aria-label="Duplicate cluster"
+                          disabled={duplicatingClusterId === cluster.id}
+                        >
+                          <IconCopy className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation()
                             handleDeleteClick(cluster)
                           }}
                           className="h-8 w-8 text-destructive hover:text-destructive"
@@ -478,6 +531,7 @@ export function ClustersList({
           open={pendingDialogOpen}
           onOpenChange={setPendingDialogOpen}
           cluster={pendingCluster}
+          onInvitesChanged={fetchClusters}
         />
       )}
 

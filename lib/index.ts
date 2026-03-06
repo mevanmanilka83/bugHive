@@ -62,7 +62,7 @@ export {
 // VALIDATION
 // ============================================================================
 
-export { validateWithSchema } from "./validation"
+export { validateWithSchema, normalizeClusterDescription } from "./validation"
 
 // ============================================================================
 // SCHEMAS (Zod & Types)

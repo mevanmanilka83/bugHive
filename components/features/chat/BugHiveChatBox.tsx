@@ -26,7 +26,7 @@ const suggestionMessages = [
   "How do I report a bug?",
   "What are related bugs?",
   "How do clusters work?",
-  "Where do GitHub/Jira issues show?",
+  "Where do GitHub issues show?",
   "How do I add a solution?",
   "What is the Related Bugs panel?",
 ]
@@ -37,7 +37,7 @@ export function BugHiveChatBox() {
     {
       role: "assistant",
       content:
-        "Hi! I'm your BugHive assistant. Ask me about reporting bugs, clusters, related bugs (GitHub, Jira, Stack Overflow, Bugzilla), or solutions.",
+        "Hi! I'm your BugHive assistant. Ask me about reporting bugs, clusters, related bugs (GitHub, Stack Overflow), or solutions.",
       timestamp: new Date(),
     },
   ])

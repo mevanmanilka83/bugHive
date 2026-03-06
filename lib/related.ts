@@ -48,12 +48,6 @@ type StackOverflowQuestion = {
     tags: string[]
 }
 
-type BugzillaBug = {
-    id: number
-    summary: string
-    whiteboard?: string
-}
-
 function toSnippet(text?: string | null) {
     const cleaned = stripHtml(String(text || "")).replace(/\s+/g, " ").trim()
     if (!cleaned) return ""
@@ -96,21 +90,6 @@ function normalizeStackOverflowQuestion(item: StackOverflowQuestion): RelatedRes
         title: stripHtml(item.title),
         url: item.link,
         source: "stack_overflow_question",
-        snippet,
-    }
-}
-
-function normalizeBugzillaBug(baseUrl: string, item: BugzillaBug): RelatedResult {
-    const cleanBase = (baseUrl || "").replace(/\/+$/, "")
-    const url = cleanBase ? `${cleanBase}/show_bug.cgi?id=${item.id}` : ""
-    const extra = item.whiteboard ? ` (${item.whiteboard})` : ""
-    const snippet = toSnippet(item.whiteboard) || "Bugzilla bug"
-
-    return {
-        id: `bz-${item.id}`,
-        title: `${item.summary}${extra}`,
-        url,
-        source: "bugzilla_bug",
         snippet,
     }
 }
@@ -355,35 +334,6 @@ export async function findRelatedItems(bug: any) {
         console.error("StackOverflow search failed", e)
     }
 
-    // --- Bugzilla Fetch (default: bugzilla.mozilla.org) ---
-    const bugzillaBaseUrl = process.env.BUGZILLA_BASE_URL || "https://bugzilla.mozilla.org"
-    const bugzillaApiKey = process.env.BUGZILLA_API_KEY
-    let bugzillaResults: RelatedResult[] = []
-    const bzHeaders = { Accept: "application/json", "User-Agent": "BugHive/1.0 (Related Bugs)" }
-
-    try {
-        const cleanBase = bugzillaBaseUrl.replace(/\/+$/, "")
-        const bzUrl = new URL(`${cleanBase}/rest/bug`)
-        let quickSearch = truncateQuery([signature.hardError, signature.languageTerms[0], title].filter(Boolean).join(" "))
-        if (!quickSearch && description) {
-            quickSearch = truncateQuery(description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80))
-        }
-        if (!quickSearch) quickSearch = "bug"
-
-        bzUrl.searchParams.set("quicksearch", quickSearch)
-        bzUrl.searchParams.set("limit", "10")
-        if (bugzillaApiKey) bzUrl.searchParams.set("api_key", bugzillaApiKey)
-
-        const bzRes = await fetch(bzUrl.toString(), { headers: bzHeaders })
-        if (bzRes.ok) {
-            const bzData = await bzRes.json()
-            const items = Array.isArray(bzData?.bugs) ? (bzData.bugs as BugzillaBug[]) : []
-            bugzillaResults = items.map(b => normalizeBugzillaBug(cleanBase, b))
-        }
-    } catch (e) {
-        console.error("Bugzilla search failed", e)
-    }
-
     // --- Internal Bug Fetch ---
     const allRecords = await getMultipleRecords("bugs")
     const filteredRecords = allRecords.filter((record: any) => {
@@ -411,8 +361,7 @@ export async function findRelatedItems(bug: any) {
         internal: internalBugs,
         external: [
             ...githubIssues.slice(0, 5),
-            ...stackQuestions.slice(0, 5),
-            ...bugzillaResults.slice(0, 5)
+      ...stackQuestions.slice(0, 5)
         ]
     }
 }

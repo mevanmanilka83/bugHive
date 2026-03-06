@@ -14,12 +14,6 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
 import { RichTextEditor } from "@/components/ui/RichTextEditor"
 
-function normalizeDescription(html: string) {
-  const trimmed = html.trim()
-  if (trimmed === "" || trimmed === "<p></p>" || trimmed === "<p><br></p>") return ""
-  return html
-}
-
 interface EditClusterDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -47,7 +41,13 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
     if (!cluster) return
 
     const trimmedName = name.trim()
-    const normalizedDesc = normalizeDescription(description)
+    const trimmedDescription = description.trim()
+    const normalizedDesc =
+      trimmedDescription === "" || trimmedDescription === "<p></p>" || trimmedDescription === "<p><br></p>"
+        ? null
+        : description
+    const currentVisibility = (cluster.visibility || "private").toLowerCase() === "public" ? "public" : "private"
+    const isVisibilityChanged = currentVisibility !== visibility
 
     if (!trimmedName) {
       toast.error("Cluster name is required")
@@ -56,15 +56,32 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
 
     try {
       setSaving(true)
-      const res = await fetch(`/api/clusters/${cluster.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: trimmedName,
-          description: normalizedDesc.length > 0 ? normalizedDesc : null,
-          visibility,
-        }),
-      })
+      const makeRequest = (confirmVisibilityChange: boolean) =>
+        fetch(`/api/clusters/${cluster.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: trimmedName,
+            description: normalizedDesc,
+            visibility,
+            confirmVisibilityChange,
+          }),
+        })
+
+      let res = await makeRequest(false)
+      if (res.status === 409 && isVisibilityChanged) {
+        const data = await res.json().catch(() => ({}))
+        if (data?.code === "VISIBILITY_CONFIRM_REQUIRED") {
+          const confirmed = window.confirm(
+            `Change visibility from ${currentVisibility} to ${visibility}? Existing cluster access rules will change.`
+          )
+          if (!confirmed) {
+            setSaving(false)
+            return
+          }
+          res = await makeRequest(true)
+        }
+      }
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -73,7 +90,7 @@ export function EditClusterDialog({ open, onOpenChange, cluster, onSuccess }: Ed
 
       toast.success("Cluster updated")
       onOpenChange(false)
-      onSuccess?.({ visibility, name: trimmedName, description: normalizedDesc.length > 0 ? normalizedDesc : null })
+      onSuccess?.({ visibility, name: trimmedName, description: normalizedDesc })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update cluster")
     } finally {

@@ -43,13 +43,20 @@ export default async function Home({ searchParams }: HomeProps) {
           </p>
         </div>
         <div className="flex w-full justify-end sm:w-auto">
-          {session ? (
-            <BugReportDialog />
-          ) : (
-            <Button asChild className="px-4 sm:w-auto">
-              <Link href="/auth/signin">Report Bug</Link>
-            </Button>
-          )}
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            {session ? (
+              <Button asChild variant="outline" className="px-4 sm:w-auto">
+                <Link href="/unanswered">Unanswered Queue</Link>
+              </Button>
+            ) : null}
+            {session ? (
+              <BugReportDialog />
+            ) : (
+              <Button asChild className="px-4 sm:w-auto">
+                <Link href="/auth/signin">Report Bug</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

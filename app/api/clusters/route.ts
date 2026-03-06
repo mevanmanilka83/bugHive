@@ -1,4 +1,4 @@
-import { auth, checkAuth, ensureValidUUID, addTimestamps, extractUsernameFromEmail, supabase, insertRecord } from "@/lib"
+import { auth, checkAuth, ensureValidUUID, addTimestamps, extractUsernameFromEmail, supabase, insertRecord, normalizeClusterDescription } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
 export const runtime = 'nodejs'
@@ -52,7 +52,10 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}))
 
   const name = body.name?.trim()
-  const description = body.description?.trim() || null
+  const descriptionResult = normalizeClusterDescription(body.description)
+  if (!descriptionResult.success) {
+    return NextResponse.json({ error: descriptionResult.error }, { status: 400 })
+  }
   const visibility = (body.visibility || "private").toString().toLowerCase()
 
   if (!name || name.length < 3) {
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
 
   const clusterData = addTimestamps({
     name,
-    description,
+    description: descriptionResult.value,
     visibility: visibility === "public" ? "public" : "private",
     owner_id: ensureValidUUID(user.id),
     owner_username: ownerUsername,

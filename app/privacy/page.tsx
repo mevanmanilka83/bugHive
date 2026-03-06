@@ -121,9 +121,8 @@ export default function PrivacyPage() {
               </h3>
               <p className="text-base text-muted-foreground">
                 When you connect or when we surface related content from
-                GitHub, Jira, Stack Overflow, or Bugzilla, those platforms have
-                their own privacy policies. We do not control their data
-                practices.
+                GitHub or Stack Overflow, those platforms have their own
+                privacy policies. We do not control their data practices.
               </p>
             </div>
           </div>

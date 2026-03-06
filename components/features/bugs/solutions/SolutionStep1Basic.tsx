@@ -38,6 +38,9 @@ export default function SolutionStep1Basic({
           value={title}
           onChange={(e) => onChangeTitle(e.target.value)}
           className={errors.title ? "border-red-500" : ""}
+          autoComplete="on"
+          autoCorrect="on"
+          spellCheck
         />
         {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
       </div>

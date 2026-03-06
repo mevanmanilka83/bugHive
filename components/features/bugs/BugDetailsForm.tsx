@@ -69,7 +69,7 @@ export function BugDetailsForm({
     return Array.isArray(att) ? att : []
   })()
 
-  const tagsDisplay = Array.isArray(bug.tags) && bug.tags.length ? bug.tags.join(", ") : "—"
+  const tagsArray = Array.isArray(bug.tags) ? bug.tags : []
   const sourceUrls: string[] =
     Array.isArray(bug.sources) && bug.sources.length
       ? (bug.sources as unknown[])
@@ -210,7 +210,41 @@ export function BugDetailsForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label>Tags</Label>
-          <Input value={tagsDisplay} disabled />
+          {tagsArray.length === 0 ? (
+            <Input value="—" disabled />
+          ) : (
+            <div className="flex flex-wrap gap-1.5 rounded-none border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
+              {tagsArray.map((tag) => {
+                const value = String(tag || "").trim()
+                const valid =
+                  value.length > 0 &&
+                  value.length <= 50 &&
+                  /^[a-z0-9][a-z0-9-]*$/i.test(value)
+
+                return (
+                  <Badge
+                    key={value}
+                    variant="outline"
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                      valid
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300"
+                        : "border-red-300 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"
+                    )}
+                  >
+                    <span className="truncate max-w-[140px]">
+                      {value}
+                    </span>
+                    {!valid && (
+                      <span className="text-[9px] font-semibold uppercase tracking-wide">
+                        Invalid tag
+                      </span>
+                    )}
+                  </Badge>
+                )
+              })}
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Sources</Label>
