@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useTheme } from "next-themes"
 import { IconSun, IconMoon, IconDeviceDesktop, IconCheck } from "@tabler/icons-react"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 import { ThemePickerSkeleton } from "@/components/features/skeletons/ThemePickerSkeleton"
 
 type ThemeOption = "light" | "dark" | "system"

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { IconArrowUp, IconArrowDown } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib"
 import { toast } from "sonner"
 
 interface VoteButtonsProps {

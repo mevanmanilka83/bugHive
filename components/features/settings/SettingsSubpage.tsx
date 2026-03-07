@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 interface SettingsSubpageProps {
   /** Link text and destination for back navigation */

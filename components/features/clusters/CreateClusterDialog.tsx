@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
 import { RichTextEditor } from "@/components/ui/RichTextEditor"
 import { toast } from "sonner"
-import { getClusterDefaultVisibility, type ClusterVisibility } from "@/lib/utils-client"
+import { getClusterDefaultVisibility, type ClusterVisibility } from "@/lib"
 
 interface CreateClusterDialogProps {
   open: boolean

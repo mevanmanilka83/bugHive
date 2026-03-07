@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { type BugDialogErrors } from "@/lib"
+import type { BugDialogErrors } from "@/lib/schemas/types"
 import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { IconPaperclip, IconUpload, IconX, IconDeviceDesktop } from "@tabler/icons-react"
 import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils-client"
-import { isValidUrl } from "@/lib/schemas/zod/shared"
+import { cn } from "@/lib"
+import { isValidUrl } from "@/lib"
 
 type AttachmentFile = {
   file: File

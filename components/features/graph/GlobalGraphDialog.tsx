@@ -35,7 +35,8 @@ import {
     type EdgeProps
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { cn } from "@/lib/utils-client"
+import { toast } from "sonner"
+import { cn } from "@/lib"
 
 interface GlobalGraphDialogProps {
     open: boolean
@@ -245,6 +246,9 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
             }
 
             const data = await res.json()
+            if (data.xpEarned) {
+                toast.success(`+${data.xpEarned} BugXP – Graph saved!`, { duration: 4000 })
+            }
             onOpenChange(false)
             setTimeout(() => {
                 router.push(`/workspaces/${data.graph.id}`)

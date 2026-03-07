@@ -1,5 +1,5 @@
-import { z } from "zod"
-import { getClusterSchema } from "@/lib"
+import { z } from "../zod"
+import { getClusterSchema } from "../zod/createCluster"
 
 export type ClusterPayload = z.infer<ReturnType<typeof getClusterSchema>>
 

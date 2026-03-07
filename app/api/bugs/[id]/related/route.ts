@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 import { extractRouteId, getSingleRecord, getMultipleRecords, successResponse, errorResponse } from "@/lib"
-import { stripHtml } from "@/lib/utils-client"
+import { stripHtml } from "@/lib"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

@@ -1,5 +1,5 @@
 
-import { stripHtml } from "@/lib/utils-client"
+import { stripHtml } from "../utils/client"
 
 export type BugSignature = {
     languageTerms: string[]

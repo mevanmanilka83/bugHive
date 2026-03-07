@@ -12,19 +12,19 @@
  * - Reduces boilerplate in individual route handlers
  */
 import { NextRequest, NextResponse } from "next/server"
-import { checkAuth } from "./auth/helpers"
-import { errorResponse, successResponse } from "./errors"
+import { checkAuth } from "../auth/helpers"
+import { errorResponse, successResponse } from "../errors/httpResponses"
 import { 
   getSingleRecord,
   getMultipleRecords,
   insertRecord,
   updateRecord,
   deleteRecord
-} from "./database"
-import { parseFormData } from "./formParser"
-import { processFormDataWithUploads } from "./s3Uploads"
-import { parseArrayField, addTimestamps, ensureValidUUID, extractRouteId } from "./utils"
-import { supabase } from "./config"
+} from "../db/crudOperations"
+import { parseFormData } from "./parseForms"
+import { processFormDataWithUploads } from "../storage/s3Uploads"
+import { parseArrayField, addTimestamps, ensureValidUUID, extractRouteId } from "../utils/server"
+import { supabase } from "../config"
 
 /**
  * Creates a generic API route handler with authentication and error handling
@@ -88,8 +88,7 @@ function createPostHandler(
     let formData
     
     if (options?.enableFileUpload) {
-      const result = await processFormDataWithUploads(request, options.uploadFolder || 'uploads')
-      formData = result.formData
+      formData = await processFormDataWithUploads(request, options.uploadFolder || 'uploads')
     } else {
       formData = await parseFormData(request)
     }

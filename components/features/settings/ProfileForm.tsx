@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { updateProfile, uploadAvatar } from "@/app/actions/profile"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 interface ProfileFormProps {
   user: {

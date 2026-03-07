@@ -6,8 +6,8 @@
  */
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { getSupabaseAdmin } from "../supabase"
-import { extractUsernameFromEmail } from "../utils"
+import { getSupabaseAdmin } from "../config"
+import { extractUsernameFromEmail } from "../utils/server"
 import { getLoginValidationSchema } from "../schemas/zod"
 import { authConfig } from "./auth.config"
 

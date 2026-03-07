@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation"
 import { IconCheck, IconWorld, IconLock, IconUsers } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { updateProfileVisibility } from "@/app/actions/privacy"
-import { type ProfileVisibility, PROFILE_VISIBILITY_LABELS } from "@/lib/schemas/zod"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
+import type { ProfileVisibility } from "@/lib/schemas/types"
+import { PROFILE_VISIBILITY_LABELS } from "@/lib/schemas/types"
 
 interface ProfileVisibilitySettingsProps {
   currentVisibility: ProfileVisibility

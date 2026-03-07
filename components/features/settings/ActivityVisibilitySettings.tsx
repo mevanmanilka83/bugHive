@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { IconEye, IconEyeOff, IconCheck } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { updateActivityVisibility } from "@/app/actions/privacy"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 interface ActivityVisibilitySettingsProps {
   showActivity: boolean

@@ -14,7 +14,7 @@ import { X, User } from "lucide-react"
 import { BotMessageSquareIcon } from "@/components/ui/bot-message-square"
 import { SendIcon } from "@/components/ui/send"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 interface Message {
   role: "user" | "assistant"

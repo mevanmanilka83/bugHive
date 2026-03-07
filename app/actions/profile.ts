@@ -2,7 +2,7 @@
 
 import { supabase, getSupabaseAdmin, generateUUIDFromEmailSync, uploadAvatarFile } from "@/lib"
 import { verifyPassword, hashPassword } from "@/lib/password"
-import { getUpdateProfileValidationSchema, getChangePasswordValidationSchema } from "@/lib/schemas/zod"
+import { getUpdateProfileValidationSchema, getChangePasswordValidationSchema } from "@/lib"
 import { auth } from "@/lib/auth/config"
 import type { ActionResponse } from "@/lib/auth/helpers" 
 

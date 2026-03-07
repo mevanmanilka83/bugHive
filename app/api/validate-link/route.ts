@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
+import { isValidUrl } from "@/lib"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 const TIMEOUT_MS = 8000
-
-function isAllowedUrl(url: string): boolean {
-  try {
-    const u = new URL(url)
-    return u.protocol === "http:" || u.protocol === "https:"
-  } catch {
-    return false
-  }
-}
 
 /**
  * GET /api/validate-link?url=...
@@ -25,7 +17,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "url is required" }, { status: 400 })
   }
   const trimmed = url.trim()
-  if (!isAllowedUrl(trimmed)) {
+  if (!isValidUrl(trimmed)) {
     return NextResponse.json({ valid: false, error: "Only http/https URLs allowed" })
   }
 

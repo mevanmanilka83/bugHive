@@ -1,7 +1,8 @@
 "use server"
 
 import { supabase } from "@/lib"
-import { getPrivacySettingsValidationSchema, type ProfileVisibility } from "@/lib/schemas/zod"
+import { getPrivacySettingsValidationSchema } from "@/lib"
+import type { ProfileVisibility } from "@/lib/schemas/types"
 import { auth } from "@/lib/auth/config"
 import type { ActionResponse } from "@/lib/auth/helpers"
 

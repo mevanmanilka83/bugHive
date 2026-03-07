@@ -1,14 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { z } from "zod"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { createBugSolution } from "@/app/actions/bug/BugSolution"
 import { toast } from "sonner"
 import { IconBulb } from "@tabler/icons-react"
 import { Check } from "lucide-react"
 import { getBugSolutionSchema } from "@/lib"
-import { type SolutionPayload, type SolutionDialogErrors, type SolutionFormData } from "@/lib"
+import type { SolutionPayload, SolutionDialogErrors, SolutionFormData } from "@/lib/schemas/types"
 import SolutionStep1Basic from "./SolutionStep1Basic"
 import SolutionStep2Type from "./SolutionStep2Type"
 import SolutionStep3Details from "./SolutionStep3Details"
@@ -433,6 +432,8 @@ export function SolutionDialog({
               errors={errors}
               onChangeTitle={(value) => !isBugClosedOrResolved && handleInputChange("title", value)}
               onChangeDescription={(value) => !isBugClosedOrResolved && handleInputChange("description", value)}
+              bugTitle={bugData?.title}
+              bugDescription={bugData?.description}
               canNext={canNextFromStep1 && !isBugClosedOrResolved}
               onNext={() => { if (!isBugClosedOrResolved && validateStepWithErrors(1)) setStep(2) }}
               onCancel={() => onOpenChange(false)}

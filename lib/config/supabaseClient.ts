@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
-import { env } from "./env"
+import { env } from "./environment"
 
 function getSupabaseUrl(): string {
     const url = env.supabaseUrl

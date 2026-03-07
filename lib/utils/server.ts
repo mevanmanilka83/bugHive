@@ -4,10 +4,10 @@
  * ⚠️ SINGLE SOURCE OF TRUTH FOR UTILITY FUNCTIONS ⚠️
  * 
  * This file consolidates all utility functions.
- * Client-safe functions are re-exported from utils-client.ts
+ * Client-safe functions are re-exported from client.ts
  * Server-specific utilities are defined here.
  * 
- * For client components, import from @/lib/utils-client to avoid server-side code.
+ * For client components, import from @/lib/utils/client to avoid server-side code.
  * For server components/API routes, import from @/lib or @/lib/utils.
  */
 
@@ -22,8 +22,42 @@ export {
   ensureValidUUID,
   extractUsernameFromEmail,
   stripHtml,
-  isHtmlContent
-} from "./utils-client"
+  isHtmlContent,
+  CLUSTER_VIEW_MODE_KEY,
+  getClusterViewMode,
+  setClusterViewMode,
+  CLUSTER_DEFAULT_VISIBILITY_KEY,
+  CLUSTER_INVITE_ALLOW_ANYONE_KEY,
+  CLUSTER_INVITE_AUTO_ACCEPT_KEY,
+  getClusterDefaultVisibility,
+  setClusterDefaultVisibility,
+  type ClusterViewMode,
+  type ClusterVisibility,
+  NOTIFICATION_EMAIL_INVITES_KEY,
+  NOTIFICATION_EMAIL_JOIN_REQUESTS_KEY,
+  NOTIFICATION_EMAIL_MENTIONS_KEY,
+  NOTIFICATION_INAPP_BADGE_KEY,
+  NOTIFICATION_INAPP_CENTER_KEY,
+  getEmailInvitesEnabled,
+  setEmailInvitesEnabled,
+  getEmailJoinRequestsEnabled,
+  setEmailJoinRequestsEnabled,
+  getEmailMentionsEnabled,
+  setEmailMentionsEnabled,
+  getInAppBadgeEnabled,
+  setInAppBadgeEnabled,
+  getInAppCenterEnabled,
+  setInAppCenterEnabled,
+  getClusterInviteAllowAnyone,
+  setClusterInviteAllowAnyone,
+  getClusterInviteAutoAccept,
+  setClusterInviteAutoAccept,
+  LOCALE_KEY,
+  getAppLocale,
+  setAppLocale,
+  getLocaleLabel,
+  type AppLocale,
+} from "./client"
 
 // ============================================================================
 // DATA PROCESSING UTILITIES (Server-only)
@@ -84,9 +118,6 @@ export function parseQueryFilters(searchParams: URLSearchParams | null): {
 // ROUTE PARAMETER UTILITIES (Server-only)
 // ============================================================================
 
-/**
- * Extracts route ID from Next.js route context
- */
 /**
  * Extract route ID from Next.js 15 App Router context params
  * Handles both string and Promise-based params

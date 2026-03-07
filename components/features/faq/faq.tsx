@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 export type FaqItem = {
   question: string

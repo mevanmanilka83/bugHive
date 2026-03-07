@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { auth, getRecordOrNotFound, ensureValidUUID, supabase } from "@/lib"
-import { incrementViewCount } from "@/lib/views"
+import { incrementViewCount } from "@/lib"
 import { BugDetailsView } from "@/components/features/bugs/BugDetailsView"
 import { RelatedBugsPanel } from "@/components/features/bugs/RelatedBugsPanel"
 import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"

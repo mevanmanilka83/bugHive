@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { auth, getRecordOrNotFound, ensureValidUUID, supabase } from "@/lib"
-import { incrementViewCount } from "@/lib/views"
+import { incrementViewCount } from "@/lib"
 import { SolutionDetailsForm } from "@/components/features/bugs/SolutionDetailsForm"
 import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 import { notFound } from "next/navigation"

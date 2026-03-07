@@ -4,6 +4,8 @@ import Link from "next/link"
 import { Info } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { HomeHeaderStatsDialog } from "@/components/home/HomeHeaderStatsDialog"
+import { LeaderboardDialog } from "@/components/leaderboard/LeaderboardDialog"
+import { HunterLevelProgress } from "@/components/home/HunterLevelProgress"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -38,6 +40,7 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
     return (
       <div className="flex items-center gap-2">
         <HomeHeaderStatsDialog />
+        <LeaderboardDialog period="week" limit={10} headerStyle />
         <Button asChild size="sm" className="px-4">
           <Link href="/auth/signup">Sign up</Link>
         </Button>
@@ -57,6 +60,8 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
     <div className="flex items-center gap-2">
       {/* Fire icon: community stats and quick links */}
       <HomeHeaderStatsDialog />
+      {/* Trophy icon: top hunters leaderboard */}
+      <LeaderboardDialog period="week" limit={10} headerStyle />
       {/* Info icon: opens dialog with user/account details */}
       <Dialog>
         <DialogTrigger asChild>
@@ -184,6 +189,7 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
           </div>
         </div>
 
+        <HunterLevelProgress size={28} className="shrink-0" />
         <Avatar className="h-7 w-7">
           <AvatarImage src={image} alt={name} priority />
           <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>

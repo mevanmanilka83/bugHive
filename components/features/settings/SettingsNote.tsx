@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 interface SettingsNoteProps {
   title?: string

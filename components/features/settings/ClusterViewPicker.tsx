@@ -6,8 +6,8 @@ import {
   getClusterViewMode,
   setClusterViewMode,
   type ClusterViewMode,
-} from "@/lib/utils-client"
-import { cn } from "@/lib/utils-client"
+  cn,
+} from "@/lib"
 
 const VIEW_MODE_LABELS: Record<ClusterViewMode, string> = {
   grid: "Grid",

@@ -7,8 +7,8 @@ import {
   setAppLocale,
   getLocaleLabel,
   type AppLocale,
-} from "@/lib/utils-client"
-import { cn } from "@/lib/utils-client"
+  cn,
+} from "@/lib"
 
 const LOCALES: AppLocale[] = ["en", "es", "fr", "de"]
 

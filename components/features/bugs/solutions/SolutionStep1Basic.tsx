@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { RichTextEditor } from "@/components/ui/RichTextEditor"
-import { type SolutionDialogErrors } from "@/lib"
+import { Sparkles, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import type { SolutionDialogErrors } from "@/lib/schemas/types"
 
 interface SolutionStep1BasicProps {
   title: string
@@ -16,6 +18,9 @@ interface SolutionStep1BasicProps {
   canNext: boolean
   onNext: () => void
   onCancel: () => void
+  /** Bug context for AI suggestions */
+  bugTitle?: string
+  bugDescription?: string
 }
 
 export default function SolutionStep1Basic({
@@ -27,9 +32,65 @@ export default function SolutionStep1Basic({
   canNext,
   onNext,
   onCancel,
+  bugTitle,
+  bugDescription,
 }: SolutionStep1BasicProps) {
+  const [suggesting, setSuggesting] = React.useState(false)
+
+  const handleSuggestWithAI = async () => {
+    if (!bugTitle?.trim()) {
+      toast.error("Bug title is required for AI suggestions")
+      return
+    }
+    setSuggesting(true)
+    try {
+      const res = await fetch("/api/ai-suggest-solutions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bugTitle: bugTitle.trim(),
+          bugDescription: bugDescription?.trim() || undefined,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to get suggestions")
+      }
+      const { suggestions } = await res.json()
+      if (!suggestions?.length) {
+        toast.error("No suggestions returned")
+        return
+      }
+      const first = suggestions[0]
+      onChangeTitle(first.title)
+      onChangeDescription(first.description)
+      toast.success("AI suggestion applied")
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to get AI suggestions")
+    } finally {
+      setSuggesting(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      {bugTitle && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleSuggestWithAI}
+          disabled={suggesting}
+          className="w-fit"
+        >
+          {suggesting ? (
+            <Loader2 className="size-4 mr-2 animate-spin" />
+          ) : (
+            <Sparkles className="size-4 mr-2" />
+          )}
+          Suggest with AI
+        </Button>
+      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor="solution-title">Solution Title <span className="text-red-500">*</span></Label>
         <Input

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 interface Tag {
   tag: string

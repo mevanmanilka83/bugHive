@@ -36,13 +36,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Loader2, Save, Plus, Lightbulb, Wrench, Sparkles, X, Pencil } from "lucide-react"
+import { Loader2, Save, Plus, Lightbulb, Wrench, Sparkles, X, Pencil, Bug } from "lucide-react"
 import { DeleteIcon } from "@/components/ui/delete"
 import { useRouter } from "next/navigation"
-import { cn, stripHtml } from "@/lib/utils-client"
+import { cn, stripHtml } from "@/lib"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { GraphIdeaDialog } from "@/components/features/graphs/GraphIdeaDialog"
+import { SearchAndAddNodesDialog } from "./SearchAndAddNodesDialog"
+import { WorkspacePresenceCursors } from "./WorkspacePresenceCursors"
+import { useWorkspaceRealtime } from "@/hooks/useWorkspaceRealtime"
 
 type GraphIdea = { id: string; kind: string; title: string; content: string | null; created_at: string }
 
@@ -198,7 +201,17 @@ const edgeTypes = {
     custom: CustomBadgeEdge,
 }
 
-export function WorkspaceCanvas({ initialWorkspace, isOwner }: { initialWorkspace: any; isOwner: boolean }) {
+export function WorkspaceCanvas({
+  initialWorkspace,
+  isOwner,
+  userId,
+  userName,
+}: {
+  initialWorkspace: any
+  isOwner: boolean
+  userId: string
+  userName: string
+}) {
     const router = useRouter()
     const [mounted, setMounted] = React.useState(false)
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialWorkspace.nodes || [])
@@ -217,7 +230,26 @@ export function WorkspaceCanvas({ initialWorkspace, isOwner }: { initialWorkspac
     const [ideaDialogInitialKind, setIdeaDialogInitialKind] = React.useState<"idea" | "solution" | "fix">("idea")
     const [ideaDialogInitialTitle, setIdeaDialogInitialTitle] = React.useState<string>("")
     const [ideaDialogInitialContent, setIdeaDialogInitialContent] = React.useState<string | null>("")
+    const [searchAddDialogOpen, setSearchAddDialogOpen] = React.useState(false)
+    const [viewportVersion, setViewportVersion] = React.useState(0)
     const autoSaveTimeout = React.useRef<number | null>(null)
+
+    const { presence, trackCursorThrottled } = useWorkspaceRealtime({
+      workspaceId: initialWorkspace.id,
+      userId,
+      userName,
+      nodes,
+      edges,
+      setNodes,
+      setEdges,
+      enabled: !!initialWorkspace?.id,
+    })
+
+    const bugNodeIds = React.useMemo(() => {
+        return nodes
+            .filter((n) => n.type === "bug" && n.id && !n.id.startsWith("cluster-") && /^[0-9a-f-]{36}$/i.test(n.id))
+            .map((n) => n.id)
+    }, [nodes])
     const isFirstRender = React.useRef(true)
 
     const fetchIdeas = React.useCallback(async () => {
@@ -401,11 +433,23 @@ export function WorkspaceCanvas({ initialWorkspace, isOwner }: { initialWorkspac
 
     return (
         <div className="w-full h-full relative" style={{ height: "calc(100vh - 56px)" }}>
-            <Panel position="top-right" className="bg-background/80 backdrop-blur-sm p-2 rounded-xl border flex gap-2 flex-wrap">
+            <Panel position="top-right" className="bg-background/80 backdrop-blur-sm p-2 rounded-xl border flex gap-2 flex-wrap items-center">
+                {presence.size > 0 && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                        {presence.size} {presence.size === 1 ? "person" : "people"} viewing
+                    </span>
+                )}
                 {isOwner && (
                     <>
                         <Button size="sm" onClick={handleOpenAddIdea}>
                             <Plus className="h-4 w-4 mr-1" /> Idea Node
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setSearchAddDialogOpen(true)}>
+                            <Bug className="h-4 w-4 mr-1" /> Add Bug/Cluster
                         </Button>
                         <Button size="sm" onClick={() => handleSave(false)} disabled={saving}>
                             {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
@@ -515,6 +559,15 @@ export function WorkspaceCanvas({ initialWorkspace, isOwner }: { initialWorkspac
                 onConnect={onConnect}
                 onNodeClick={handleNodeClick}
                 onInit={setRfInstance}
+                onViewportChange={() => setViewportVersion((v) => v + 1)}
+                onPaneMouseMove={(event) => {
+                  if (!rfInstance) return
+                  const pos = rfInstance.screenToFlowPosition({
+                    x: event.clientX,
+                    y: event.clientY,
+                  })
+                  trackCursorThrottled(pos.x, pos.y)
+                }}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 connectionMode={ConnectionMode.Loose}
@@ -522,7 +575,45 @@ export function WorkspaceCanvas({ initialWorkspace, isOwner }: { initialWorkspac
             >
                 <Background color="#ccc" gap={20} size={1} />
                 <Controls showInteractive={false} style={{ marginBottom: "2rem" }} />
+                <WorkspacePresenceCursors presence={presence} viewportVersion={viewportVersion} />
             </ReactFlow>
+
+            {isOwner && (
+                <SearchAndAddNodesDialog
+                    open={searchAddDialogOpen}
+                    onOpenChange={setSearchAddDialogOpen}
+                    existingNodeIds={new Set(nodes.map((n) => n.id))}
+                    onAddBug={(bug) => {
+                        if (nodes.some((n) => n.id === bug.id)) return
+                        const vp = rfInstance?.getViewport?.()
+                        const baseX = vp ? -vp.x + 200 : 0
+                        const baseY = vp ? -vp.y + 100 : 0
+                        const newNode: Node = {
+                            id: bug.id,
+                            type: "bug",
+                            position: { x: baseX + Math.random() * 80 - 40, y: baseY + Math.random() * 80 - 40 },
+                            data: { type: "bug", label: bug.title },
+                        }
+                        setNodes((nds) => nds.concat(newNode))
+                        toast.success(`Added bug: ${bug.title}`)
+                    }}
+                    onAddCluster={(cluster) => {
+                        const nodeId = `cluster-${cluster.id}`
+                        if (nodes.some((n) => n.id === nodeId)) return
+                        const vp = rfInstance?.getViewport?.()
+                        const baseX = vp ? -vp.x + 200 : 0
+                        const baseY = vp ? -vp.y + 100 : 0
+                        const newNode: Node = {
+                            id: nodeId,
+                            type: "cluster",
+                            position: { x: baseX + Math.random() * 80 - 40, y: baseY + Math.random() * 80 - 40 },
+                            data: { type: "cluster", label: cluster.name },
+                        }
+                        setNodes((nds) => nds.concat(newNode))
+                        toast.success(`Added cluster: ${cluster.name}`)
+                    }}
+                />
+            )}
 
             {isOwner && (
                 <GraphIdeaDialog

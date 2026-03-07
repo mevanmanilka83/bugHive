@@ -17,8 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { VoteButtons } from "@/components/features/bugs/VoteButtons"
 import { BugReportDialog } from "@/components/features/bugs/reports/BugReportDialog"
-import { cn } from "@/lib/utils"
-import { stripHtml } from "@/lib/utils-client"
+import { cn, stripHtml } from "@/lib"
 import { toast } from "sonner"
 import {
   DropdownMenu,

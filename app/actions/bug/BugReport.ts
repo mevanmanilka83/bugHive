@@ -11,9 +11,10 @@ import {
   validateWithSchema,
   type ActionResponse
 } from "@/lib"
+import { awardBugXP, checkOnFireBadge } from "@/lib"
 import { getBugReportSchema } from "@/lib"
 
-export async function createBugReport(formData: FormData): Promise<ActionResponse<{ bug?: any }>> {
+export async function createBugReport(formData: FormData): Promise<ActionResponse<{ bug?: any; xpEarned?: number }>> {
   try {
     // Check authentication
     const authResult = await requireAuth()
@@ -108,9 +109,13 @@ export async function createBugReport(formData: FormData): Promise<ActionRespons
       return handleSupabaseError(error, 'Failed to save bug report')
     }
 
+    const xp = await awardBugXP(session.user.id, 'bug_report')
+    checkOnFireBadge(session.user.id).catch(() => {})
+
     return { 
       success: true, 
-      bug: data 
+      bug: data,
+      xpEarned: xp,
     }
   } catch (error) {
     return createErrorResponse(error)

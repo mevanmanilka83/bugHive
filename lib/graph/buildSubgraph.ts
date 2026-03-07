@@ -1,5 +1,5 @@
-import { supabase } from "@/lib"
-import { findRelatedItems } from "@/lib/related"
+import { supabase } from "../config"
+import { findRelatedItems } from "./findRelated"
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

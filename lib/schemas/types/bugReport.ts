@@ -1,5 +1,5 @@
-import { z } from "zod"
-import { getBugReportSchema } from "@/lib"
+import { z } from "../zod"
+import { getBugReportSchema } from "../zod/bugReport"
 
 export type BugPayload = z.infer<ReturnType<typeof getBugReportSchema>>
 

@@ -1,7 +1,7 @@
 
-import { getMultipleRecords } from "@/lib"
-import { stripHtml } from "@/lib/utils-client"
-import { BugSignature, extractBugSignature, RelatedResult, calculateRelevance } from "./bug-relationships"
+import { getMultipleRecords } from "../db/crudOperations"
+import { stripHtml } from "../utils/client"
+import { BugSignature, extractBugSignature, RelatedResult, calculateRelevance } from "./relationshipTypes"
 
 const GEMINI_MODEL = "gemini-1.5-flash"
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"

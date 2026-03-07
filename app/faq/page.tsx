@@ -1,7 +1,7 @@
 import { auth } from "@/lib"
 import { FAQClient } from "@/components/features/faq/FAQClient"
 import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
-import { FAQ_ITEMS } from "@/lib/faq"
+import { FAQ_ITEMS } from "@/lib"
 
 export default async function FAQPage() {
   const session = await auth()

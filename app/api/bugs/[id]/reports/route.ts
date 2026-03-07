@@ -8,6 +8,7 @@ import {
   ensureValidUUID,
   supabase,
 } from "@/lib"
+import { awardBugXP, checkFirstResponderBadge, checkOnFireBadge } from "@/lib"
 
 const bugHandler = createBugHandler()
 const ALLOWED_PATCH_FIELDS = [
@@ -54,6 +55,13 @@ export async function PATCH(
     "id"
   )
 
+  let xpEarned = 0
+  if (updateData.status !== undefined || updateData.assigned_to !== undefined) {
+    xpEarned = await awardBugXP(authResult.user.id, "triage")
+    checkFirstResponderBadge(authResult.user.id, id).catch(() => {})
+    checkOnFireBadge(authResult.user.id).catch(() => {})
+  }
+
   const newAssigneeId =
     typeof updateData.assigned_to === "string" && updateData.assigned_to.trim()
       ? updateData.assigned_to.trim()
@@ -76,5 +84,5 @@ export async function PATCH(
     }
   }
 
-  return NextResponse.json({ bug: updated })
+  return NextResponse.json({ bug: updated, xpEarned: xpEarned || undefined })
 }

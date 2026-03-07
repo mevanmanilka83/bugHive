@@ -9,8 +9,8 @@ import {
   setEmailJoinRequestsEnabled,
   getEmailMentionsEnabled,
   setEmailMentionsEnabled,
-} from "@/lib/utils-client"
-import { cn } from "@/lib/utils-client"
+  cn,
+} from "@/lib"
 
 const rowClass =
   "flex items-center justify-between gap-4 py-3 px-0 border-b border-border/60 last:border-b-0"

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import OpenAI from "openai"
+import { generateChatCompletion } from "@/lib"
 
 export const runtime = "nodejs"
 
@@ -10,18 +10,19 @@ type RefineBody = {
   instructions?: string
 }
 
+/**
+ * POST /api/ai-refine
+ * Refines/rewrites text using AI.
+ * Uses Gemini when GEMINI_API_KEY is set, otherwise OpenAI.
+ */
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "OpenAI API key not configured" },
+        { error: "No AI provider configured. Set GEMINI_API_KEY or OPENAI_API_KEY." },
         { status: 500 }
       )
     }
-
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
 
     const body = (await req.json()) as Partial<RefineBody>
     const text = (body.text ?? "").toString()
@@ -44,17 +45,12 @@ export async function POST(req: NextRequest) {
       ? `Instructions: ${extra}\n\nText:\n${text}`
       : `Rewrite this text to be clearer and more concise, preserving meaning:\n\n${text}`
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      max_tokens: 500,
+    const { text: refined } = await generateChatCompletion({
+      systemPrompt,
+      messages: [{ role: "user", content: userPrompt }],
+      maxTokens: 500,
       temperature: 0.4,
     })
-
-    const refined = completion.choices[0]?.message?.content?.trim()
 
     if (!refined) {
       return NextResponse.json(

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { getAttachmentSchema, getLinksSchema, PRIORITY_ENUM, STRING_VALIDATIONS } from "@/lib/schemas/zod/shared"
+import { getAttachmentSchema, getLinksSchema, PRIORITY_ENUM, STRING_VALIDATIONS } from "./shared"
 
 /**
  * Bug Solution Validation Schema

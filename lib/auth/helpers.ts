@@ -6,7 +6,7 @@
  */
 import { NextResponse } from "next/server"
 import { auth } from "./config"
-import { ensureValidUUID, extractUsernameFromEmail } from "@/lib"
+import { ensureValidUUID, extractUsernameFromEmail } from "../utils/client"
 
 /**
  * Authenticated session type with user guaranteed to exist

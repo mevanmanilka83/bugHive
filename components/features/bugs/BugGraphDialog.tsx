@@ -42,7 +42,8 @@ import {
   type EdgeProps
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { cn } from "@/lib/utils-client"
+import { toast } from "sonner"
+import { cn } from "@/lib"
 
 interface BugGraphDialogProps {
   open: boolean
@@ -125,6 +126,21 @@ interface GraphData {
   }
 }
 
+type RelatedBugSource =
+  | "github_issue"
+  | "github_repo"
+  | "bughive_public"
+  | "bughive_cluster"
+  | "stack_overflow_question"
+
+type RelatedBugItem = {
+  id: string
+  title: string
+  url: string
+  source: RelatedBugSource
+  snippet: string
+}
+
 const GRAPH_DEPTH = 2
 const GRAPH_LIMIT = 25
 
@@ -137,7 +153,7 @@ const nodeTypeColors: Record<string, string> = {
   environment: "bg-slate-400 border-slate-500",
   component: "bg-pink-500 border-pink-600",
   github_issue: "bg-gray-700 border-gray-800",
-  stack_overflow: "bg-slate-600 border-slate-700",
+  stack_overflow: "bg-amber-700 border-amber-800",
   cause: "bg-indigo-500 border-indigo-600",
   solution: "bg-emerald-500 border-emerald-600",
   evidence: "bg-cyan-500 border-cyan-600",
@@ -331,6 +347,72 @@ const edgeTypes = {
 
 const graphCache = new Map<string, GraphData>()
 
+function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugItem[], fallbackCenterId: string): GraphData {
+  if (!Array.isArray(relatedItems) || relatedItems.length === 0) return graph
+
+  const stackItems = relatedItems.filter((item) => item.source === "stack_overflow_question")
+  if (stackItems.length === 0) return graph
+
+  const centerId = graph.center || fallbackCenterId
+  const existingNodeIds = new Set(graph.nodes.map((n) => n.id))
+  const existingEdgeIds = new Set(graph.edges.map((e) => e.id))
+
+  const mergedNodes = [...graph.nodes]
+  const mergedEdges = [...graph.edges]
+
+  const centerNode = graph.nodes.find((n) => n.id === centerId)
+  const centerX = centerNode?.position?.x ?? 0
+  const centerY = centerNode?.position?.y ?? 0
+  const placedCount = stackItems.length
+
+  for (const [index, item] of stackItems.entries()) {
+    if (!existingNodeIds.has(item.id)) {
+      const yStep = 170
+      const offsetIndex = index - (placedCount - 1) / 2
+      mergedNodes.push({
+        id: item.id,
+        type: "stack_overflow",
+        label: item.title,
+        data: {
+          title: item.title,
+          description: item.snippet,
+          type: "stack_overflow",
+          url: item.url,
+        },
+        position: {
+          x: centerX + 520,
+          y: centerY + offsetIndex * yStep,
+        },
+      })
+      existingNodeIds.add(item.id)
+    }
+
+    const edgeId = `so-${centerId}-${item.id}`
+    if (!existingEdgeIds.has(edgeId)) {
+      mergedEdges.push({
+        id: edgeId,
+        source: centerId,
+        target: item.id,
+        type: "related_to",
+        weight: 0.7,
+        label: "Stack Overflow",
+        style: {
+          stroke: "#f97316",
+          strokeDasharray: "4,2",
+        },
+      })
+      existingEdgeIds.add(edgeId)
+    }
+  }
+
+  return {
+    ...graph,
+    center: centerId,
+    nodes: mergedNodes,
+    edges: mergedEdges,
+  }
+}
+
 export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -371,7 +453,14 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
         throw new Error(errBody?.error || `Failed to load graph (${res.status})`)
       }
       const wrapper = await res.json()
-      const graph: GraphData = wrapper.data ?? wrapper
+      let graph: GraphData = wrapper.data ?? wrapper
+
+      const relatedRes = await fetch(`/api/bugs/${bugId}/related`, { cache: "no-store" })
+      if (relatedRes.ok) {
+        const relatedJson = await relatedRes.json()
+        const relatedItems = Array.isArray(relatedJson?.results) ? relatedJson.results as RelatedBugItem[] : []
+        graph = mergeStackOverflowIntoGraph(graph, relatedItems, bugId)
+      }
 
       if (!graph?.nodes?.length || !Array.isArray(graph.edges)) {
         setError("Graph returned no data.")
@@ -482,6 +571,10 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
       }
 
       const data = await res.json()
+      if (data.xpEarned) {
+        toast.success(`+${data.xpEarned} BugXP – Graph saved!`, { duration: 4000 })
+        window.dispatchEvent(new CustomEvent("hunter:xp", { detail: { xp: data.xpEarned } }))
+      }
       setSaveDialogOpen(false)
       onOpenChange(false)
       setTimeout(() => {

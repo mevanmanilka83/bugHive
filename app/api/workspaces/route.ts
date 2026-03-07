@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseAdmin, getAuthenticatedUserId } from "@/lib"
+import { awardBugXP, awardGraphArchitectBadge, checkDeepDiverBadge, checkOnFireBadge } from "@/lib"
 
 export async function GET(request: NextRequest) {
     try {
@@ -65,7 +66,18 @@ export async function POST(request: Request) {
 
         if (error) throw error
 
-        return NextResponse.json({ success: true, graph: data })
+        const nodeIds = Array.isArray(nodes)
+          ? nodes.map((n: { id?: string }) => n?.id).filter((id): id is string => typeof id === "string")
+          : []
+        const xp = await awardBugXP(userId, "graph_node", {
+          nodeIds,
+          graphId: data?.id,
+        })
+        awardGraphArchitectBadge(userId).catch(() => {})
+        checkDeepDiverBadge(userId).catch(() => {})
+        checkOnFireBadge(userId).catch(() => {})
+
+        return NextResponse.json({ success: true, graph: data, xpEarned: xp })
     } catch (e: any) {
         console.error("Save graph error:", e)
         return NextResponse.json({ error: e.message || "Failed to save graph" }, { status: 500 })

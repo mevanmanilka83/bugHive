@@ -5,38 +5,26 @@
  * 
  * This is the ONLY file that should be imported for configuration.
  * 
- * Available exports:
- * 
- * Database & Storage:
- * - supabase: Supabase client for database operations
- * - getS3Client: AWS S3 client for file storage (lazy initialization)
- * 
- * Authentication:
- * - handlers, signIn, signOut, auth: NextAuth configuration
- * - getUserFromSession, getUserIdFromSession: Auth helpers
- * 
  * Usage:
  * ```ts
- * import { supabase, auth, pool } from "@/lib/config"
+ * import { supabase, auth, env } from "@/lib/config"
  * ```
  */
 
-import { createClient } from "@supabase/supabase-js"
 import { S3Client } from "@aws-sdk/client-s3"
-import { env } from "./env"
+import { env } from "./environment"
 
 // ============================================================================
 // ENVIRONMENT VARIABLES
 // ============================================================================
 
-// Re-export env for convenience
 export { env }
 
 // ============================================================================
 // SUPABASE CONFIGURATION
 // ============================================================================
 
-export { supabase, getSupabaseAdmin } from "./supabase"
+export { supabase, getSupabaseAdmin } from "./supabaseClient"
 
 // ============================================================================
 // AWS S3 CONFIGURATION
@@ -78,5 +66,4 @@ export function getS3Client(): S3Client {
 // AUTHENTICATION CONFIGURATION
 // ============================================================================
 
-// Re-export auth from auth/config to keep auth logic separate
-export { handlers, signIn, signOut, auth } from "./auth/config"
+export { handlers, signIn, signOut, auth } from "../auth/config"

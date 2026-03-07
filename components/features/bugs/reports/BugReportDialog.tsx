@@ -3,9 +3,8 @@
 import * as React from "react"
 import { Check } from "lucide-react"
 import { toast } from "sonner"
-import { z } from "zod"
-import { getBugReportSchema } from "@/lib/schemas/zod"
-import { type BugPayload, type BugDialogErrors } from "@/lib/schemas/types"
+import { getBugReportSchema, z } from "@/lib"
+import type { BugPayload, BugDialogErrors } from "@/lib/schemas/types"
 import { createBugReport } from "@/app/actions/bug/BugReport"
 import { Button } from "@/components/ui/button"
 import { GitForkIcon } from "@/components/ui/git-fork"
@@ -386,6 +385,11 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       }
 
       toast("Bug report created successfully")
+      if ((result as { xpEarned?: number }).xpEarned) {
+        const xp = (result as { xpEarned: number }).xpEarned
+        toast.success(`+${xp} BugXP – Bug documented!`, { duration: 4000 })
+        window.dispatchEvent(new CustomEvent("hunter:xp", { detail: { xp } }))
+      }
       setOpen(false)
       resetForm()
     } catch (err: any) {

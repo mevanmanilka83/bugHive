@@ -1,55 +1,45 @@
 import { NextRequest, NextResponse } from "next/server"
-import OpenAI from "openai"
+import { generateChatCompletion } from "@/lib"
 
 export const runtime = "nodejs"
 
+const SYSTEM_PROMPT =
+  "You are a helpful AI assistant for BugHive, a collaborative bug tracking platform. You help users understand how to report bugs, use clusters, and view related bugs from GitHub and Stack Overflow. Be friendly, concise, and helpful. When users ask about errors or bugs in their code, you can give general debugging tips but remind them they can create a bug report in BugHive."
+
 export async function POST(req: NextRequest) {
-  let messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = []
+  let messages: Array<{ role: "user" | "assistant"; content: string }> = []
 
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "OpenAI API key not configured" },
+        { error: "No AI provider configured. Set GEMINI_API_KEY or OPENAI_API_KEY." },
         { status: 500 }
       )
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-
     const body = await req.json()
-    messages = body.messages || []
+    const rawMessages = body.messages || []
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!rawMessages || !Array.isArray(rawMessages)) {
       return NextResponse.json(
         { error: "Messages are required and must be an array" },
         { status: 400 }
       )
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful AI assistant for BugHive, a collaborative bug tracking platform. You help users understand how to report bugs, use clusters, and view related bugs from GitHub and Stack Overflow. Be friendly, concise, and helpful. When users ask about errors or bugs in their code, you can give general debugging tips but remind them they can create a bug report in BugHive.",
-        },
-        ...messages,
-      ],
-      max_tokens: 500,
+    messages = rawMessages
+      .filter((m: { role?: string; content?: string }) => m?.role && m?.content)
+      .map((m: { role: string; content: string }) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: String(m.content),
+      }))
+
+    const { text: response } = await generateChatCompletion({
+      systemPrompt: SYSTEM_PROMPT,
+      messages,
+      maxTokens: 500,
       temperature: 0.7,
     })
-
-    const response = completion.choices[0]?.message?.content
-
-    if (!response) {
-      return NextResponse.json(
-        { error: "No response from OpenAI" },
-        { status: 500 }
-      )
-    }
 
     return NextResponse.json({ response })
   } catch (error) {
@@ -111,9 +101,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ response: fallbackResponse })
       }
 
-      if (error.message.includes("401")) {
+      if (error.message.includes("401") || error.message.includes("API key")) {
         return NextResponse.json(
-          { error: "Invalid OpenAI API key" },
+          { error: "Invalid API key" },
           { status: 401 }
         )
       }

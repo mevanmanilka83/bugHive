@@ -1,8 +1,8 @@
 import type { NextAuthConfig } from "next-auth"
 import GitHub from "next-auth/providers/github"
-import { env } from "../env"
-import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "../utils"
-import { getSupabaseAdmin } from "../supabase"
+import { env } from "../config/environment"
+import { getSupabaseAdmin } from "../config/supabaseClient"
+import { generateUUID, generateUUIDFromEmailSync, extractUsernameFromEmail } from "../utils/server"
 
 export const authConfig = {
   providers: [

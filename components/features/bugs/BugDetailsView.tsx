@@ -9,9 +9,8 @@ import { SolutionVoteButtons } from "@/components/features/bugs/solutions/Soluti
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
-import { IconBulb, IconChevronDown, IconEye, IconShare3 } from "@tabler/icons-react"
-import { stripHtml } from "@/lib/utils-client"
-import { cn } from "@/lib/utils"
+import { IconBulb, IconChevronDown, IconEye, IconShare3, IconCheck } from "@tabler/icons-react"
+import { stripHtml, cn } from "@/lib"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +50,8 @@ type SolutionItem = {
   views?: number | null
   upvotes_count?: number | null
   downvotes_count?: number | null
+  created_by?: string | null
+  verified_at?: string | null
   user?: {
     id: string
     name?: string | null
@@ -67,6 +68,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const [assigneeDisplayName, setAssigneeDisplayName] = React.useState<string | null>(null)
   const [solutionOpen, setSolutionOpen] = React.useState(false)
   const [solutions, setSolutions] = React.useState<SolutionItem[]>([])
+  const [verifyingId, setVerifyingId] = React.useState<string | null>(null)
   const [solutionsLoading, setSolutionsLoading] = React.useState(true)
   const [solutionSortBy, setSolutionSortBy] = React.useState<SolutionSortOption>("newest")
 
@@ -167,13 +169,17 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ assigned_to: assignedTo || null }),
       })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err?.error || err?.message || "Failed to update assignee")
+        throw new Error(data?.error || data?.message || "Failed to update assignee")
       }
       setCurrentBug((prev) => ({ ...prev, assigned_to: assignedTo || undefined }))
       if (!assignedTo) setAssigneeDisplayName(null)
       toast.success(assignedTo ? "Bug assigned" : "Assignee cleared")
+      if (data.xpEarned) {
+        toast.success(`+${data.xpEarned} BugXP – Triage complete!`, { duration: 4000 })
+        window.dispatchEvent(new CustomEvent("hunter:xp", { detail: { xp: data.xpEarned } }))
+      }
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("bug:updated", { detail: { bugId, assigned_to: assignedTo } }))
       }
@@ -189,12 +195,16 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err?.error || err?.message || "Failed to update status")
+        throw new Error(data?.error || data?.message || "Failed to update status")
       }
       setCurrentBug((prev) => ({ ...prev, status: newStatus }))
       toast.success("Status updated")
+      if (data.xpEarned) {
+        toast.success(`+${data.xpEarned} BugXP – Triage complete!`, { duration: 4000 })
+        window.dispatchEvent(new CustomEvent("hunter:xp", { detail: { xp: data.xpEarned } }))
+      }
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("bug:updated", { detail: { bugId, status: newStatus } }))
       }
@@ -504,6 +514,40 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                             <IconShare3 className="size-3" />
                             <span className="font-medium text-foreground">Share</span>
                           </button>
+                          {(solution as SolutionItem).verified_at ? (
+                            <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 px-2 py-1 rounded text-[11px] font-medium">
+                              <IconCheck className="size-3" />
+                              Verified
+                            </span>
+                          ) : isLoggedIn && userId && (solution as SolutionItem).created_by !== userId ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900 px-2 py-1 rounded text-[11px] font-medium transition-colors disabled:opacity-50"
+                              disabled={verifyingId === solution.id}
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                setVerifyingId(solution.id)
+                                try {
+                                  const res = await fetch(`/api/solutions/${solution.id}/verify`, { method: "POST" })
+                                  const data = await res.json().catch(() => ({}))
+                                  if (!res.ok) throw new Error(data.error || "Failed to verify")
+                                  setSolutions((prev) =>
+                                    prev.map((s) =>
+                                      s.id === solution.id ? { ...s, verified_at: new Date().toISOString() } : s
+                                    )
+                                  )
+                                  toast.success("Solution verified! Creator earned +150 BugXP.")
+                                } catch (err) {
+                                  toast.error(err instanceof Error ? err.message : "Failed to verify")
+                                } finally {
+                                  setVerifyingId(null)
+                                }
+                              }}
+                            >
+                              <IconCheck className="size-3" />
+                              {verifyingId === solution.id ? "Verifying…" : "Verify"}
+                            </button>
+                          ) : null}
                         </div>
                       </div>
 

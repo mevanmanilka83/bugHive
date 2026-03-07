@@ -1,6 +1,6 @@
 "use client"
 
-import { type BugDialogErrors } from "@/lib"
+import type { BugDialogErrors } from "@/lib/schemas/types"
 import { IconAlertTriangle, IconEye, IconLock } from "@tabler/icons-react"
 import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { Button } from "@/components/ui/button"

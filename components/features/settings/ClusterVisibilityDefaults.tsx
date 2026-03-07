@@ -6,8 +6,8 @@ import {
   getClusterDefaultVisibility,
   setClusterDefaultVisibility,
   type ClusterVisibility,
-} from "@/lib/utils-client"
-import { cn } from "@/lib/utils-client"
+  cn,
+} from "@/lib"
 
 const OPTIONS = [
   {

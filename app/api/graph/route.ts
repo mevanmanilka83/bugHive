@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib"
-import { buildBugSubgraph } from "@/lib/graph-builder"
+import { buildBugSubgraph } from "@/lib"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

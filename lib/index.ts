@@ -6,26 +6,26 @@
  * Import everything from @/lib - never import from subdirectories directly.
  * 
  * Directory structure:
- * - lib/config.ts        → Database, Storage, Auth configuration
- * - lib/database.ts      → All CRUD operations and cluster helpers
- * - lib/utils.ts         → Server utilities (re-exports client-safe from utils-client.ts)
- * - lib/utils-client.ts  → Client-safe utilities (cn, generateUUID, etc.)
- * - lib/errors.ts        → Error handling (errorResponse, successResponse, etc.)
- * - lib/validation.ts    → Schema validation
- * - lib/auth/            → Authentication config and helpers
- * - lib/schemas/         → Zod schemas and TypeScript types
- * - lib/handlerFactory.ts → API route handler wrappers
- * - lib/formParser.ts    → Form data parsing
- * - lib/s3Uploads.ts     → File upload handling
+ * - lib/config/        → environment, supabaseClient, S3, auth
+ * - lib/db/            → crudOperations
+ * - lib/utils/         → server, client utilities
+ * - lib/errors/        → httpResponses
+ * - lib/validation/    → formValidation
+ * - lib/gamification/  → badgesRanks, awardXp
+ * - lib/api/           → routeHandlers, parseForms
+ * - lib/storage/       → s3Uploads
+ * - lib/graph/         → buildSubgraph, findRelated, relationshipTypes
+ * - lib/auth/          → Authentication config and helpers
+ * - lib/schemas/       → Zod schemas and TypeScript types
  * 
- * For client components, import from @/lib/utils-client to avoid server-side code.
+ * For client components, import from @/lib (cn, etc. are client-safe) or @/lib/utils/client.
  * 
  * ```ts
  * // Server-side (API routes, server actions)
  * import { cn, supabase, getSingleRecord, errorResponse } from "@/lib"
  * 
  * // Client-side (React components)
- * import { cn } from "@/lib/utils-client"
+ * import { cn } from "@/lib"
  * ```
  */
 
@@ -43,8 +43,31 @@ export {
   parseQueryFilters,
   extractUsernameFromEmail,
   extractRouteId,
-  stripHtml
-} from "./utils"
+  stripHtml,
+  isHtmlContent,
+  getClusterViewMode,
+  setClusterViewMode,
+  getClusterDefaultVisibility,
+  setClusterDefaultVisibility,
+  getEmailInvitesEnabled,
+  setEmailInvitesEnabled,
+  getEmailJoinRequestsEnabled,
+  setEmailJoinRequestsEnabled,
+  getEmailMentionsEnabled,
+  setEmailMentionsEnabled,
+  getInAppBadgeEnabled,
+  setInAppBadgeEnabled,
+  getInAppCenterEnabled,
+  setInAppCenterEnabled,
+  getClusterInviteAllowAnyone,
+  setClusterInviteAllowAnyone,
+  getClusterInviteAutoAccept,
+  setClusterInviteAutoAccept,
+  getAppLocale,
+  setAppLocale,
+  getLocaleLabel,
+} from "./utils/server"
+export type { ClusterViewMode, ClusterVisibility, AppLocale } from "./utils/server"
 
 // ============================================================================
 // ERROR HANDLING
@@ -56,34 +79,19 @@ export {
   successResponse,
   createErrorResponse,
   handleSupabaseError
-} from "./errors"
+} from "./errors/httpResponses"
 
 // ============================================================================
 // VALIDATION
 // ============================================================================
 
-export { validateWithSchema, normalizeClusterDescription } from "./validation"
+export { normalizeClusterDescription } from "./validation/formValidation"
 
 // ============================================================================
-// SCHEMAS (Zod & Types)
+// SCHEMAS (Zod & Types) - use @/lib/schemas or @/lib/schemas/types
 // ============================================================================
 
-// Re-export all Zod schemas
-export * from "./schemas/zod"
-
-// Re-export all TypeScript types
-export type {
-  NotificationPayload,
-  ClusterPayload,
-  ClusterFormData,
-  InviteFormData,
-  BugPayload,
-  BugDialogErrors,
-  BugFormData,
-  SolutionPayload,
-  SolutionDialogErrors,
-  SolutionFormData
-} from "./schemas/types"
+export * from "./schemas"
 
 // ============================================================================
 // DATABASE OPERATIONS
@@ -101,13 +109,13 @@ export {
   getUserClusterIds,
   isClusterOwnerOrMember,
   canUserViewBug
-} from "./database"
+} from "./db/crudOperations"
 
 // ============================================================================
 // CONFIGURATION (Database, Storage, Auth)
 // ============================================================================
 
-export { env } from "./env"
+export { env } from "./config"
 export {
   supabase,
   getSupabaseAdmin,
@@ -136,15 +144,55 @@ export {
 // API HANDLERS
 // ============================================================================
 
-export { createApiHandler, createBugHandler, createSolutionHandler } from "./handlerFactory"
+export { createApiHandler, createBugHandler, createSolutionHandler } from "./api/routeHandlers"
+
+// ============================================================================
+// GAMIFICATION
+// ============================================================================
+
+export { getBadgeLabel, BADGE_LABELS, getRankForXp, getProgressToNextRank } from "./gamification/badgesRanks"
+export {
+  awardBugXP,
+  checkFirstResponderBadge,
+  checkDeepDiverBadge,
+  checkOnFireBadge,
+  awardGraphArchitectBadge,
+  BUGXP,
+  BADGES,
+  RANKS
+} from "./gamification/awardXp"
 
 // ============================================================================
 // FILE HANDLING
 // ============================================================================
 
-export { parseFormData } from "./formParser"
+export { parseFormData } from "./api/parseForms"
 export {
   handleFileUploads,
   processFormDataWithUploads,
   uploadAvatarFile
-} from "./s3Uploads"
+} from "./storage/s3Uploads"
+
+// ============================================================================
+// GRAPH
+// ============================================================================
+
+export { buildBugSubgraph } from "./graph/buildSubgraph"
+
+// ============================================================================
+// VIEWS
+// ============================================================================
+
+export { incrementViewCount, getViewCount } from "./views"
+
+// ============================================================================
+// AI / LLM
+// ============================================================================
+
+export { generateChatCompletion, type ChatMessage, type GenerateOptions, type GenerateResult } from "./ai/llm"
+
+// ============================================================================
+// FAQ
+// ============================================================================
+
+export { FAQ_ITEMS } from "./faq"

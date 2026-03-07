@@ -3,11 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { IconChevronRight } from "@tabler/icons-react"
-import {
-  getClusterViewMode,
-  type ClusterViewMode,
-} from "@/lib/utils-client"
-import { cn } from "@/lib/utils-client"
+import { getClusterViewMode, type ClusterViewMode, cn } from "@/lib"
 import { SettingsContentSkeleton } from "@/components/features/skeletons/SettingsContentSkeleton"
 
 const SECTION_HEADING =

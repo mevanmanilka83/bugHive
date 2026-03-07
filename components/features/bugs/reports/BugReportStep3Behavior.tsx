@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { type BugDialogErrors } from "@/lib"
+import type { BugDialogErrors } from "@/lib/schemas/types"
 import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"

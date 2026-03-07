@@ -80,6 +80,8 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
         return handleSupabaseError(error, 'Failed to save solution')
       }
 
+      // XP awarded only when another user verifies the solution (+150 BugXP)
+
       // Create notifications for cluster members if bug belongs to a cluster
       try {
         // Get the bug to check if it has a cluster_id

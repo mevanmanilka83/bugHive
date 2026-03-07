@@ -26,7 +26,7 @@ import { InviteUserDialog } from "./InviteUserDialog"
 import { PendingInvitesDialog } from "./PendingInvitesDialog"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
 import { deleteCluster, duplicateCluster } from "@/app/actions/cluster"
-import { stripHtml, getClusterViewMode, setClusterViewMode } from "@/lib/utils-client"
+import { stripHtml, getClusterViewMode, setClusterViewMode } from "@/lib"
 
 interface ClustersListProps {
   userId?: string

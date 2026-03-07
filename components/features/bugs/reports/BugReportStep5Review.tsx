@@ -5,7 +5,7 @@ import { BugDescriptionContent } from "@/components/features/bugs/BugDescription
 import { ArrowLeftIcon } from "@/components/ui/arrow-left"
 import { GitForkIcon } from "@/components/ui/git-fork"
 import { IconAlertTriangle, IconDeviceDesktop, IconEye, IconLock, IconTags, IconUsers } from "@tabler/icons-react"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 type Props = {
   title: string

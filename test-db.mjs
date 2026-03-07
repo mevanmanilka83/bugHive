@@ -1,6 +1,10 @@
 import { Client } from 'pg'
 
-const connStr = 'postgresql://postgres.cfgsnahszucjhtwsfqwy:%3FVBbv4JGBtLC%24ez@aws-1-us-east-1.pooler.supabase.com:6543/postgres'
+const connStr = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
+if (!connStr) {
+  console.error('Set DATABASE_URL or SUPABASE_DB_URL in .env')
+  process.exit(1)
+}
 
 const client = new Client({
   connectionString: connStr,

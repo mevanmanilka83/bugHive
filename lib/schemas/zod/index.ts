@@ -1,9 +1,12 @@
 /**
  * Zod Validation Schemas
- * 
- * Single source of truth for all validation schemas.
- * Re-exports all schemas for easy importing.
+ *
+ * Single source of truth for all Zod validation.
+ * Re-exports schemas, validation helpers, and zod.
  */
+
+export { z } from "zod"
+export { validateWithSchema } from "./validation"
 
 // Shared validation utilities
 export * from "./shared"

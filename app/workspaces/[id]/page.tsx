@@ -47,7 +47,12 @@ export default async function WorkspacePage({ params }: { params: Promise<{ id: 
                 )}
             </header>
             <main className="flex-1 w-full relative">
-                <WorkspaceCanvas initialWorkspace={workspace} isOwner={isOwner} />
+                <WorkspaceCanvas
+                initialWorkspace={workspace}
+                isOwner={isOwner}
+                userId={session.user.id}
+                userName={session.user.name ?? session.user.email ?? "Anonymous"}
+              />
             </main>
         </div>
     )

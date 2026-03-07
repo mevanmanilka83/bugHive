@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { changePassword } from "@/app/actions/profile"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 
 interface PasswordFormProps {
   /** Auth provider from session: "credentials" = email/password; "github" etc. = OAuth */

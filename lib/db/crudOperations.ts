@@ -15,9 +15,9 @@
  */
 
 import { notFound } from "next/navigation"
-import { supabase } from "./config"
-import { ensureValidUUID } from "./utils-client"
-import type { ActionResponse } from "./auth/helpers"
+import { supabase } from "../config"
+import { ensureValidUUID } from "../utils/client"
+import type { ActionResponse } from "../auth/helpers"
 
 /**
  * Fetches a single record by ID

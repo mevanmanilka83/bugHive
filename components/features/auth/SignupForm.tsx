@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 import { Button } from "@/components/ui/button"
 import {
   Card,

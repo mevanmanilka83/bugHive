@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { RotateCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 import { RelatedBugsPanelSkeleton } from "@/components/features/skeletons/RelatedBugsPanelSkeleton"
 
 /** Normalized shape from API */

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { cn } from "@/lib/utils-client"
+import { cn } from "@/lib"
 import type { ActivitySummaryData, RecentActivityItem } from "@/app/actions/activity"
 
 const CARD_CLASS =

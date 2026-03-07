@@ -1,6 +1,6 @@
 import { requireAuthForPage } from "@/lib"
 import { SettingsSubpage } from "@/components/features/settings/SettingsSubpage"
-import { FAQ_ITEMS } from "@/lib/faq"
+import { FAQ_ITEMS } from "@/lib"
 import { FAQClient } from "@/components/features/faq/FAQClient"
 
 export default async function SettingsFaqPage() {

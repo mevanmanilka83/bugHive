@@ -1,6 +1,6 @@
 "use client"
 
-import { isHtmlContent } from "@/lib/utils-client"
+import { isHtmlContent } from "@/lib"
 
 type Props = {
   content: string

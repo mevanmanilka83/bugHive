@@ -1,5 +1,3 @@
-"use server"
-
 import { NextResponse } from "next/server"
 import { getSupabaseAdmin } from "@/lib"
 import { requireRole } from "@/lib/auth/helpers"

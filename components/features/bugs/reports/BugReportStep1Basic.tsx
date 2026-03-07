@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RichTextEditor } from "@/components/ui/RichTextEditor"
-import { type BugDialogErrors } from "@/lib"
+import type { BugDialogErrors } from "@/lib/schemas/types"
 
 type Props = {
   title: string

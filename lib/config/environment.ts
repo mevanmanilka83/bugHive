@@ -9,7 +9,7 @@
  * Environment configuration - Single source of truth for all env vars
  */
 export const env = {
-  // Supabase
+  // Supabase (client Realtime needs NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY)
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
@@ -23,6 +23,10 @@ export const env = {
   // GitHub OAuth
   githubClientId: process.env.GITHUB_CLIENT_ID,
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
+
+  // AI (Gemini preferred; OpenAI fallback)
+  geminiApiKey: process.env.GEMINI_API_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
   
   // Other
   nodeEnv: process.env.NODE_ENV,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { checkAuth } from "@/lib/auth/helpers"
-import { errorResponse, successResponse } from "@/lib/errors"
+import { errorResponse, successResponse } from "@/lib"
 import { voteOnBug, getUserVote } from "@/app/actions/bug/vote"
 import { ensureValidUUID } from "@/lib"
 

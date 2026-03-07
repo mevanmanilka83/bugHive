@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 import { extractRouteId, getSingleRecord, successResponse, errorResponse } from "@/lib"
-import { buildBugSubgraph } from "@/lib/graph-builder"
+import { buildBugSubgraph } from "@/lib"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
