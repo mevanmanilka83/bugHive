@@ -213,7 +213,7 @@ export function BugReportStep4Details({
                   <span
                     key={tag}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                      "inline-flex items-center gap-1 !rounded-none border px-2 py-0.5 text-[11px] font-medium",
                       valid
                         ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300"
                         : "border-red-300 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"
@@ -249,7 +249,7 @@ export function BugReportStep4Details({
                   <span
                     key={source}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                      "inline-flex items-center gap-1 !rounded-none border px-2 py-0.5 text-[11px] font-medium",
                       valid
                         ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300"
                         : "border-red-300 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"

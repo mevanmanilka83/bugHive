@@ -64,7 +64,7 @@ export function Leaderboard({ period = "week", limit = 10, className }: Leaderbo
           <CardTitle className="text-base">Top Hunters</CardTitle>
         </div>
         <CardDescription>
-          Top BugXP earners this week — report bugs, triage, and share solutions to climb
+          Top BugXP earners this week. Report bugs, triage, and share solutions to climb the leaderboard
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -213,7 +213,7 @@ export function BugDetailsForm({
           {tagsArray.length === 0 ? (
             <Input value="—" disabled />
           ) : (
-            <div className="flex flex-wrap gap-1.5 rounded-none border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
+            <div className="flex flex-wrap gap-1.5 !rounded-none border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
               {tagsArray.map((tag) => {
                 const value = String(tag || "").trim()
                 const valid =
@@ -226,7 +226,7 @@ export function BugDetailsForm({
                     key={value}
                     variant="outline"
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                      "inline-flex items-center gap-1 !rounded-none border px-2 py-0.5 text-[11px] font-medium",
                       valid
                         ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300"
                         : "border-red-300 bg-red-50 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"
@@ -251,7 +251,7 @@ export function BugDetailsForm({
           {sourceUrls.length === 0 ? (
             <Input value="—" disabled />
           ) : (
-            <div className="flex flex-col gap-2 rounded-none border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
+            <div className="flex flex-col gap-2 !rounded-none border border-input bg-muted/30 px-3 py-2 min-h-[40px]">
               {sourceUrls.map((url) => {
                 const valid = linkValidity[url]
                 const isValid = valid === true
@@ -282,7 +282,7 @@ export function BugDetailsForm({
                       {url}
                     </a>
                     {isInvalid && (
-                      <Badge variant="destructive" className="h-5 px-1.5 text-[10px] uppercase font-bold tracking-wider">
+                      <Badge variant="destructive" className="h-5 px-1.5 text-[10px] uppercase font-bold tracking-wider !rounded-none">
                         Invalid source
                       </Badge>
                     )}

@@ -44,7 +44,7 @@ export function TagsList() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-border/40 bg-card p-6">
+      <div className="rounded-none border border-border/40 bg-card p-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-sm text-muted-foreground">Loading tags...</div>
         </div>
@@ -54,7 +54,7 @@ export function TagsList() {
 
   if (tags.length === 0) {
     return (
-      <div className="rounded-lg border border-border/40 bg-card p-6">
+      <div className="rounded-none border border-border/40 bg-card p-6">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-sm font-medium text-foreground mb-1">No tags found</p>
           <p className="text-xs text-muted-foreground">
@@ -93,7 +93,7 @@ export function TagsList() {
       </div>
 
       {/* Tags Grid */}
-      <div className="rounded-lg border border-border/40 bg-card p-6">
+      <div className="rounded-none border border-border/40 bg-card p-6">
         {filteredTags.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-sm font-medium text-foreground mb-1">No tags match &quot;{searchQuery.trim()}&quot;</p>
@@ -110,7 +110,7 @@ export function TagsList() {
                   key={tag}
                   href={`/?tag=${encodeURIComponent(slug)}`}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm",
+                    "inline-flex items-center gap-2 !rounded-none border px-3 py-1.5 text-sm",
                     "transition-colors hover:bg-muted hover:border-primary/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   )}
@@ -127,7 +127,7 @@ export function TagsList() {
       </div>
 
       {/* Stats */}
-      <div className="rounded-lg border border-border/40 bg-card p-4">
+      <div className="rounded-none border border-border/40 bg-card p-4">
         <p className="text-xs text-muted-foreground">
           Showing {filteredTags.length} of {tags.length} tags
         </p>
