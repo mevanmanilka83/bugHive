@@ -139,6 +139,7 @@ type RelatedBugItem = {
   url: string
   source: RelatedBugSource
   snippet: string
+  relevanceScore?: number
 }
 
 const GRAPH_DEPTH = 2
@@ -212,7 +213,7 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-xl border shadow-sm transition-all duration-200 min-w-[160px] max-w-[240px] bg-background relative",
+        "rounded-2xl border border-white/30 dark:border-white/10 shadow-xl shadow-black/5 min-w-[160px] max-w-[240px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl relative transition-all duration-200",
         selected ? "ring-2 ring-primary border-primary shadow-md" : "border-border",
         isFocus ? "ring-4 ring-primary/20 scale-105 shadow-xl" : ""
       )}
@@ -363,13 +364,20 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
   const centerNode = graph.nodes.find((n) => n.id === centerId)
   const centerX = centerNode?.position?.x ?? 0
   const centerY = centerNode?.position?.y ?? 0
-  const placedCount = stackItems.length
 
+  // Place Stack Overflow nodes in a vertical column to the right of the main circle (radius 320)
+  // so they don't overlap circle nodes and have clear, consistent spacing
+  const mainCircleRadius = 320
+  const soColumnOffsetX = 220
+  const soRowSpacing = 220
   const nowIso = new Date().toISOString()
-  for (const [index, item] of stackItems.entries()) {
+  const soCount = stackItems.filter((item) => !existingNodeIds.has(item.id)).length
+  let soIndex = 0
+
+  stackItems.forEach((item) => {
     if (!existingNodeIds.has(item.id)) {
-      const yStep = 170
-      const offsetIndex = index - (placedCount - 1) / 2
+      const offsetY = soCount <= 1 ? 0 : (soIndex - (soCount - 1) / 2) * soRowSpacing
+      soIndex++
       mergedNodes.push({
         id: item.id,
         type: "stack_overflow",
@@ -382,8 +390,8 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
           created_at: nowIso,
         },
         position: {
-          x: centerX + 520,
-          y: centerY + offsetIndex * yStep,
+          x: centerX + mainCircleRadius + soColumnOffsetX,
+          y: centerY + offsetY,
         },
       })
       existingNodeIds.add(item.id)
@@ -391,22 +399,20 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
 
     const edgeId = `so-${centerId}-${item.id}`
     if (!existingEdgeIds.has(edgeId)) {
+      const score = item.relevanceScore ?? 0.5
       mergedEdges.push({
         id: edgeId,
         source: centerId,
         target: item.id,
-        type: "related_to",
-        weight: 0.7,
-        label: "Stack Overflow",
-        data: { created_at: nowIso },
-        style: {
-          stroke: "#f97316",
-          strokeDasharray: "4,2",
-        },
+        type: "SIMILAR",
+        weight: score,
+        label: `Similar (${Math.round(score * 100)}%)`,
+        data: { similarity: score, created_at: nowIso },
+        style: { strokeDasharray: "5,5" },
       })
       existingEdgeIds.add(edgeId)
     }
-  }
+  })
 
   return {
     ...graph,
@@ -645,7 +651,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent showCloseButton={false} className="fixed inset-0  right-0 bottom-0 w-[100vw] min-w-full h-screen max-w-none sm:max-w-none max-h-none translate-x-0 translate-y-0 rounded-none flex flex-col p-0 gap-0 overflow-hidden outline-none !left-0 !top-0">
-          <DialogHeader className="px-6 py-4 border-b shrink-0 bg-background z-10 flex flex-row items-center justify-between gap-4 min-h-14">
+          <DialogHeader className="px-6 py-4 border-b border-white/20 dark:border-white/10 shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10 flex flex-row items-center justify-between gap-4 min-h-14">
             <DialogTitle className="flex items-center gap-2 min-w-0 truncate">
               <GitBranch className="h-5 w-5 text-primary shrink-0" />
               <span className="truncate">Bug Relationship Graph</span>
@@ -669,15 +675,15 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
           </DialogHeader>
 
           <div className="flex-1 w-full h-full min-h-0 flex flex-col">
-            {/* Graph Canvas */}
-            <div className="flex-1 min-h-0 relative w-full bg-muted/5">
+            {/* Graph Canvas – glassmorphism background */}
+            <div className="flex-1 min-h-0 relative w-full overflow-hidden rounded-b-xl bg-gradient-to-br from-white/40 via-slate-50/30 to-slate-100/40 dark:from-slate-800/50 dark:via-slate-900/40 dark:to-slate-800/50 border border-white/40 dark:border-white/10 shadow-inner">
               {loading ? (
-                <div className="absolute inset-0 flex items-center justify-center z-50 bg-background/50 backdrop-blur-sm">
+                <div className="absolute inset-0 flex items-center justify-center z-50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <span className="ml-2 font-medium text-muted-foreground">Generating Graph...</span>
                 </div>
               ) : error ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-50 bg-background/80 backdrop-blur-sm p-4">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-4">
                   <p className="text-destructive font-medium text-center">{error}</p>
                   <Button size="sm" onClick={() => { setError(null); fetchGraphData(); }}>
                     Retry
@@ -702,11 +708,11 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                   maxZoom={2}
                   defaultEdgeOptions={{ type: 'smoothstep' }}
                 >
-                  <Background color="#94a3b8" gap={20} size={1} />
+                  <Background color="#94a3b8" gap={20} size={1} className="opacity-[0.15] dark:opacity-[0.2]" />
                   <Controls showInteractive={false} style={{ marginBottom: "2rem" }} />
 
                   {/* Legend Panel */}
-                  <Panel position="top-right" className="bg-background/95 backdrop-blur-sm p-3 rounded-lg border shadow-lg text-xs w-[200px]">
+                  <Panel position="top-right" className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl shadow-black/5 dark:shadow-black/20 p-4 rounded-2xl text-xs w-[200px]">
                     <div className="font-semibold mb-2 flex items-center gap-2 justify-between">
                       <div className="flex items-center gap-2">
                         <GitBranch className="h-3 w-3" />
@@ -728,7 +734,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                     <Panel position="top-left" className="bg-transparent m-4 max-w-[300px] flex flex-col gap-3">
                       {/* Root Cause Card */}
                       {graphData.insights.rootCausePatterns.length > 0 && (
-                        <Card className="bg-background/90 backdrop-blur-md border-indigo-200/50 shadow-sm animate-in fade-in slide-in-from-left-4 duration-500">
+                        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-indigo-200/40 dark:border-indigo-500/20 shadow-xl shadow-indigo-500/5 dark:shadow-indigo-500/10 animate-in fade-in slide-in-from-left-4 duration-500 rounded-2xl overflow-hidden">
                           <CardHeader className="p-3 pb-1">
                             <CardTitle className="text-xs font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-2">
                               <Search className="h-3 w-3" />
@@ -750,7 +756,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
 
                       {/* Environments Card */}
                       {graphData.insights.recurringEnvironments.length > 0 && (
-                        <Card className="bg-background/90 backdrop-blur-md border-blue-200/50 shadow-sm animate-in fade-in slide-in-from-left-4 duration-700">
+                        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-blue-200/40 dark:border-blue-500/20 shadow-xl shadow-blue-500/5 dark:shadow-blue-500/10 animate-in fade-in slide-in-from-left-4 duration-700 rounded-2xl overflow-hidden">
                           <CardHeader className="p-3 pb-1">
                             <CardTitle className="text-xs font-bold uppercase tracking-wider text-brand-blue flex items-center gap-2">
                               <Globe className="h-3 w-3" />
@@ -788,7 +794,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
               const selectedTime = minT + range * (timeTravelPercent / 100)
               const asOfDate = hasTime ? new Date(selectedTime) : null
               return (
-              <div className="shrink-0 border-t bg-muted/30 px-4 py-3 flex flex-wrap items-center gap-3">
+              <div className="shrink-0 border-t border-white/20 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl px-4 py-3 flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <History className="h-4 w-4" />
                   <span>Time travel</span>

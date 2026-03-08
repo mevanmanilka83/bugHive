@@ -78,15 +78,15 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
     return (
         <div
             className={cn(
-                "rounded-none border backdrop-blur-md shadow-lg transition-all duration-300 relative",
-                "w-[140px] sm:w-[180px] max-w-[240px]", // Responsive width
+                "rounded-2xl border border-white/30 dark:border-white/10 backdrop-blur-xl shadow-xl shadow-black/5 transition-all duration-300 relative",
+                "w-[140px] sm:w-[180px] max-w-[240px]",
                 selected ? "ring-2 ring-primary border-primary shadow-primary/20 scale-105" : "hover:border-primary/50",
-                "bg-card/80"
+                "bg-white/80 dark:bg-slate-900/80"
             )}
         >
             <Handle type="target" position={Position.Top} className="opacity-0" />
             <div className={cn("p-2 sm:p-3 flex items-start gap-2 sm:gap-3", styles)}>
-                <div className={cn("p-1.5 sm:p-2 rounded-none bg-background/50 shadow-sm shrink-0 text-foreground")}>
+                <div className={cn("p-1.5 sm:p-2 rounded-xl bg-white/50 dark:bg-slate-800/50 shadow-sm shrink-0 text-foreground")}>
                     <div className="h-3 w-3 sm:h-4 sm:w-4 flex items-center justify-center">
                         {icon}
                     </div>
@@ -344,7 +344,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="p-0 gap-0 border-none shadow-2xl bg-background/95 backdrop-blur-xl focus:outline-none"
+                className="p-0 gap-0 border border-white/20 dark:border-white/10 shadow-2xl shadow-black/10 dark:shadow-black/30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl focus:outline-none"
                 style={{
                     maxWidth: '95vw',
                     width: '95vw',
@@ -355,7 +355,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                 aria-describedby={undefined}
                 showCloseButton={false}
             >
-                <DialogHeader className="px-4 py-3 border-b border-border/40 shrink-0 flex flex-row items-center justify-between space-y-0 bg-background/50">
+                <DialogHeader className="px-4 py-3 border-b border-white/20 dark:border-white/10 shrink-0 flex flex-row items-center justify-between space-y-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl">
                     <DialogTitle className="flex items-center gap-2.5 text-lg">
                         <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
                             <Share2 className="h-4 w-4" />
@@ -390,7 +390,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                     {/* Graph Canvas - Absolute Full Fill */}
                     <div className="absolute inset-0 z-0">
                         {loading && (
-                            <div className="absolute inset-0 flex flex-col gap-3 items-center justify-center bg-background/50 backdrop-blur-sm z-50">
+                            <div className="absolute inset-0 flex flex-col gap-3 items-center justify-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl z-50">
                                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
                                 <p className="text-sm font-medium text-muted-foreground animate-pulse">Analyzing relationships...</p>
                             </div>
@@ -421,14 +421,14 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                             <Background color="hsl(var(--muted-foreground))" gap={20} size={1} className="opacity-10" />
 
                             <Controls
-                                className="bg-background border shadow-md rounded-lg p-1 m-4"
+                                className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl shadow-black/5 rounded-2xl p-1 m-4"
                                 position="bottom-left"
                                 showInteractive={false}
                                 style={{ marginBottom: "2rem" }}
                             />
 
                             <div className="absolute top-4 right-4 z-10 pointer-events-none">
-                                <div className="bg-background/90 backdrop-blur border shadow-sm rounded-lg p-3 space-y-2 max-w-[200px] pointer-events-auto">
+                                <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl shadow-black/5 rounded-2xl p-4 space-y-2 max-w-[200px] pointer-events-auto">
                                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Legend</h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -454,11 +454,11 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
 
                     {/* Insights Sidebar - Absolute Overlay */}
                     <div className={cn(
-                        "absolute top-0 right-0 bottom-0 w-80 bg-background/90 backdrop-blur-md border-l border-border/40 shadow-xl z-20 transition-transform duration-300 ease-in-out",
+                        "absolute top-0 right-0 bottom-0 w-80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-l border-white/20 dark:border-white/10 shadow-2xl shadow-black/10 z-20 transition-transform duration-300 ease-in-out",
                         selectedNode ? "translate-x-0" : "translate-x-full"
                     )}>
                         <div className="flex flex-col h-full overflow-hidden">
-                            <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/20">
+                            <div className="flex items-center justify-between p-4 border-b border-white/20 dark:border-white/10 bg-white/30 dark:bg-slate-800/30">
                                 <h3 className="font-semibold text-sm flex items-center gap-2">
                                     Graph Insights
                                 </h3>

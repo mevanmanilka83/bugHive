@@ -175,7 +175,7 @@ export async function buildBugSubgraph(
     })
   }
 
-  // 4. External refs (GitHub, Stack Overflow) — only top N
+  // 4. External refs (GitHub, Stack Overflow) — show as Similar like other relationship nodes
   let externalAdded = 0
   for (const ext of external) {
     if (nodes.length >= opts.limit || externalAdded >= opts.externalLimit) break
@@ -183,12 +183,11 @@ export async function buildBugSubgraph(
     connectedIds.add(ext.id)
     externalAdded++
     let nType = "github_issue"
-    let eType = "EVIDENCE_FOR"
     if (ext.source === "stack_overflow_question") {
       nType = "stack_overflow"
-      eType = "SOLUTION_FOR"
     }
     const nowIso = new Date().toISOString()
+    const score = (ext as { relevanceScore?: number }).relevanceScore ?? 0.5
     nodes.push({
       id: ext.id,
       type: nType,
@@ -205,11 +204,11 @@ export async function buildBugSubgraph(
       id: `ext-${centerId}-${ext.id}`,
       source: centerId,
       target: ext.id,
-      type: eType,
-      weight: 0.6,
-      label: "Reference",
-      data: { created_at: nowIso },
-      style: { strokeDasharray: "2,2" },
+      type: "SIMILAR",
+      weight: score,
+      label: `Similar (${Math.round(score * 100)}%)`,
+      data: { similarity: score, created_at: nowIso },
+      style: { strokeDasharray: "5,5" },
     })
   }
 

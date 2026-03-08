@@ -98,7 +98,7 @@ function IdeaNode({ id, data, selected }: { id: string; data: any; selected: boo
 
     return (
         <div className={cn(
-            "w-[200px] rounded-xl border backdrop-blur-md shadow-lg transition-all duration-300 relative",
+            "w-[200px] rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-black/20 transition-all duration-300 relative",
             selected ? "ring-2 ring-primary border-primary scale-105" : "hover:border-primary/50",
             "bg-card/90"
         )}>
@@ -156,7 +156,7 @@ function LegacyCustomNode({ data, selected }: { data: any; selected: boolean }) 
 
     return (
         <div className={cn(
-            "w-[160px] sm:w-[200px] rounded-xl border backdrop-blur-md shadow-lg transition-all duration-300 relative",
+            "w-[160px] sm:w-[200px] rounded-2xl border border-white/30 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-black/20 transition-all duration-300 relative",
             selected ? "ring-2 ring-primary border-primary scale-105" : "hover:border-primary/50",
             "bg-card/85"
         )}>
@@ -433,7 +433,7 @@ export function WorkspaceCanvas({
 
     return (
         <div className="w-full h-full relative" style={{ height: "calc(100vh - 56px)" }}>
-            <Panel position="top-right" className="bg-background/80 backdrop-blur-sm p-2 rounded-xl border flex gap-2 flex-wrap items-center">
+            <Panel position="top-right" className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl shadow-black/5 p-3 rounded-2xl flex gap-2 flex-wrap items-center">
                 {presence.size > 0 && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <span className="relative flex h-2 w-2">
@@ -463,7 +463,7 @@ export function WorkspaceCanvas({
             </Panel>
 
             {showIdeasPanel && (
-                <Panel position="top-left" className="bg-background/95 backdrop-blur-sm rounded-xl border shadow-lg w-72 max-h-[70vh] overflow-hidden flex flex-col">
+                <Panel position="top-left" className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl shadow-black/10 dark:shadow-black/20 rounded-2xl w-72 max-h-[70vh] overflow-hidden flex flex-col">
                     <div className="p-3 px-4 border-b font-semibold text-[15px] flex items-center gap-2">
                         <Lightbulb className="h-4 w-4 stroke-[2.5]" />
                         Ideas & solutions
