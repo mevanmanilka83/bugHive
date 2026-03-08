@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ArrowUp, ArrowDown, X, Save } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ArrowUp, ArrowDown, X, Save, History } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
   ReactFlow,
@@ -365,6 +365,7 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
   const centerY = centerNode?.position?.y ?? 0
   const placedCount = stackItems.length
 
+  const nowIso = new Date().toISOString()
   for (const [index, item] of stackItems.entries()) {
     if (!existingNodeIds.has(item.id)) {
       const yStep = 170
@@ -378,6 +379,7 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
           description: item.snippet,
           type: "stack_overflow",
           url: item.url,
+          created_at: nowIso,
         },
         position: {
           x: centerX + 520,
@@ -396,6 +398,7 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
         type: "related_to",
         weight: 0.7,
         label: "Stack Overflow",
+        data: { created_at: nowIso },
         style: {
           stroke: "#f97316",
           strokeDasharray: "4,2",
@@ -425,12 +428,14 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
   const [saveDialogOpen, setSaveDialogOpen] = React.useState(false)
   const [saveTitle, setSaveTitle] = React.useState("")
   const [saveAsPublic, setSaveAsPublic] = React.useState(false)
+  const [timeTravelPercent, setTimeTravelPercent] = React.useState(100)
   const router = useRouter()
 
   React.useEffect(() => {
     if (open && bugId) {
       setSelectedNode(null)
       setError(null)
+      setTimeTravelPercent(100)
       fetchGraphData()
     }
   }, [open, bugId])
@@ -438,7 +443,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
   async function fetchGraphData() {
     const cached = graphCache.get(bugId)
     if (cached?.nodes?.length) {
-      applyGraphToFlow(cached)
       setGraphData(cached)
       setLoading(false)
       return
@@ -467,7 +471,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
         return
       }
       graphCache.set(bugId, graph)
-      applyGraphToFlow(graph)
       setGraphData(graph)
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to fetch graph"
@@ -503,13 +506,61 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
         markerEnd: { type: MarkerType.ArrowClosed, color: baseStyle.stroke },
         style: { ...baseStyle, strokeWidth: Math.max(2, weight * 3), opacity: 0.9, ...edge.style },
         labelStyle: { fill: "#334155", fontWeight: 600, fontSize: 10 },
-        data: { weight, type: edge.type },
+        data: { weight, type: edge.type, ...(edge.data || {}), created_at: edge.data?.created_at },
       }
     })
 
     setNodes(flowNodes)
     setEdges(flowEdges)
   }
+
+  // Time-travel: filter graph by created_at and apply to flow
+  React.useEffect(() => {
+    if (!graphData?.nodes?.length || !Array.isArray(graphData.edges)) return
+
+    const getTime = (createdAt: string | null | undefined): number =>
+      createdAt ? new Date(createdAt).getTime() : 0
+    const timestamps: number[] = []
+    graphData.nodes.forEach((n) => {
+      const t = getTime(n.data?.created_at)
+      if (t > 0) timestamps.push(t)
+    })
+    graphData.edges.forEach((e) => {
+      const t = getTime(e.data?.created_at)
+      if (t > 0) timestamps.push(t)
+    })
+
+    let visibleNodes: GraphNode[]
+    let visibleEdges: GraphEdge[]
+    if (timestamps.length === 0) {
+      visibleNodes = graphData.nodes
+      visibleEdges = graphData.edges
+    } else {
+      const minT = Math.min(...timestamps)
+      const maxT = Math.max(...timestamps)
+      const range = Math.max(maxT - minT, 1)
+      const selectedTime = minT + range * (timeTravelPercent / 100)
+
+      visibleNodes = graphData.nodes.filter((n) => {
+        const at = n.data?.created_at
+        if (!at) return true
+        return new Date(at).getTime() <= selectedTime
+      })
+      const visibleIds = new Set(visibleNodes.map((n) => n.id))
+      visibleEdges = graphData.edges.filter(
+        (e) =>
+          visibleIds.has(e.source) &&
+          visibleIds.has(e.target) &&
+          (!e.data?.created_at || new Date(e.data.created_at).getTime() <= selectedTime)
+      )
+    }
+
+    applyGraphToFlow({
+      ...graphData,
+      nodes: visibleNodes,
+      edges: visibleEdges,
+    })
+  }, [graphData, timeTravelPercent])
 
   React.useEffect(() => {
     if (!open || loading || nodes.length === 0 || !reactFlowInstance) return
@@ -617,9 +668,9 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
             </div>
           </DialogHeader>
 
-          <div className="flex-1 w-full h-full min-h-0 relative">
+          <div className="flex-1 w-full h-full min-h-0 flex flex-col">
             {/* Graph Canvas */}
-            <div className="absolute inset-0 w-full h-full bg-muted/5">
+            <div className="flex-1 min-h-0 relative w-full bg-muted/5">
               {loading ? (
                 <div className="absolute inset-0 flex items-center justify-center z-50 bg-background/50 backdrop-blur-sm">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -633,6 +684,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                   </Button>
                 </div>
               ) : (
+                <div className="absolute inset-0 w-full h-full">
                 <ReactFlow
                   nodes={nodes}
                   edges={edges}
@@ -719,8 +771,47 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                     </Panel>
                   )}
                 </ReactFlow>
+                </div>
               )}
             </div>
+
+            {/* Time-travel slider: show how the web of issues grew over time */}
+            {graphData && !loading && !error && graphData.nodes.length > 0 && (() => {
+              const getT = (c: string | null | undefined) => (c ? new Date(c).getTime() : 0)
+              const ts: number[] = []
+              graphData.nodes.forEach((n) => { const t = getT(n.data?.created_at); if (t > 0) ts.push(t) })
+              graphData.edges.forEach((e) => { const t = getT(e.data?.created_at); if (t > 0) ts.push(t) })
+              const hasTime = ts.length > 0
+              const minT = hasTime ? Math.min(...ts) : 0
+              const maxT = hasTime ? Math.max(...ts) : 0
+              const range = Math.max(maxT - minT, 1)
+              const selectedTime = minT + range * (timeTravelPercent / 100)
+              const asOfDate = hasTime ? new Date(selectedTime) : null
+              return (
+              <div className="shrink-0 border-t bg-muted/30 px-4 py-3 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <History className="h-4 w-4" />
+                  <span>Time travel</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={timeTravelPercent}
+                  onChange={(e) => setTimeTravelPercent(Number(e.target.value))}
+                  className="flex-1 min-w-[120px] max-w-[400px] h-2 rounded-full appearance-none bg-muted accent-primary cursor-pointer"
+                  aria-label="Slide back in time to see how the graph grew"
+                />
+                <span className="text-xs text-muted-foreground tabular-nums min-w-[140px]">
+                  {timeTravelPercent === 100
+                    ? "Now (full graph)"
+                    : asOfDate
+                      ? `As of ${asOfDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+                      : `${Math.round(timeTravelPercent)}% of timeline`}
+                </span>
+              </div>
+              )
+            })()}
           </div>
         </DialogContent>
       </Dialog>

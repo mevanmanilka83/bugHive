@@ -59,6 +59,8 @@ export async function buildBugSubgraph(
   const edges: BugSubgraphResult["edges"] = []
   const centerId = mainBug.id
 
+  const mainBugCreatedAt = (mainBug as { created_at?: string }).created_at ?? null
+
   // 1. Primary node (center)
   nodes.push({
     id: centerId,
@@ -73,6 +75,7 @@ export async function buildBugSubgraph(
       isFocus: true,
       upvotes: mainBug.upvotes_count ?? 0,
       downvotes: mainBug.downvotes_count ?? 0,
+      created_at: mainBugCreatedAt,
     },
     position: { x: 0, y: 0 },
   })
@@ -82,7 +85,7 @@ export async function buildBugSubgraph(
   // 2. Stored relationships (direct: CAUSE_OF, EVIDENCE_FOR, SOLUTION_FOR, SIMILAR, DUPLICATE)
   const { data: rels } = await supabase
     .from("bug_relationships")
-    .select("id, source_id, target_id, relationship_type, confidence, origin")
+    .select("id, source_id, target_id, relationship_type, confidence, origin, created_at")
     .or(`source_id.eq.${mainBug.id},target_id.eq.${mainBug.id}`)
     .gte("confidence", opts.relationshipConfidenceMin)
     .order("confidence", { ascending: false })
@@ -101,6 +104,7 @@ export async function buildBugSubgraph(
         if (!otherBug) continue
         connectedIds.add(otherId)
         const nodeId = otherId
+        const relCreatedAt = (rel as { created_at?: string }).created_at ?? null
         if (!nodes.some((n) => n.id === nodeId)) {
           nodes.push({
             id: nodeId,
@@ -112,6 +116,7 @@ export async function buildBugSubgraph(
               type: "bug",
               url: `/bugs/${otherBug.id}`,
               upvotes: otherBug.upvotes_count ?? 0,
+              created_at: relCreatedAt,
             },
           })
         }
@@ -123,7 +128,7 @@ export async function buildBugSubgraph(
           type: edgeType,
           weight: Number(rel.confidence) || 0.8,
           label: `${edgeType.replace(/_/g, " ")} (${Math.round(Number(rel.confidence) * 100)}%)`,
-          data: { confidence: rel.confidence, origin: rel.origin },
+          data: { confidence: rel.confidence, origin: rel.origin, created_at: relCreatedAt },
         })
       }
     }
@@ -143,6 +148,7 @@ export async function buildBugSubgraph(
     if (connectedIds.has(id)) continue
     connectedIds.add(id)
     internalAdded++
+    const nowIso = new Date().toISOString()
     nodes.push({
       id: bug.id,
       type: "bug",
@@ -153,6 +159,7 @@ export async function buildBugSubgraph(
         type: "bug",
         url: bug.url || `/bugs/${id}`,
         relevanceScore: bug.relevanceScore,
+        created_at: nowIso,
       },
     })
     const score = bug.relevanceScore ?? 0.5
@@ -163,7 +170,7 @@ export async function buildBugSubgraph(
       type: "SIMILAR",
       weight: score,
       label: `Similar (${Math.round(score * 100)}%)`,
-      data: { similarity: score },
+      data: { similarity: score, created_at: nowIso },
       style: { strokeDasharray: "5,5" },
     })
   }
@@ -181,6 +188,7 @@ export async function buildBugSubgraph(
       nType = "stack_overflow"
       eType = "SOLUTION_FOR"
     }
+    const nowIso = new Date().toISOString()
     nodes.push({
       id: ext.id,
       type: nType,
@@ -190,6 +198,7 @@ export async function buildBugSubgraph(
         description: ext.snippet,
         type: nType,
         url: ext.url,
+        created_at: nowIso,
       },
     })
     edges.push({
@@ -199,6 +208,7 @@ export async function buildBugSubgraph(
       type: eType,
       weight: 0.6,
       label: "Reference",
+      data: { created_at: nowIso },
       style: { strokeDasharray: "2,2" },
     })
   }

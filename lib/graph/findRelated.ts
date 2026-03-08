@@ -365,3 +365,68 @@ export async function findRelatedItems(bug: any) {
         ]
     }
 }
+
+/** Draft shape for duplicate detection (title + description as user types). */
+export type PotentialDuplicateDraft = {
+    title?: string
+    description?: string
+    tags?: string[]
+}
+
+/** Result item for potential duplicate (internal bug only, with score). */
+export type PotentialDuplicateResult = {
+    id: string
+    title: string
+    url: string
+    snippet: string
+    relevanceScore: number
+    relevanceReasons: string[]
+}
+
+const MIN_DRAFT_LENGTH = 3
+const MAX_POTENTIAL_DUPLICATES = 8
+const MIN_RELEVANCE_SCORE = 0.15
+
+/**
+ * Fuzzy search for potential duplicate bugs using the same relevance logic as findRelatedItems.
+ * Used by the Duplicate Radar when the user is typing a new report (title + description).
+ */
+export async function findPotentialDuplicates(draft: PotentialDuplicateDraft): Promise<PotentialDuplicateResult[]> {
+    const title = String(draft.title || "").trim()
+    const description = String(draft.description || "").trim()
+    const tags = Array.isArray(draft.tags) ? draft.tags : []
+    const combinedLength = (title + " " + description).trim().length
+    if (combinedLength < MIN_DRAFT_LENGTH) return []
+
+    const draftBug = {
+        title,
+        description,
+        tags,
+        actual_behavior: description,
+    }
+
+    const allRecords = await getMultipleRecords("bugs")
+    const filteredRecords = allRecords.filter((record: any) => {
+        const visibility = String(record.visibility || "public").toLowerCase().trim()
+        return visibility !== "private"
+    })
+
+    const results = filteredRecords
+        .map((record: any) => {
+            const { score, reasons } = calculateRelevance(draftBug, record)
+            const normalized = normalizePublicBug(record)
+            return {
+                id: record.id,
+                title: normalized.title,
+                url: normalized.url,
+                snippet: normalized.snippet,
+                relevanceScore: score,
+                relevanceReasons: reasons,
+            }
+        })
+        .filter((item: PotentialDuplicateResult) => item.relevanceScore >= MIN_RELEVANCE_SCORE)
+        .sort((a: PotentialDuplicateResult, b: PotentialDuplicateResult) => b.relevanceScore - a.relevanceScore)
+        .slice(0, MAX_POTENTIAL_DUPLICATES)
+
+    return results
+}

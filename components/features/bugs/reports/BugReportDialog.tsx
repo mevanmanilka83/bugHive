@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { GitForkIcon } from "@/components/ui/git-fork"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import BugReportStep1Basic from "@/components/features/bugs/reports/BugReportStep1Basic"
+import { DuplicateRadar } from "@/components/features/bugs/reports/DuplicateRadar"
 import BugReportStep2Priority from "@/components/features/bugs/reports/BugReportStep2Priority"
 import BugReportStep3Behavior from "@/components/features/bugs/reports/BugReportStep3Behavior"
 import BugReportStep4Details from "@/components/features/bugs/reports/BugReportStep4Details"
@@ -515,16 +516,24 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         </p>
 
         {step === 1 && (
-          <div key="step-1" className="animate-in fade-in-50 slide-in-from-right-4 duration-300">
-            <BugReportStep1Basic
+          <div key="step-1" className="animate-in fade-in-50 slide-in-from-right-4 duration-300 flex flex-col gap-4 lg:flex-row lg:items-start">
+            <div className="min-w-0 flex-1">
+              <BugReportStep1Basic
+                title={title}
+                description={description}
+                errors={errors}
+                onChangeTitle={(v) => { setTitle(v); if (errors.title) setErrors(prev => ({ ...prev, title: '' })) }}
+                onChangeDescription={(v) => { setDescription(v); if (errors.description) setErrors(prev => ({ ...prev, description: '' })) }}
+                canNext={canNextFromStep1}
+                onNext={() => { if (validateStepWithErrors(1)) setStep(2) }}
+                onCancel={() => setOpen(false)}
+              />
+            </div>
+            <DuplicateRadar
               title={title}
               description={description}
-              errors={errors}
-              onChangeTitle={(v) => { setTitle(v); if (errors.title) setErrors(prev => ({ ...prev, title: '' })) }}
-              onChangeDescription={(v) => { setDescription(v); if (errors.description) setErrors(prev => ({ ...prev, description: '' })) }}
-              canNext={canNextFromStep1}
-              onNext={() => { if (validateStepWithErrors(1)) setStep(2) }}
-              onCancel={() => setOpen(false)}
+              tags={tagsInput.split(",").map((t) => t.trim()).filter(Boolean)}
+              className="w-full lg:w-72 lg:shrink-0 lg:sticky lg:top-0"
             />
           </div>
         )}

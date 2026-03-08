@@ -5,6 +5,7 @@ import Link from "next/link"
 import { BugDetailsForm } from "@/components/features/bugs/BugDetailsForm"
 import { BugDescriptionContent } from "@/components/features/bugs/BugDescriptionContent"
 import { SolutionDialog } from "@/components/features/bugs/solutions/BugReportSolutionDialog"
+import { VoteButtons } from "@/components/features/bugs/VoteButtons"
 import { SolutionVoteButtons } from "@/components/features/bugs/solutions/SolutionVoteButtons"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -273,16 +274,32 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
     }
   }, [solutions, solutionSortBy])
 
+  const bugUpvotes = (currentBug as { upvotes_count?: number }).upvotes_count ?? 0
+  const bugDownvotes = (currentBug as { downvotes_count?: number }).downvotes_count ?? 0
+
   return (
     <>
-      <div className="mt-2 mb-4">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {currentBug.title || "Bug details"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Full report details and activity
-        </p>
+      {/* Title row only: votes left, title + subtitle right */}
+      <div className="mt-2 flex flex-row gap-2 sm:gap-3 items-start flex-nowrap mb-4">
+        <div className="flex flex-col items-center gap-1 min-w-[56px] flex-shrink-0 sm:min-w-[70px]">
+          <VoteButtons
+            bugId={currentBug.id}
+            initialUpvotes={bugUpvotes}
+            initialDownvotes={bugDownvotes}
+            userId={userId ?? undefined}
+            compact
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {currentBug.title || "Bug details"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Full report details and activity
+          </p>
+        </div>
       </div>
+
       <div className="flex flex-col gap-4 overflow-y-auto text-sm rounded-lg border bg-card p-4 md:p-6 mb-6">
         <BugDetailsForm
           bug={currentBug}
