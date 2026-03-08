@@ -24,7 +24,7 @@ const fontMono = ADLaM_Display({
 export const metadata: Metadata = {
   title: "BugHive",
   description: "BugHive – collaborative bug tracking and solutions",
-  icons: { icon: "/bugHiveFavicon.ico" },
+  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({
