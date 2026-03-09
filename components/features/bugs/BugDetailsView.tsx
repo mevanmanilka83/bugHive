@@ -10,8 +10,8 @@ import { SolutionVoteButtons } from "@/components/features/bugs/solutions/Soluti
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
-import { IconBulb, IconChevronDown, IconEye, IconShare3, IconCheck } from "@tabler/icons-react"
-import { stripHtml, cn } from "@/lib"
+import { IconBulb, IconChevronDown, IconEye, IconShare3, IconCheck, IconMessageCircle } from "@tabler/icons-react"
+import { stripHtml, stripMarkdownBold, cn } from "@/lib"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +72,8 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const [verifyingId, setVerifyingId] = React.useState<string | null>(null)
   const [solutionsLoading, setSolutionsLoading] = React.useState(true)
   const [solutionSortBy, setSolutionSortBy] = React.useState<SolutionSortOption>("newest")
+  const [comments, setComments] = React.useState<{ id: string; content: string; created_at: string }[]>([])
+  const [commentsLoading, setCommentsLoading] = React.useState(true)
 
   const copyToClipboard = React.useCallback(async (text: string) => {
     try {
@@ -98,6 +100,18 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
       return false
     }
   }, [])
+
+  const formatCommentDate = (iso: string): string => {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ""
+    return d.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
 
   const formatSolutionTimeAgo = (date: Date): string => {
     const now = new Date()
@@ -132,6 +146,34 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   React.useEffect(() => {
     fetchSolutions()
   }, [fetchSolutions])
+
+  const fetchComments = React.useCallback(async () => {
+    try {
+      setCommentsLoading(true)
+      const res = await fetch(`/api/bugs/${currentBug.id}/comments`)
+      if (!res.ok) {
+        setComments([])
+        return
+      }
+      const data = await res.json()
+      setComments(Array.isArray(data?.comments) ? data.comments : [])
+    } finally {
+      setCommentsLoading(false)
+    }
+  }, [currentBug.id])
+
+  React.useEffect(() => {
+    fetchComments()
+  }, [fetchComments])
+
+  React.useEffect(() => {
+    const onComment = (e: Event) => {
+      const ev = e as CustomEvent<{ bugId?: string }>
+      if (ev.detail?.bugId === currentBug.id) fetchComments()
+    }
+    window.addEventListener("bug:comment-added", onComment)
+    return () => window.removeEventListener("bug:comment-added", onComment)
+  }, [currentBug.id, fetchComments])
 
   React.useEffect(() => {
     const onCreated = (e: Event) => {
@@ -308,6 +350,32 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
           onStatusChange={handleStatusChange}
           onAssigneeChange={handleAssigneeChange}
         />
+      </div>
+
+      <div className="mt-6 rounded-lg border bg-card">
+        <div className="border-b px-4 py-3 md:px-6">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <IconMessageCircle className="size-5 text-muted-foreground" />
+            Comments
+            {!commentsLoading && <span className="text-sm font-normal text-muted-foreground">({comments.length})</span>}
+          </h2>
+        </div>
+        {commentsLoading ? (
+          <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading comments…</div>
+        ) : comments.length === 0 ? (
+          <div className="px-4 py-6 text-center text-sm text-muted-foreground">No comments yet.</div>
+        ) : (
+          <div className="divide-y">
+            {comments.map((c) => (
+              <div key={c.id} className="px-4 py-3 md:px-6">
+                <p className="text-sm whitespace-pre-wrap break-words">{stripMarkdownBold(stripHtml(c.content))}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatCommentDate(c.created_at)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mt-16 rounded-lg border bg-card">

@@ -89,6 +89,12 @@ type RelationshipType =
   | "conflict"
   | "complementary -support"
   | "relate"
+  | "SIMILAR"
+  | "DUPLICATE"
+  | "CAUSE_OF"
+  | "EVIDENCE_FOR"
+  | "SOLUTION_FOR"
+  | "RELATE"
 
 interface GraphNode {
   id: string

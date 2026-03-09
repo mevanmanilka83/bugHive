@@ -61,7 +61,7 @@ export function GraphIdeaStep4Review({
           type="button"
           variant="outline"
           onClick={onBack}
-          className="w-full rounded-full px-4 sm:w-auto"
+          className="w-full rounded-none px-4 sm:w-auto"
         >
           Back
         </Button>
@@ -69,7 +69,7 @@ export function GraphIdeaStep4Review({
           type="button"
           onClick={onSave}
           disabled={submitting}
-          className="w-full rounded-full px-4 sm:w-auto"
+          className="w-full rounded-none px-4 sm:w-auto"
         >
           {submitting ? "Saving..." : "Save"}
         </Button>

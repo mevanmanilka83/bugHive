@@ -1,7 +1,8 @@
 
 import { getMultipleRecords } from "../db/crudOperations"
+import { getSupabaseAdmin } from "../config"
 import { stripHtml } from "../utils/client"
-import { BugSignature, extractBugSignature, RelatedResult, calculateRelevance } from "./relationshipTypes"
+import { BugSignature, extractBugSignature, RelatedResult, calculateRelevance, TEMPORAL_BOOST_48H_SCORE } from "./relationshipTypes"
 
 const GEMINI_MODEL = "gemini-1.5-flash"
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
@@ -396,10 +397,13 @@ export type PotentialDuplicateResult = {
 const MIN_DRAFT_LENGTH = 3
 const MAX_POTENTIAL_DUPLICATES = 8
 const MIN_RELEVANCE_SCORE = 0.15
+const TRIGRAM_CANDIDATE_LIMIT = 25
+const TRIGRAM_MIN_SIMILARITY = 0.08
+const TEMPORAL_48H_MS = 48 * 60 * 60 * 1000
 
 /**
- * Fuzzy search for potential duplicate bugs using the same relevance logic as findRelatedItems.
- * Used by the Duplicate Radar when the user is typing a new report (title + description).
+ * Duplicate search: PostgreSQL trigram (GIN) for fast candidate retrieval, then
+ * heuristic scoring (stack trace fingerprint 0.8+, temporal boost 48h, calculateRelevance).
  */
 export async function findPotentialDuplicates(draft: PotentialDuplicateDraft): Promise<PotentialDuplicateResult[]> {
     const title = String(draft.title || "").trim()
@@ -415,22 +419,62 @@ export async function findPotentialDuplicates(draft: PotentialDuplicateDraft): P
         actual_behavior: description,
     }
 
-    const allRecords = await getMultipleRecords("bugs")
-    const filteredRecords = allRecords.filter((record: any) => {
-        const visibility = String(record.visibility || "public").toLowerCase().trim()
-        return visibility !== "private"
-    })
+    const queryText = (title + " " + description).slice(0, 2000)
 
-    const results = filteredRecords
+    let candidateIds: { id: string; similarity_score: number; created_at: string }[] = []
+    try {
+        const supabase = getSupabaseAdmin()
+        const { data: rpcData, error } = await supabase.rpc("search_bugs_duplicate_candidates", {
+            query_text: queryText,
+            lim: TRIGRAM_CANDIDATE_LIMIT,
+            min_similarity: TRIGRAM_MIN_SIMILARITY,
+        })
+        if (!error && Array.isArray(rpcData)) {
+            candidateIds = rpcData as { id: string; similarity_score: number; created_at: string }[]
+        }
+    } catch {
+        // fallback: no trigram or RPC missing
+    }
+
+    const ids = candidateIds.map((r) => r.id)
+    const createdAtById = new Map(candidateIds.map((r) => [r.id, r.created_at]))
+    const now = Date.now()
+
+    let records: any[] = []
+    if (ids.length > 0) {
+        const supabase = getSupabaseAdmin()
+        const { data } = await supabase.from("bugs").select("*").in("id", ids)
+        records = (data || []).filter((r: any) => String(r.visibility || "").toLowerCase() !== "private")
+    }
+
+    if (records.length === 0) {
+        const fallback = await getMultipleRecords("bugs")
+        records = fallback
+            .filter((r: any) => String(r.visibility || "public").toLowerCase() !== "private")
+            .slice(0, 50)
+    }
+
+    const results = records
         .map((record: any) => {
             const { score, reasons } = calculateRelevance(draftBug, record)
+            let finalScore = Math.min(score, 1)
+
+            const createdAt = record.created_at || createdAtById.get(record.id)
+            if (createdAt) {
+                const createdMs = new Date(createdAt).getTime()
+                if (now - createdMs <= TEMPORAL_48H_MS) {
+                    finalScore += TEMPORAL_BOOST_48H_SCORE
+                    reasons.push("Created in last 48h (outage burst)")
+                }
+            }
+
             const normalized = normalizePublicBug(record)
             return {
                 id: record.id,
                 title: normalized.title,
                 url: normalized.url,
                 snippet: normalized.snippet,
-                relevanceScore: score,
+                relevanceScore: Math.min(finalScore, 1),
                 relevanceReasons: reasons,
             }
         })

@@ -57,6 +57,39 @@ function normalizeTerm(term: string): string {
     return term.trim().toLowerCase()
 }
 
+/** Stack trace frame patterns (Java, JS, Python, C#, etc.) */
+const STACK_FRAME_REGEX = [
+    /\bat\s+([A-Za-z0-9_.]+)\.([A-Za-z0-9_]+)\s*\(([^)]*)(?::(\d+))?\)/g,
+    /\b(?:at|#)\s*([A-Za-z0-9_.]+)\s*\(([^)]*):(\d+)\)/g,
+    /File\s+"([^"]+)",\s*line\s+(\d+)/g,
+    /\s+at\s+([^\s(]+)\s*\(([^)]+)\)/g,
+]
+
+/**
+ * Extract top 3 stack trace frames from pasted logs for fingerprinting.
+ * Identical crashes (same top frames) get high-priority weight (0.8+) in duplicate matching.
+ */
+export function extractStackTraceFingerprint(text: string): string[] {
+    if (!text || typeof text !== "string") return []
+    const frames: string[] = []
+    const seen = new Set<string>()
+
+    for (const re of STACK_FRAME_REGEX) {
+        re.lastIndex = 0
+        let m: RegExpExecArray | null
+        while ((m = re.exec(text)) !== null && frames.length < 3) {
+            const normalized = m.slice(1).filter(Boolean).join(":").replace(/\s+/g, " ").trim()
+            if (normalized.length >= 4 && !seen.has(normalized)) {
+                seen.add(normalized)
+                frames.push(normalized)
+            }
+        }
+        if (frames.length >= 3) break
+    }
+
+    return frames.slice(0, 3)
+}
+
 function detectTerms(textLower: string, terms: string[]): string[] {
     const found: string[] = []
     terms.forEach((term) => {
@@ -124,6 +157,10 @@ export function extractBugSignature(params: {
     }
 }
 
+/** Temporal boost: issues created in last 48h (outage burst) get this added to score. */
+export const TEMPORAL_BOOST_48H_SCORE = 0.15
+export const STACK_TRACE_MATCH_SCORE = 0.82
+
 export function calculateRelevance(bugA: any, bugB: any): { score: number; reasons: string[] } {
     const sigA = extractBugSignature({
         title: bugA.title,
@@ -141,6 +178,18 @@ export function calculateRelevance(bugA: any, bugB: any): { score: number; reaso
 
     let score = 0
     const reasons: string[] = []
+
+    // 0. Stack trace fingerprint: identical top frames = strongest duplicate signal (+0.82)
+    const draftText = (bugA.description || "") + " " + (bugA.actual_behavior || "") + " " + (bugA.title || "")
+    const fingerprintA = extractStackTraceFingerprint(draftText)
+    if (fingerprintA.length > 0) {
+        const textBForStack = (bugB.description || "") + " " + (bugB.actual_behavior || "") + " " + (bugB.title || "")
+        const allInB = fingerprintA.every((frame) => textBForStack.includes(frame))
+        if (allInB) {
+            score += STACK_TRACE_MATCH_SCORE
+            reasons.push(`Same stack trace (top ${fingerprintA.length} frames)`)
+        }
+    }
 
     // 1. Language Match (+0.3)
     const langMatch = sigA.languageTerms.some(term => textB.includes(term))

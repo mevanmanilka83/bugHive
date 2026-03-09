@@ -63,17 +63,22 @@ export function generateUUIDFromEmailSync(email: string): string {
   return uuid
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Returns true if the string is a valid UUID (v4 format).
+ * Use for client-side validation before calling APIs (e.g. bug id).
+ */
+export function isValidUUID(str: string | undefined | null): boolean {
+  return typeof str === "string" && UUID_REGEX.test(str.trim())
+}
+
 /**
  * Ensures a value is a valid UUID, generating one if needed
  */
 export function ensureValidUUID(userId: string | undefined): string {
   if (!userId) return '00000000-0000-0000-0000-000000000000'
-  
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  if (uuidRegex.test(userId)) {
-    return userId
-  }
-  
+  if (UUID_REGEX.test(userId)) return userId
   return generateUUID()
 }
 
@@ -101,6 +106,15 @@ export function extractUsernameFromEmail(email: string | null | undefined, fallb
 export function stripHtml(html: string): string {
   if (!html || typeof html !== "string") return ""
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+}
+
+/**
+ * Removes markdown bold markers (**text** → text) for plain-text display (e.g. comments).
+ * Use for content that may have been stored with markdown.
+ */
+export function stripMarkdownBold(text: string): string {
+  if (!text || typeof text !== "string") return ""
+  return text.replace(/\*\*([^*]*)\*\*/g, "$1").trim()
 }
 
 /**

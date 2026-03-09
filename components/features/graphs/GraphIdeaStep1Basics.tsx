@@ -91,14 +91,14 @@ export function GraphIdeaStep1Basics({
         <Button
           variant="outline"
           onClick={onCancel}
-          className="w-full rounded-full px-4 sm:w-auto"
+          className="w-full rounded-none px-4 sm:w-auto"
         >
           Cancel
         </Button>
         <Button
           onClick={onNext}
           disabled={!canNext}
-          className="w-full rounded-full px-4 sm:w-auto"
+          className="w-full rounded-none px-4 sm:w-auto"
         >
           Next
         </Button>

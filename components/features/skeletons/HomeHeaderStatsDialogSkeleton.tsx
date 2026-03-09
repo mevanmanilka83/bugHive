@@ -1,60 +1,53 @@
 import { Skeleton } from "@/components/ui/skeleton"
 
-function StatsSkeleton() {
+function StatsCardSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border/30">
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-7 w-12 mt-1" />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function ListSkeleton() {
-  return (
-    <div className="space-y-1">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="h-10 rounded-md border border-transparent bg-muted/20" />
-      ))}
-    </div>
-  )
-}
-
-function SectionSkeleton() {
-  return (
-    <section>
-      <div className="flex items-center gap-2 mb-3">
-        <Skeleton className="size-1 rounded-full" />
-        <Skeleton className="h-4 w-24" />
+    <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+      <div className="px-4 py-3 border-b border-border/40 bg-muted/20">
+        <Skeleton className="h-4 w-28" />
       </div>
-      <ListSkeleton />
-      <Skeleton className="h-3 w-20 mt-2" />
-    </section>
+      <div className="p-3">
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-1 p-3 rounded-lg bg-muted/40 border border-border/40">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-7 w-12 mt-1" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ListCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+      <div className="px-4 py-3 border-b border-border/40 bg-muted/20">
+        <Skeleton className="h-4 w-32" />
+      </div>
+      <div className="p-3 space-y-1.5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-14 rounded-lg bg-muted/30 border border-border/30" />
+        ))}
+      </div>
+      <div className="px-3 pb-3">
+        <Skeleton className="h-3 w-24" />
+      </div>
+    </div>
   )
 }
 
 export function HomeHeaderStatsDialogSkeleton() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-8">
-      {/* Left column */}
-      <div className="flex flex-col gap-8">
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Skeleton className="size-1 rounded-full" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <StatsSkeleton />
-        </section>
-        <SectionSkeleton />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="flex flex-col gap-5">
+        <StatsCardSkeleton />
+        <ListCardSkeleton />
       </div>
-
-      {/* Right column */}
-      <div className="flex flex-col gap-8">
-        <SectionSkeleton />
-        <SectionSkeleton />
+      <div className="flex flex-col gap-5">
+        <ListCardSkeleton />
+        <ListCardSkeleton />
       </div>
     </div>
   )
