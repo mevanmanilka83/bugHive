@@ -16,12 +16,14 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ArrowDown, ArrowUp, Save } from "lucide-react"
+import { TimeTravelBar, timeToOpacity, useTimeTravelPlayback } from "@/components/features/graph/TimeTravelBar"
 import {
     ReactFlow,
     Node,
     Edge,
     Background,
     Controls,
+    Panel,
     useNodesState,
     useEdgesState,
     ConnectionMode,
@@ -215,7 +217,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
     const [loading, setLoading] = React.useState(false)
     const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
     const [insights, setInsights] = React.useState<any>(null)
-
+    const [timeTravelPercent, setTimeTravelPercent] = React.useState(100)
     const [saving, setSaving] = React.useState(false)
 
     const params = useParams()
@@ -282,7 +284,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                 id: node.id,
                 type: node.type || "default",
                 position: node.position || { x: 0, y: 0 },
-                data: { ...node.data, type: node.type, label: node.label },
+                data: { ...node.data, type: node.type, label: node.label, created_at: node.data?.created_at },
             }))
 
             const flowEdges: Edge[] = (data.edges || []).map((edge: any, idx: number) => {
@@ -303,7 +305,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                     type: "custom",
                     animated: true,
                     label: edge.label || type.replace(/_/g, " "),
-                    data: { type },
+                    data: { type, created_at: edge.data?.created_at },
                     style: { stroke, strokeWidth: Math.max(1.5, (edge.weight || 0.5) * 3), opacity: 0.8 },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
@@ -331,6 +333,55 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
     }, [])
 
     const [reactFlowInstance, setReactFlowInstance] = React.useState<any>(null)
+
+    const getTime = (c: string | null | undefined) => (c ? new Date(c).getTime() : 0)
+    const { timestamps, minT, maxT, milestones } = React.useMemo(() => {
+        const ts: number[] = []
+        nodes.forEach((n) => {
+            const t = getTime((n.data as any)?.created_at)
+            if (t > 0) ts.push(t)
+        })
+        edges.forEach((e) => {
+            const t = getTime((e.data as any)?.created_at)
+            if (t > 0) ts.push(t)
+        })
+        const minT = ts.length > 0 ? Math.min(...ts) : 0
+        const maxT = ts.length > 0 ? Math.max(...ts) : 0
+        const milestones = [...new Set(ts)].sort((a, b) => a - b)
+        return { timestamps: ts, minT, maxT, milestones }
+    }, [nodes, edges])
+
+    const selectedTime = React.useMemo(() => {
+        if (timestamps.length === 0) return Infinity
+        const range = Math.max(maxT - minT, 1)
+        return minT + range * (timeTravelPercent / 100)
+    }, [minT, maxT, timeTravelPercent, timestamps.length])
+
+    const { isPlaying, toggle: togglePlayback } = useTimeTravelPlayback(
+        timeTravelPercent,
+        setTimeTravelPercent,
+        minT,
+        maxT,
+        10
+    )
+
+    React.useEffect(() => {
+        if (timestamps.length === 0) return
+        setNodes((nds) =>
+            nds.map((n) => {
+                const nodeTime = getTime((n.data as any)?.created_at)
+                const opacity = timeToOpacity(nodeTime, selectedTime)
+                return { ...n, style: { ...n.style, opacity, transition: "opacity 0.3s ease" } }
+            })
+        )
+        setEdges((eds) =>
+            eds.map((e) => {
+                const edgeTime = getTime((e.data as any)?.created_at)
+                const opacity = timeToOpacity(edgeTime, selectedTime)
+                return { ...e, style: { ...e.style, opacity, transition: "opacity 0.3s ease" } }
+            })
+        )
+    }, [selectedTime, timestamps.length, setNodes, setEdges])
 
     // Handle fitView on open or data change
     React.useEffect(() => {
@@ -426,6 +477,20 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                                 showInteractive={false}
                                 style={{ marginBottom: "2rem" }}
                             />
+
+                            {milestones.length > 0 && (
+                                <Panel position="bottom-center" className="!relative !transform-none w-full">
+                                    <TimeTravelBar
+                                        percent={timeTravelPercent}
+                                        onPercentChange={setTimeTravelPercent}
+                                        milestones={milestones}
+                                        minTime={minT}
+                                        maxTime={maxT}
+                                        isPlaying={isPlaying}
+                                        onPlayPause={togglePlayback}
+                                    />
+                                </Panel>
+                            )}
 
                             <div className="absolute top-4 right-4 z-10 pointer-events-none">
                                 <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl shadow-black/5 rounded-2xl p-4 space-y-2 max-w-[200px] pointer-events-auto">

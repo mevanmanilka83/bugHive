@@ -148,7 +148,7 @@ export async function buildBugSubgraph(
     if (connectedIds.has(id)) continue
     connectedIds.add(id)
     internalAdded++
-    const nowIso = new Date().toISOString()
+    const bugCreatedAt = (bug as { created_at?: string }).created_at ?? new Date().toISOString()
     nodes.push({
       id: bug.id,
       type: "bug",
@@ -159,7 +159,7 @@ export async function buildBugSubgraph(
         type: "bug",
         url: bug.url || `/bugs/${id}`,
         relevanceScore: bug.relevanceScore,
-        created_at: nowIso,
+        created_at: bugCreatedAt,
       },
     })
     const score = bug.relevanceScore ?? 0.5
@@ -170,7 +170,7 @@ export async function buildBugSubgraph(
       type: "SIMILAR",
       weight: score,
       label: `Similar (${Math.round(score * 100)}%)`,
-      data: { similarity: score, created_at: nowIso },
+      data: { similarity: score, created_at: bugCreatedAt },
       style: { strokeDasharray: "5,5" },
     })
   }
@@ -186,7 +186,7 @@ export async function buildBugSubgraph(
     if (ext.source === "stack_overflow_question") {
       nType = "stack_overflow"
     }
-    const nowIso = new Date().toISOString()
+    const extCreatedAt = (ext as { created_at?: string }).created_at ?? new Date().toISOString()
     const score = (ext as { relevanceScore?: number }).relevanceScore ?? 0.5
     nodes.push({
       id: ext.id,
@@ -197,7 +197,7 @@ export async function buildBugSubgraph(
         description: ext.snippet,
         type: nType,
         url: ext.url,
-        created_at: nowIso,
+        created_at: extCreatedAt,
       },
     })
     edges.push({
@@ -207,7 +207,7 @@ export async function buildBugSubgraph(
       type: "SIMILAR",
       weight: score,
       label: `Similar (${Math.round(score * 100)}%)`,
-      data: { similarity: score, created_at: nowIso },
+      data: { similarity: score, created_at: extCreatedAt },
       style: { strokeDasharray: "5,5" },
     })
   }

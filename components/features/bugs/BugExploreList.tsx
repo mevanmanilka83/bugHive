@@ -65,7 +65,7 @@ export function BugExploreList({
   const [allBugs, setAllBugs] = React.useState<any[]>([])
   const [graphOpen, setGraphOpen] = React.useState(false)
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
-  const [loading, setLoading] = React.useState(false)
+  const [loading, setLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [filtersOpen, setFiltersOpen] = React.useState(false)
   const isMobile = useIsMobile()
@@ -606,6 +606,7 @@ export function BugExploreList({
         showReportButton={showReportButton}
         currentUserName={currentUserName}
         currentUserImage={currentUserImage}
+        isLoading={loading}
         onOpenFilters={() => setFiltersOpen((open) => !open)}
         filtersOpen={filtersOpen}
         renderFiltersPanel={() => (

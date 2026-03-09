@@ -23,6 +23,7 @@ type GitHubIssue = {
     body?: string | null
     comments?: number
     repository_url?: string
+    created_at?: string | null
 }
 
 type GitHubRepo = {
@@ -46,6 +47,7 @@ type StackOverflowQuestion = {
     answer_count: number
     is_answered: boolean
     tags: string[]
+    creation_date?: number
 }
 
 function toSnippet(text?: string | null) {
@@ -77,6 +79,7 @@ function normalizeIssue(item: GitHubIssue): RelatedResult {
         url: item.html_url,
         source: "github_issue",
         snippet,
+        created_at: item.created_at ?? undefined,
     }
 }
 
@@ -85,12 +88,17 @@ function normalizeStackOverflowQuestion(item: StackOverflowQuestion): RelatedRes
     const bodySnippet = toSnippet(item.body_markdown)
     const snippet = [tagStr, bodySnippet].filter(Boolean).join(". ") || `Stack Overflow question (Score: ${item.score})`
 
+    const created_at = item.creation_date
+        ? new Date(item.creation_date * 1000).toISOString()
+        : undefined
+
     return {
         id: `so-${item.question_id}`,
         title: stripHtml(item.title),
         url: item.link,
         source: "stack_overflow_question",
         snippet,
+        created_at,
     }
 }
 
@@ -103,6 +111,7 @@ function normalizePublicBug(item: any): RelatedResult {
         url: `/bugs/${item.id}`,
         source: "bughive_public",
         snippet,
+        created_at: item.created_at ?? undefined,
     }
 }
 
@@ -350,7 +359,8 @@ export async function findRelatedItems(bug: any) {
                 ...normalizePublicBug(record),
                 relevanceScore: score,
                 relevanceReasons: reasons,
-                description: record.description || "" // preserve description for graph prompt
+                description: record.description || "", // preserve description for graph prompt
+                created_at: record.created_at ?? undefined,
             }
         })
         .filter((item: any) => item.relevanceScore > 0.1) // Only return relevant

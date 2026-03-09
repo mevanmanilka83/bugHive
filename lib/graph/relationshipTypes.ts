@@ -23,6 +23,7 @@ export type RelatedResult = {
     snippet: string
     relevanceScore?: number
     relevanceReasons?: string[]
+    created_at?: string
 }
 
 const STRONG_TERMS = new Set([

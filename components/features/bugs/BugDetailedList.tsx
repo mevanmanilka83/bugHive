@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { VoteButtons } from "@/components/features/bugs/VoteButtons"
 import { BugReportDialog } from "@/components/features/bugs/reports/BugReportDialog"
+import { HomeBugsListSkeleton } from "@/components/features/skeletons/HomeBugsListSkeleton"
 import { cn, stripHtml } from "@/lib"
 import { toast } from "sonner"
 import {
@@ -47,6 +48,7 @@ interface BugDetailedListProps {
   currentUserImage?: string
   /** Visual/layout variant. "saved" is a simplified header for the Saved page. */
   variant?: "default" | "saved"
+  isLoading?: boolean
 }
 
 type SortOption =
@@ -70,6 +72,7 @@ export function BugDetailedList({
   currentUserName,
   currentUserImage,
   variant = "default",
+  isLoading = false,
 }: BugDetailedListProps) {
   const [sortBy, setSortBy] = React.useState<SortOption>("newest")
 
@@ -496,7 +499,12 @@ export function BugDetailedList({
 
       {/* Bug List */}
       <div className="space-y-0 border-t">
-        {paginatedBugs.map((bug) => {
+        {isLoading ? (
+          <div className="pt-3">
+            <HomeBugsListSkeleton />
+          </div>
+        ) : (
+          paginatedBugs.map((bug) => {
           const createdAt = bug.created_at || bug.createdAt
           const created = createdAt ? new Date(createdAt) : new Date()
           const bugTitle: string = (bug.title || bug.header || bug.name || "").toString() || "(untitled bug)"
@@ -673,11 +681,12 @@ export function BugDetailedList({
               </div>
             </div>
           )
-        })}
+          })
+        )}
       </div>
 
       {/* Pagination */}
-      {totalPages > 0 && (
+      {!isLoading && totalPages > 0 && (
         <div className="border-t bg-background/60 px-3 py-2">
           <Pagination className="mx-0">
             <PaginationContent>
@@ -733,7 +742,7 @@ export function BugDetailedList({
         </div>
       )}
 
-      {sortedBugs.length === 0 && (
+      {!isLoading && sortedBugs.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           No bugs found
         </div>

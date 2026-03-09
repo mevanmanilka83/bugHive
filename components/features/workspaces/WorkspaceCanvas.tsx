@@ -37,6 +37,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Loader2, Save, Plus, Lightbulb, Wrench, Sparkles, X, Pencil, Bug } from "lucide-react"
+import { TimeTravelBar, timeToOpacity, useTimeTravelPlayback } from "@/components/features/graph/TimeTravelBar"
 import { DeleteIcon } from "@/components/ui/delete"
 import { useRouter } from "next/navigation"
 import { cn, stripHtml } from "@/lib"
@@ -232,6 +233,7 @@ export function WorkspaceCanvas({
     const [ideaDialogInitialContent, setIdeaDialogInitialContent] = React.useState<string | null>("")
     const [searchAddDialogOpen, setSearchAddDialogOpen] = React.useState(false)
     const [viewportVersion, setViewportVersion] = React.useState(0)
+    const [timeTravelPercent, setTimeTravelPercent] = React.useState(100)
     const autoSaveTimeout = React.useRef<number | null>(null)
 
     const { presence, trackCursorThrottled } = useWorkspaceRealtime({
@@ -250,6 +252,55 @@ export function WorkspaceCanvas({
             .filter((n) => n.type === "bug" && n.id && !n.id.startsWith("cluster-") && /^[0-9a-f-]{36}$/i.test(n.id))
             .map((n) => n.id)
     }, [nodes])
+
+    const getTime = (c: string | null | undefined) => (c ? new Date(c).getTime() : 0)
+    const { timestamps, minT, maxT, milestones } = React.useMemo(() => {
+        const ts: number[] = []
+        nodes.forEach((n) => {
+            const t = getTime((n.data as any)?.created_at)
+            if (t > 0) ts.push(t)
+        })
+        edges.forEach((e) => {
+            const t = getTime((e.data as any)?.created_at)
+            if (t > 0) ts.push(t)
+        })
+        const minT = ts.length > 0 ? Math.min(...ts) : 0
+        const maxT = ts.length > 0 ? Math.max(...ts) : 0
+        const milestones = [...new Set(ts)].sort((a, b) => a - b)
+        return { timestamps: ts, minT, maxT, milestones }
+    }, [nodes, edges])
+
+    const selectedTime = React.useMemo(() => {
+        if (timestamps.length === 0) return Infinity
+        const range = Math.max(maxT - minT, 1)
+        return minT + range * (timeTravelPercent / 100)
+    }, [minT, maxT, timeTravelPercent, timestamps.length])
+
+    const { isPlaying, toggle: togglePlayback } = useTimeTravelPlayback(
+        timeTravelPercent,
+        setTimeTravelPercent,
+        minT,
+        maxT,
+        10
+    )
+
+    React.useEffect(() => {
+        if (timestamps.length === 0) return
+        setNodes((nds) =>
+            nds.map((n) => {
+                const nodeTime = getTime((n.data as any)?.created_at)
+                const opacity = timeToOpacity(nodeTime, selectedTime)
+                return { ...n, style: { ...n.style, opacity, transition: "opacity 0.3s ease" } }
+            })
+        )
+        setEdges((eds) =>
+            eds.map((e) => {
+                const edgeTime = getTime((e.data as any)?.created_at)
+                const opacity = timeToOpacity(edgeTime, selectedTime)
+                return { ...e, style: { ...e.style, opacity, transition: "opacity 0.3s ease" } }
+            })
+        )
+    }, [selectedTime, timestamps.length, setNodes, setEdges])
     const isFirstRender = React.useRef(true)
 
     const fetchIdeas = React.useCallback(async () => {
@@ -576,6 +627,19 @@ export function WorkspaceCanvas({
                 <Background color="#ccc" gap={20} size={1} />
                 <Controls showInteractive={false} style={{ marginBottom: "2rem" }} />
                 <WorkspacePresenceCursors presence={presence} viewportVersion={viewportVersion} />
+                {milestones.length > 0 && (
+                    <Panel position="bottom-center" className="!relative !transform-none w-full">
+                        <TimeTravelBar
+                            percent={timeTravelPercent}
+                            onPercentChange={setTimeTravelPercent}
+                            milestones={milestones}
+                            minTime={minT}
+                            maxTime={maxT}
+                            isPlaying={isPlaying}
+                            onPlayPause={togglePlayback}
+                        />
+                    </Panel>
+                )}
             </ReactFlow>
 
             {isOwner && (
@@ -592,7 +656,11 @@ export function WorkspaceCanvas({
                             id: bug.id,
                             type: "bug",
                             position: { x: baseX + Math.random() * 80 - 40, y: baseY + Math.random() * 80 - 40 },
-                            data: { type: "bug", label: bug.title },
+                            data: {
+                                type: "bug",
+                                label: bug.title,
+                                created_at: (bug as { created_at?: string }).created_at ?? new Date().toISOString(),
+                            },
                         }
                         setNodes((nds) => nds.concat(newNode))
                         toast.success(`Added bug: ${bug.title}`)
@@ -660,6 +728,7 @@ export function WorkspaceCanvas({
                                     kind: idea.kind,
                                     ideaId: idea.id,
                                     onDelete: handleDeleteIdea,
+                                    created_at: (idea as { created_at?: string }).created_at ?? new Date().toISOString(),
                                 },
                             }
                             return nds.concat(newNode)

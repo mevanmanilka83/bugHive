@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ArrowUp, ArrowDown, X, Save, History } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Lightbulb, Search, ShieldAlert, GitBranch, ArrowUp, ArrowDown, X, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
   ReactFlow,
@@ -44,6 +44,7 @@ import {
 import "@xyflow/react/dist/style.css"
 import { toast } from "sonner"
 import { cn } from "@/lib"
+import { TimeTravelBar, timeToOpacity, useTimeTravelPlayback } from "@/components/features/graph/TimeTravelBar"
 
 interface BugGraphDialogProps {
   open: boolean
@@ -140,6 +141,7 @@ type RelatedBugItem = {
   source: RelatedBugSource
   snippet: string
   relevanceScore?: number
+  created_at?: string
 }
 
 const GRAPH_DEPTH = 2
@@ -370,7 +372,6 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
   const mainCircleRadius = 320
   const soColumnOffsetX = 220
   const soRowSpacing = 220
-  const nowIso = new Date().toISOString()
   const soCount = stackItems.filter((item) => !existingNodeIds.has(item.id)).length
   let soIndex = 0
 
@@ -387,7 +388,7 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
           description: item.snippet,
           type: "stack_overflow",
           url: item.url,
-          created_at: nowIso,
+          created_at: item.created_at ?? new Date().toISOString(),
         },
         position: {
           x: centerX + mainCircleRadius + soColumnOffsetX,
@@ -407,7 +408,7 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
         type: "SIMILAR",
         weight: score,
         label: `Similar (${Math.round(score * 100)}%)`,
-        data: { similarity: score, created_at: nowIso },
+        data: { similarity: score, created_at: item.created_at ?? new Date().toISOString() },
         style: { strokeDasharray: "5,5" },
       })
       existingEdgeIds.add(edgeId)
@@ -488,20 +489,61 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
     }
   }
 
-  function applyGraphToFlow(graph: GraphData) {
-    const flowNodes: Node[] = graph.nodes.map((node, idx) => ({
-      id: node.id,
-      type: node.type,
-      position: node.position ?? {
-        x: Math.cos((idx / graph.nodes.length) * Math.PI * 2) * 300,
-        y: Math.sin((idx / graph.nodes.length) * Math.PI * 2) * 300,
-      },
-      data: { ...node.data, type: node.type, label: node.label },
-    }))
+  const getTime = React.useCallback((createdAt: string | null | undefined): number =>
+    createdAt ? new Date(createdAt).getTime() : 0, [])
+
+  const { timestamps, minT, maxT, milestones } = React.useMemo(() => {
+    const ts: number[] = []
+    graphData?.nodes?.forEach((n) => {
+      const t = getTime(n.data?.created_at)
+      if (t > 0) ts.push(t)
+    })
+    graphData?.edges?.forEach((e) => {
+      const t = getTime(e.data?.created_at)
+      if (t > 0) ts.push(t)
+    })
+    const minT = ts.length > 0 ? Math.min(...ts) : 0
+    const maxT = ts.length > 0 ? Math.max(...ts) : 0
+    const milestones = [...new Set(ts)].sort((a, b) => a - b)
+    return { timestamps: ts, minT, maxT, milestones }
+  }, [graphData, getTime])
+
+  const selectedTime = React.useMemo(() => {
+    if (timestamps.length === 0) return Infinity
+    const range = Math.max(maxT - minT, 1)
+    return minT + range * (timeTravelPercent / 100)
+  }, [minT, maxT, timeTravelPercent, timestamps.length])
+
+  const { isPlaying, toggle: togglePlayback } = useTimeTravelPlayback(
+    timeTravelPercent,
+    setTimeTravelPercent,
+    minT,
+    maxT,
+    10
+  )
+
+  function applyGraphToFlow(graph: GraphData, opts?: { selectedTime?: number }) {
+    const selTime = opts?.selectedTime ?? (timestamps.length > 0 ? maxT : Infinity)
+    const flowNodes: Node[] = graph.nodes.map((node, idx) => {
+      const nodeTime = getTime(node.data?.created_at)
+      const opacity = timeToOpacity(nodeTime, selTime)
+      return {
+        id: node.id,
+        type: node.type,
+        position: node.position ?? {
+          x: Math.cos((idx / graph.nodes.length) * Math.PI * 2) * 300,
+          y: Math.sin((idx / graph.nodes.length) * Math.PI * 2) * 300,
+        },
+        data: { ...node.data, type: node.type, label: node.label },
+        style: { opacity, transition: "opacity 0.3s ease" },
+      }
+    })
 
     const flowEdges: Edge[] = graph.edges.map((edge, idx) => {
       const baseStyle = edgeTypeStyles[edge.type] || { stroke: "#94a3b8" }
       const weight = edge.weight ?? 0.5
+      const edgeTime = getTime(edge.data?.created_at)
+      const opacity = timeToOpacity(edgeTime, selTime)
       return {
         id: edge.id || `e-${edge.source}-${edge.target}-${idx}`,
         source: edge.source,
@@ -510,7 +552,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
         label: edge.label || edge.type?.replace(/_/g, " ") || "Related",
         animated: ["SOLUTION_FOR", "CAUSE_OF", "solution_for", "cause_of", "contradicts", "condractary", "condractary-dispute", "conflict"].includes(edge.type),
         markerEnd: { type: MarkerType.ArrowClosed, color: baseStyle.stroke },
-        style: { ...baseStyle, strokeWidth: Math.max(2, weight * 3), opacity: 0.9, ...edge.style },
+        style: { ...baseStyle, strokeWidth: Math.max(2, weight * 3), opacity: opacity * 0.9, transition: "opacity 0.3s ease", ...edge.style },
         labelStyle: { fill: "#334155", fontWeight: 600, fontSize: 10 },
         data: { weight, type: edge.type, ...(edge.data || {}), created_at: edge.data?.created_at },
       }
@@ -520,53 +562,11 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
     setEdges(flowEdges)
   }
 
-  // Time-travel: filter graph by created_at and apply to flow
+  // Apply full graph with opacity (fade: ghost out-of-range nodes instead of hard filter)
   React.useEffect(() => {
     if (!graphData?.nodes?.length || !Array.isArray(graphData.edges)) return
-
-    const getTime = (createdAt: string | null | undefined): number =>
-      createdAt ? new Date(createdAt).getTime() : 0
-    const timestamps: number[] = []
-    graphData.nodes.forEach((n) => {
-      const t = getTime(n.data?.created_at)
-      if (t > 0) timestamps.push(t)
-    })
-    graphData.edges.forEach((e) => {
-      const t = getTime(e.data?.created_at)
-      if (t > 0) timestamps.push(t)
-    })
-
-    let visibleNodes: GraphNode[]
-    let visibleEdges: GraphEdge[]
-    if (timestamps.length === 0) {
-      visibleNodes = graphData.nodes
-      visibleEdges = graphData.edges
-    } else {
-      const minT = Math.min(...timestamps)
-      const maxT = Math.max(...timestamps)
-      const range = Math.max(maxT - minT, 1)
-      const selectedTime = minT + range * (timeTravelPercent / 100)
-
-      visibleNodes = graphData.nodes.filter((n) => {
-        const at = n.data?.created_at
-        if (!at) return true
-        return new Date(at).getTime() <= selectedTime
-      })
-      const visibleIds = new Set(visibleNodes.map((n) => n.id))
-      visibleEdges = graphData.edges.filter(
-        (e) =>
-          visibleIds.has(e.source) &&
-          visibleIds.has(e.target) &&
-          (!e.data?.created_at || new Date(e.data.created_at).getTime() <= selectedTime)
-      )
-    }
-
-    applyGraphToFlow({
-      ...graphData,
-      nodes: visibleNodes,
-      edges: visibleEdges,
-    })
-  }, [graphData, timeTravelPercent])
+    applyGraphToFlow(graphData, { selectedTime })
+  }, [graphData, selectedTime])
 
   React.useEffect(() => {
     if (!open || loading || nodes.length === 0 || !reactFlowInstance) return
@@ -781,43 +781,18 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
               )}
             </div>
 
-            {/* Time-travel slider: show how the web of issues grew over time */}
-            {graphData && !loading && !error && graphData.nodes.length > 0 && (() => {
-              const getT = (c: string | null | undefined) => (c ? new Date(c).getTime() : 0)
-              const ts: number[] = []
-              graphData.nodes.forEach((n) => { const t = getT(n.data?.created_at); if (t > 0) ts.push(t) })
-              graphData.edges.forEach((e) => { const t = getT(e.data?.created_at); if (t > 0) ts.push(t) })
-              const hasTime = ts.length > 0
-              const minT = hasTime ? Math.min(...ts) : 0
-              const maxT = hasTime ? Math.max(...ts) : 0
-              const range = Math.max(maxT - minT, 1)
-              const selectedTime = minT + range * (timeTravelPercent / 100)
-              const asOfDate = hasTime ? new Date(selectedTime) : null
-              return (
-              <div className="shrink-0 border-t border-white/20 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl px-4 py-3 flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <History className="h-4 w-4" />
-                  <span>Time travel</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={timeTravelPercent}
-                  onChange={(e) => setTimeTravelPercent(Number(e.target.value))}
-                  className="flex-1 min-w-[120px] max-w-[400px] h-2 rounded-full appearance-none bg-muted accent-primary cursor-pointer"
-                  aria-label="Slide back in time to see how the graph grew"
-                />
-                <span className="text-xs text-muted-foreground tabular-nums min-w-[140px]">
-                  {timeTravelPercent === 100
-                    ? "Now (full graph)"
-                    : asOfDate
-                      ? `As of ${asOfDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
-                      : `${Math.round(timeTravelPercent)}% of timeline`}
-                </span>
-              </div>
-              )
-            })()}
+            {/* Time-travel: fade (ghost) out-of-range nodes; play/pause; milestone markers */}
+            {graphData && !loading && !error && graphData.nodes.length > 0 && (
+              <TimeTravelBar
+                percent={timeTravelPercent}
+                onPercentChange={setTimeTravelPercent}
+                milestones={milestones}
+                minTime={minT}
+                maxTime={maxT}
+                isPlaying={isPlaying}
+                onPlayPause={togglePlayback}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
