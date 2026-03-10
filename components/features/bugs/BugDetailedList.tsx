@@ -78,7 +78,7 @@ export function BugDetailedList({
 
   const [solutionCounts, setSolutionCounts] = React.useState<Record<string, number>>({})
   const [userInfo, setUserInfo] = React.useState<Record<string, { name?: string; image?: string; reputation?: number }>>({})
-  const [pageSize, setPageSize] = React.useState(15)
+  const [pageSize, setPageSize] = React.useState(10)
   const [currentPage, setCurrentPage] = React.useState(1)
   const [savedBugIds, setSavedBugIds] = React.useState<Set<string>>(new Set())
 

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
 import { cn } from "@/lib"
+import { TagsListSkeleton } from "@/components/features/skeletons/TagsListSkeleton"
 
 interface Tag {
   tag: string
@@ -43,13 +44,7 @@ export function TagsList() {
   }, [tags, searchQuery])
 
   if (loading) {
-    return (
-      <div className="rounded-none border border-border/40 bg-card p-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-sm text-muted-foreground">Loading tags...</div>
-        </div>
-      </div>
-    )
+    return <TagsListSkeleton />
   }
 
   if (tags.length === 0) {

@@ -52,6 +52,8 @@ interface BugExploreListProps {
   currentUserImage?: string
 }
 
+const ALL_ASSIGNEES_VALUE = "__all_assignees__"
+
 export function BugExploreList({
   userId,
   initialTag,
@@ -319,7 +321,7 @@ export function BugExploreList({
 
   // Reusable filter content component
   const FilterContent = () => (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h4 className="font-semibold">Filters</h4>
         {hasActiveFilters() && (
@@ -335,7 +337,7 @@ export function BugExploreList({
       </div>
 
       {/* Status and Priority in columns */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Bug Status */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Bug Status</Label>
@@ -424,11 +426,11 @@ export function BugExploreList({
       <Separator />
 
       {/* Date filters in columns */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Date Created */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Date Created</Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="space-y-1">
               <Label htmlFor="created-from" className="text-xs text-muted-foreground">From</Label>
               <Input
@@ -455,7 +457,7 @@ export function BugExploreList({
         {/* Date Modified */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Date Modified</Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="space-y-1">
               <Label htmlFor="modified-from" className="text-xs text-muted-foreground">From</Label>
               <Input
@@ -486,14 +488,19 @@ export function BugExploreList({
         <div className="space-y-2">
           <Label htmlFor="assignee" className="text-sm font-medium">Assignee</Label>
           <Select
-            value={filters.assignee}
-            onValueChange={(value) => setFilters(prev => ({ ...prev, assignee: value }))}
+            value={filters.assignee || ALL_ASSIGNEES_VALUE}
+            onValueChange={(value) =>
+              setFilters(prev => ({
+                ...prev,
+                assignee: value === ALL_ASSIGNEES_VALUE ? "" : value,
+              }))
+            }
           >
             <SelectTrigger id="assignee" className="h-8">
               <SelectValue placeholder="All assignees" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All assignees</SelectItem>
+              <SelectItem value={ALL_ASSIGNEES_VALUE}>All assignees</SelectItem>
               {availableAssignees.map(assignee => (
                 <SelectItem key={assignee} value={assignee}>
                   {assignee}
@@ -511,7 +518,7 @@ export function BugExploreList({
           <div className="space-y-2">
             <Label className="text-sm font-medium">Tags</Label>
             <div className="max-h-32 overflow-y-auto">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {availableTags.map(tag => (
                   <div key={tag} className="flex items-center space-x-2">
                     <Checkbox
@@ -610,19 +617,21 @@ export function BugExploreList({
         onOpenFilters={() => setFiltersOpen((open) => !open)}
         filtersOpen={filtersOpen}
         renderFiltersPanel={() => (
-          <div className="rounded-none border bg-muted/60 px-4 py-4">
+          <div className="rounded-lg border bg-card px-4 py-4 shadow-sm">
             <FilterContent />
-            <div className="mt-4 flex items-center justify-end gap-2">
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
               <Button
                 type="button"
-                className="px-4"
+                size="sm"
+                className="px-4 rounded-none"
                 onClick={clearAllFilters}
               >
                 Clear filters
               </Button>
               <Button
                 type="button"
-                className="px-4"
+                size="sm"
+                className="px-4 rounded-none"
                 onClick={() => setFiltersOpen(false)}
               >
                 Cancel
@@ -630,7 +639,7 @@ export function BugExploreList({
               <Button
                 type="button"
                 size="sm"
-                className="px-4"
+                className="px-4 rounded-none"
                 onClick={() => {
                   applyFilters()
                   setFiltersOpen(false)

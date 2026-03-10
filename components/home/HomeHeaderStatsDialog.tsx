@@ -58,8 +58,10 @@ function BugRow({
   onClose: () => void
   variant: "unanswered" | "recent"
 }) {
-  const isTruncated = (bug.title?.length ?? 0) > 45
-  const content = (
+  const title = bug.title || "Untitled"
+  const isTruncated = title.length > 45
+
+  return (
     <Link
       href={href}
       className="group flex items-center justify-between gap-2 rounded-lg border border-transparent px-3 py-2.5 hover:bg-muted/60 hover:border-border/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -73,12 +75,37 @@ function BugRow({
               variant === "unanswered" ? "bg-amber-500/80" : "bg-muted-foreground/50 group-hover:bg-primary/50"
             )}
           />
-          <span className={cn(
-            "text-sm font-medium truncate leading-snug",
-            "text-foreground group-hover:text-primary transition-colors"
-          )}>
-            {bug.title || "Untitled"}
-          </span>
+          {isTruncated ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className={cn(
+                    "text-sm font-medium truncate leading-snug",
+                    "text-foreground group-hover:text-primary transition-colors"
+                  )}
+                >
+                  {title}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="start"
+                sideOffset={6}
+                className="max-w-[280px] border border-border/60 bg-popover text-popover-foreground shadow-md"
+              >
+                <p className="text-xs">{title}</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <span
+              className={cn(
+                "text-sm font-medium truncate leading-snug",
+                "text-foreground group-hover:text-primary transition-colors"
+              )}
+            >
+              {title}
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-1.5 pl-3.5">
           {bug.priority && (
@@ -101,18 +128,6 @@ function BugRow({
       <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
     </Link>
   )
-
-  if (isTruncated) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{content}</TooltipTrigger>
-        <TooltipContent side="top" className="max-w-[320px]">
-          <p className="text-xs text-balance">{bug.title}</p>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-  return content
 }
 
 function SectionCard({

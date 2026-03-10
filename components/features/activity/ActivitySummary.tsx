@@ -28,6 +28,14 @@ function typeLabel(type: RecentActivityItem["type"]) {
       return "Vote"
     case "solution_vote":
       return "Vote"
+    case "comment":
+      return "Comment"
+    case "saved_bug":
+      return "Saved"
+    case "cluster_created":
+      return "Cluster"
+    case "cluster_joined":
+      return "Joined"
     default:
       return "Activity"
   }
@@ -118,7 +126,7 @@ export function ActivitySummary({
           </ul>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
-            Your recent bug reports, solutions, and votes will appear here.
+            Your recent actions like reports, solutions, comments, votes, and saved bugs will appear here.
           </p>
         )}
       </div>

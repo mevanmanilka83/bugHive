@@ -7,6 +7,7 @@ import { GraphDialog } from "@/components/features/bugs/GraphDialog"
 import { ChartConfig } from "@/components/ui/chart"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggleGroup"
 import { getSolutionsByUser } from "@/app/actions/bug/BugSolution"
+import { MyBugsListSkeleton } from "@/components/features/skeletons/MyBugsListSkeleton"
 
 interface MyBugsListProps {
   userId: string
@@ -31,7 +32,7 @@ export function MyBugsList({
   const [bugs, setBugs] = React.useState<any[]>([])
   const [graphOpen, setGraphOpen] = React.useState(false)
   const [chartData, setChartData] = React.useState<Array<{ date: string; count: number }>>([])
-  const [loading, setLoading] = React.useState(false)
+  const [loading, setLoading] = React.useState(true)
   const [internalVisibilityFilter, setInternalVisibilityFilter] = React.useState<"private" | "public" | "cluster-private" | "cluster-public">("private")
 
   const chartConfig: ChartConfig = {
@@ -176,7 +177,17 @@ export function MyBugsList({
     <div>
       <div className="mb-4 flex flex-col gap-2 sm:items-start">
         <p className="text-sm text-muted-foreground">
-          {filteredBugs.length} {visibilityLabelMap[activeVisibilityFilter]} bug{filteredBugs.length !== 1 ? "s" : ""}
+          {loading
+            ? activeVisibilityFilter === "private"
+              ? "Loading your private bugs…"
+              : activeVisibilityFilter === "public"
+                ? "Loading your public bugs…"
+                : activeVisibilityFilter === "cluster-private"
+                  ? "Loading your private cluster bugs…"
+                  : "Loading your public cluster bugs…"
+            : `${filteredBugs.length} ${visibilityLabelMap[activeVisibilityFilter]} bug${
+                filteredBugs.length !== 1 ? "s" : ""
+              }`}
         </p>
         {showVisibilityToggle && (
           <div className="grid w-full gap-2 sm:max-w-xl">
@@ -239,16 +250,20 @@ export function MyBugsList({
           </div>
         )}
       </div>
-      <BugDetailedList
-        userId={userId}
-        bugs={filteredBugs}
-        onBugClick={openBugDetails}
-        totalCount={filteredBugs.length}
-        showTitle={false}
-        showReportButton={showReportButton}
-        currentUserName={currentUserName}
-        currentUserImage={currentUserImage}
-      />
+      {loading ? (
+        <MyBugsListSkeleton mode={activeVisibilityFilter} />
+      ) : (
+        <BugDetailedList
+          userId={userId}
+          bugs={filteredBugs}
+          onBugClick={openBugDetails}
+          totalCount={filteredBugs.length}
+          showTitle={false}
+          showReportButton={showReportButton}
+          currentUserName={currentUserName}
+          currentUserImage={currentUserImage}
+        />
+      )}
 
       <GraphDialog
         open={graphOpen}
