@@ -177,9 +177,6 @@ export function DuplicateRadar({ title, description, tags = [], className }: Pro
                           const commentBody = [
                             "Me too – same issue.",
                             "",
-                            `Title: ${title}`,
-                            "",
-                            "Details:",
                             plainDescription.slice(0, 2000),
                           ].join("\n")
                           const res = await fetch(`/api/bugs/${bugId}/comments`, {

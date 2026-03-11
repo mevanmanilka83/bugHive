@@ -395,9 +395,9 @@ export function BugDetailedList({
                   {displayCount.toLocaleString()} bugs
                 </p>
 
-                {/* Tabs group – horizontal scroll on mobile */}
+                {/* Tabs group – wraps on small screens, inline on larger */}
                 <div className="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
-                  <div className="inline-flex flex-nowrap items-center gap-1 rounded-none border bg-background px-1 py-1 min-w-0">
+                  <div className="flex flex-wrap sm:inline-flex sm:flex-nowrap items-center gap-1 rounded-none border bg-background px-1 py-1 min-w-0">
                     <button
                       className={cn(
                         "px-3 py-1.5 text-sm font-normal rounded-none transition-colors cursor-pointer",

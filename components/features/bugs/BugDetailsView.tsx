@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { IconBulb, IconChevronDown, IconEye, IconShare3, IconCheck, IconMessageCircle } from "@tabler/icons-react"
 import { stripHtml, stripMarkdownBold, cn } from "@/lib"
+import { getSupabaseBrowser } from "@/lib/realtime/supabaseBrowser"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,8 +73,30 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const [verifyingId, setVerifyingId] = React.useState<string | null>(null)
   const [solutionsLoading, setSolutionsLoading] = React.useState(true)
   const [solutionSortBy, setSolutionSortBy] = React.useState<SolutionSortOption>("newest")
-  const [comments, setComments] = React.useState<{ id: string; content: string; created_at: string }[]>([])
+  const [comments, setComments] = React.useState<Array<{
+    id: string
+    content: string
+    created_at: string
+    user_id?: string | null
+    author_name?: string | null
+    author_image?: string | null
+    reactions?: Array<{ emoji: string; count: number }>
+    my_reactions?: string[]
+  }>>([])
   const [commentsLoading, setCommentsLoading] = React.useState(true)
+
+  const REACTION_EMOJIS = ["👍", "🎉", "👀", "❤️"] as const
+
+  const formatCommentBody = React.useCallback((raw: string): string => {
+    let text = stripMarkdownBold(stripHtml(raw))
+    const meTooPrefix = "Me too – same issue."
+    if (text.startsWith(meTooPrefix) && text.includes("Title:") && text.includes("Details:")) {
+      const detailsIdx = text.indexOf("Details:")
+      const afterDetails = text.slice(detailsIdx + "Details:".length).trim()
+      text = afterDetails ? `${meTooPrefix} ${afterDetails}` : meTooPrefix
+    }
+    return text
+  }, [])
 
   const copyToClipboard = React.useCallback(async (text: string) => {
     try {
@@ -174,6 +197,96 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
     window.addEventListener("bug:comment-added", onComment)
     return () => window.removeEventListener("bug:comment-added", onComment)
   }, [currentBug.id, fetchComments])
+
+  // Realtime: live comments + reactions (war room)
+  React.useEffect(() => {
+    const supabase = getSupabaseBrowser()
+    if (!supabase) return
+
+    const commentsChannel = supabase
+      .channel(`bug-comments:${currentBug.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "bug_comments", filter: `bug_id=eq.${currentBug.id}` },
+        () => {
+          // refresh to include reaction aggregates + my_reactions
+          fetchComments()
+        }
+      )
+      .subscribe()
+
+    const reactionsChannel = supabase
+      .channel(`comment-reactions:${currentBug.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comment_reactions" },
+        () => {
+          fetchComments()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(commentsChannel)
+      supabase.removeChannel(reactionsChannel)
+    }
+  }, [currentBug.id, fetchComments])
+
+  const toggleReaction = React.useCallback(
+    async (commentId: string, emoji: (typeof REACTION_EMOJIS)[number]) => {
+      // Optimistic update: enforce 1 reaction per user per comment
+      setComments((prev) =>
+        prev.map((c) => {
+          if (c.id !== commentId) return c
+          const currentMine = new Set(c.my_reactions ?? [])
+          const reactions = new Map((c.reactions ?? []).map((r) => [r.emoji, r.count]))
+
+          const hadEmoji = currentMine.has(emoji)
+          // Remove all my previous reactions from counts
+          for (const e of currentMine) {
+            const count = reactions.get(e) ?? 0
+            if (count <= 1) reactions.delete(e)
+            else reactions.set(e, count - 1)
+          }
+
+          if (hadEmoji) {
+            // Toggled off: no reactions left for this user
+            return {
+              ...c,
+              reactions: Array.from(reactions, ([e, count]) => ({ emoji: e, count })),
+              my_reactions: [],
+            }
+          }
+
+          // Toggled on: only this emoji remains for this user
+          const nextCount = (reactions.get(emoji) ?? 0) + 1
+          reactions.set(emoji, nextCount)
+          return {
+            ...c,
+            reactions: Array.from(reactions, ([e, count]) => ({ emoji: e, count })),
+            my_reactions: [emoji],
+          }
+        })
+      )
+
+      try {
+        const res = await fetch(`/api/comments/${commentId}/reactions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emoji }),
+        })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body?.error || "Failed to react")
+        }
+      } catch (e) {
+        // Roll back on failure by refetching
+        fetchComments()
+        toast.error(e instanceof Error ? e.message : "Failed to react")
+      }
+    },
+    [fetchComments]
+  )
 
   React.useEffect(() => {
     const onCreated = (e: Event) => {
@@ -368,10 +481,62 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
           <div className="divide-y">
             {comments.map((c) => (
               <div key={c.id} className="px-4 py-3 md:px-6">
-                <p className="text-sm whitespace-pre-wrap break-words">{stripMarkdownBold(stripHtml(c.content))}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatCommentDate(c.created_at)}
-                </p>
+                <div className="flex items-start gap-3">
+                  <Avatar className="size-7">
+                    {c.author_image ? (
+                      <AvatarImage src={c.author_image} alt={c.author_name ?? "User"} />
+                    ) : (
+                      <AvatarFallback className="text-[11px]">
+                        {(c.author_name || "?").slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      {c.author_name && (
+                        <span className="text-sm font-medium text-[var(--brand-blue)]">
+                          {c.author_name}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm whitespace-pre-wrap break-words">
+                      {formatCommentBody(c.content)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatCommentDate(c.created_at)}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {REACTION_EMOJIS.map((emoji) => {
+                        const count = (c.reactions ?? []).find((r) => r.emoji === emoji)?.count ?? 0
+                        const mine = (c.my_reactions ?? []).includes(emoji)
+                        return (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => toggleReaction(c.id, emoji)}
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-none border px-2 py-1 text-xs transition-colors",
+                              mine ? "bg-primary text-primary-foreground border-primary/50" : "bg-background hover:bg-muted"
+                            )}
+                            aria-label={`React ${emoji}`}
+                          >
+                            <span>{emoji}</span>
+                            {count > 0 ? (
+                              <span
+                                className={cn(
+                                  "tabular-nums",
+                                  mine ? "text-primary-foreground/90" : "text-muted-foreground"
+                                )}
+                              >
+                                {count}
+                              </span>
+                            ) : null}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
