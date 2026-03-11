@@ -6,21 +6,34 @@ import { Button } from "@/components/ui/button"
 import { BugReportDialog } from "@/components/features/bugs/reports/BugReportDialog"
 import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 
-type HomeProps = { searchParams?: Promise<{ tag?: string }> }
+type HomeProps = { searchParams?: Promise<{ tag?: string; tags?: string }> }
 
 export default async function Home({ searchParams }: HomeProps) {
   const session = await auth()
   const userId = session?.user?.id ?? ""
   const params = searchParams ? await searchParams : {}
   const initialTag = typeof params?.tag === "string" && params.tag.trim() ? params.tag.trim() : undefined
+  const initialTags =
+    typeof params?.tags === "string" && params.tags.trim()
+      ? Array.from(
+          new Set(
+            params.tags
+              .split(",")
+              .map((t) => decodeURIComponent(t).trim())
+              .filter(Boolean)
+          )
+        )
+      : undefined
+
+  const hasTagFilter = Boolean(initialTag) || (Array.isArray(initialTags) && initialTags.length > 0)
 
   return (
     <PublicPageLayout
       session={session}
-      sidebarActive={initialTag ? "tags" : "public"}
+      sidebarActive={hasTagFilter ? "tags" : "public"}
       useAuthFallback
     >
-      {initialTag ? (
+      {hasTagFilter ? (
         <div className="mb-4">
           <Button variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground" asChild>
             <Link href="/tags" className="inline-flex items-center gap-2">
@@ -34,10 +47,14 @@ export default async function Home({ searchParams }: HomeProps) {
       <div className="rounded-lg border border-border/40 bg-card p-6 mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="mb-1 text-xl font-semibold sm:text-2xl">
-            {initialTag ? `Bugs tagged with "${initialTag}"` : "Newest Bugs"}
+            {hasTagFilter
+              ? Array.isArray(initialTags) && initialTags.length > 0
+                ? `Bugs tagged with ${initialTags.length} tag${initialTags.length === 1 ? "" : "s"}`
+                : `Bugs tagged with "${initialTag}"`
+              : "Newest Bugs"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {initialTag
+            {hasTagFilter
               ? "Bugs filtered by this tag. Clear filters to see all."
               : "Discover real bugs reported by the BugHive community."}
           </p>
@@ -63,6 +80,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <BugExploreList
         userId={userId}
         initialTag={initialTag}
+        initialTags={initialTags}
         showTitle={false}
         showReportButton={false}
         currentUserName={session?.user?.name ?? session?.user?.email ?? undefined}

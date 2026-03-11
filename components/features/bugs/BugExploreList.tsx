@@ -46,6 +46,8 @@ interface BugExploreListProps {
   userId: string
   /** When set (e.g. from /?tag=...), bugs are filtered to those with this tag. */
   initialTag?: string
+  /** When set (e.g. from /?tags=tag1,tag2), bugs are filtered to those with any of these tags. */
+  initialTags?: string[]
   showTitle?: boolean
   showReportButton?: boolean
   currentUserName?: string
@@ -57,6 +59,7 @@ const ALL_ASSIGNEES_VALUE = "__all_assignees__"
 export function BugExploreList({
   userId,
   initialTag,
+  initialTags,
   showTitle = true,
   showReportButton = true,
   currentUserName,
@@ -74,7 +77,7 @@ export function BugExploreList({
   const [filters, setFilters] = React.useState<FilterState>({
     status: [],
     priority: [],
-    tags: initialTag ? [initialTag] : [],
+    tags: Array.isArray(initialTags) && initialTags.length > 0 ? initialTags : (initialTag ? [initialTag] : []),
     browser: "",
     os: "",
     device: "",
@@ -239,14 +242,17 @@ export function BugExploreList({
     fetchBugs()
   }, [])
 
-  // Sync tag filter from URL when initialTag changes (e.g. user clicked a tag on /tags)
+  // Sync tag filter from URL when initialTag(s) change (e.g. user clicked tag(s) on /tags)
   React.useEffect(() => {
-    if (initialTag && initialTag.trim()) {
-      setFilters((prev) =>
-        prev.tags.includes(initialTag) ? prev : { ...prev, tags: [initialTag] }
-      )
+    const cleaned =
+      Array.isArray(initialTags) && initialTags.length > 0
+        ? Array.from(new Set(initialTags.map((t) => (t || "").trim()).filter(Boolean)))
+        : (initialTag && initialTag.trim() ? [initialTag.trim()] : [])
+
+    if (cleaned.length > 0) {
+      setFilters((prev) => ({ ...prev, tags: cleaned }))
     }
-  }, [initialTag])
+  }, [initialTag, initialTags])
 
   React.useEffect(() => {
     if (allBugs.length > 0) {

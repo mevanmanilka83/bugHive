@@ -2,12 +2,14 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
 import { cn } from "@/lib"
 import { TagsListSkeleton } from "@/components/features/skeletons/TagsListSkeleton"
+import AnimatedTags from "@/components/features/tags/AnimatedTags"
 
 interface Tag {
   tag: string
@@ -15,9 +17,35 @@ interface Tag {
 }
 
 export function TagsList() {
+  const router = useRouter()
   const [tags, setTags] = React.useState<Tag[]>([])
   const [loading, setLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState("")
+  const selectedTags = React.useMemo(() => {
+    return Array.from(
+      new Set(
+        searchQuery
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      )
+    )
+  }, [searchQuery])
+
+  const filterToken = React.useMemo(() => {
+    const parts = searchQuery.split(",")
+    return (parts[parts.length - 1] || "").trim()
+  }, [searchQuery])
+
+  const handleSearchBugs = React.useCallback(() => {
+    if (selectedTags.length === 0) return
+    if (selectedTags.length === 1) {
+      router.push(`/?tag=${encodeURIComponent(selectedTags[0])}`)
+      return
+    }
+    const encoded = selectedTags.map((t) => encodeURIComponent(t)).join(",")
+    router.push(`/?tags=${encoded}`)
+  }, [router, selectedTags])
 
   React.useEffect(() => {
     async function fetchTags() {
@@ -38,10 +66,10 @@ export function TagsList() {
   }, [])
 
   const filteredTags = React.useMemo(() => {
-    if (!searchQuery.trim()) return tags
-    const query = searchQuery.toLowerCase().trim()
+    if (!filterToken) return tags
+    const query = filterToken.toLowerCase().trim()
     return tags.filter((t) => t.tag.toLowerCase().trim().includes(query))
-  }, [tags, searchQuery])
+  }, [tags, filterToken])
 
   if (loading) {
     return <TagsListSkeleton />
@@ -70,6 +98,12 @@ export function TagsList() {
           placeholder="Search by tag name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+              handleSearchBugs()
+            }
+          }}
           className="pl-10 pr-10"
           aria-label="Search tags"
         />
@@ -97,27 +131,39 @@ export function TagsList() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-3">
-            {filteredTags.map(({ tag, count }) => {
-              const slug = (tag || "").trim() || tag
-              return (
-                <Link
-                  key={tag}
-                  href={`/?tag=${encodeURIComponent(slug)}`}
-                  className={cn(
-                    "inline-flex items-center gap-2 !rounded-none border px-3 py-1.5 text-sm",
-                    "transition-colors hover:bg-muted hover:border-primary/50",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  )}
-                >
-                  <span className="font-medium">{tag}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {count}
-                  </Badge>
-                </Link>
-              )
-            })}
-          </div>
+          <>
+            <AnimatedTags
+              initialTags={filteredTags.map((t) => t.tag)}
+              showSelected={false}
+              counts={Object.fromEntries(tags.map((t) => [t.tag, t.count]))}
+              onAddTag={(tag) => {
+                setSearchQuery((prev) => {
+                  const existing = prev
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean)
+
+                  if (existing.includes(tag)) return prev
+
+                  const next = [...existing, tag]
+                  // Keep a trailing comma + space so the last token is empty,
+                  // which shows all tags again and lets the user type a new filter.
+                  return `${next.join(", ")}, `
+                })
+              }}
+            />
+            <div className="mt-4 flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                className="rounded-none px-4"
+                disabled={selectedTags.length === 0}
+                onClick={handleSearchBugs}
+              >
+                Search bugs
+              </Button>
+            </div>
+          </>
         )}
       </div>
 
