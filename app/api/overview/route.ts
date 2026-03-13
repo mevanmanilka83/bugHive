@@ -25,6 +25,7 @@ export async function GET() {
       solutionsRes,
       bugUpvotesRes,
       solutionUpvotesRes,
+      commentsRes,
       clustersRes,
       unansweredBugsRes,
       recentBugsRes,
@@ -33,6 +34,7 @@ export async function GET() {
       supabase.from("bug_solution_details").select("id", { count: "exact", head: true }),
       supabase.from("bug_votes").select("id", { count: "exact", head: true }).eq("vote_type", "upvote"),
       supabase.from("solution_votes").select("id", { count: "exact", head: true }).eq("vote_type", "upvote"),
+      supabase.from("bug_comments").select("id", { count: "exact", head: true }),
       supabase.from("clusters").select("id, name").limit(10),
       supabase.rpc("get_unanswered_bugs", { lim: 5 }),
       supabase.from("bugs").select("id, title, priority, status, created_at").order("created_at", { ascending: false }).limit(5),
@@ -42,6 +44,7 @@ export async function GET() {
     const answers = solutionsRes.count ?? 0
     const bugUpvotes = bugUpvotesRes.count ?? 0
     const solutionUpvotes = solutionUpvotesRes.count ?? 0
+    const comments = commentsRes.count ?? 0
     const upvotes = bugUpvotes + solutionUpvotes
 
     const clusters = (clustersRes.data ?? []).map((c: { id: string; name: string }) => ({
@@ -82,7 +85,7 @@ export async function GET() {
       stats: {
         questions,
         answers,
-        comments: 0,
+        comments,
         upvotes,
         usersOnline: null,
       },

@@ -12,6 +12,7 @@ type GraphItem = {
   description?: string | null
   is_public?: boolean
   updated_at?: string | null
+  origin_cluster_id?: string | null
 }
 
 export function WorkspaceGraphList({

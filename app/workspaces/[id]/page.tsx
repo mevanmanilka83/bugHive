@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { requireAuthForPage, getSupabaseAdmin } from "@/lib"
+import { requireAuthForPage, getSupabaseAdmin, isClusterOwnerOrMember } from "@/lib"
 import { notFound } from "next/navigation"
 import { WorkspaceCanvas } from "@/components/features/workspaces/WorkspaceCanvas"
 import { CopyGraphButton } from "@/components/features/workspaces/CopyGraphButton"
@@ -21,12 +21,20 @@ export default async function WorkspacePage({ params }: { params: Promise<{ id: 
         notFound()
     }
 
-    if (workspace.user_id !== session.user.id && !workspace.is_public) {
-        notFound() // unauthorized viewing private graphs of others
-    }
-
     const isOwner = workspace.user_id === session.user.id
     const isPublic = Boolean(workspace.is_public)
+
+    let isClusterMember = false
+    if (workspace.origin_cluster_id) {
+        isClusterMember = await isClusterOwnerOrMember(session.user.id, workspace.origin_cluster_id)
+    }
+
+    const canView = isPublic || isOwner || isClusterMember
+    if (!canView) {
+        notFound()
+    }
+
+    const canEdit = isOwner || isClusterMember
 
     return (
         <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
@@ -48,11 +56,12 @@ export default async function WorkspacePage({ params }: { params: Promise<{ id: 
             </header>
             <main className="flex-1 w-full relative">
                 <WorkspaceCanvas
-                initialWorkspace={workspace}
-                isOwner={isOwner}
-                userId={session.user.id}
-                userName={session.user.name ?? session.user.email ?? "Anonymous"}
-              />
+                    initialWorkspace={workspace}
+                    isOwner={isOwner}
+                    canEdit={canEdit}
+                    userId={session.user.id}
+                    userName={session.user.name ?? session.user.email ?? "Anonymous"}
+                />
             </main>
         </div>
     )

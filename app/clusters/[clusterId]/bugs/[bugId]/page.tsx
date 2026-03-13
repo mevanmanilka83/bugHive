@@ -4,6 +4,7 @@ import { incrementViewCount } from "@/lib"
 import { BugDetailsView } from "@/components/features/bugs/BugDetailsView"
 import { RelatedBugsPanel } from "@/components/features/bugs/RelatedBugsPanel"
 import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
+import { GraphButton } from "@/components/features/bugs/GraphButton"
 import { notFound, redirect } from "next/navigation"
 
 export default async function ClusterBugDetailsPage({
@@ -47,12 +48,15 @@ export default async function ClusterBugDetailsPage({
       sidebarActive="clusters"
       aside={<RelatedBugsPanel bugId={bug.id} context="cluster" />}
     >
-      <Link
-        href={`/clusters/${clusterId}`}
-        className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block"
-      >
-        &larr; Back to Cluster
-      </Link>
+      <div className="flex items-center justify-between mb-6">
+        <Link
+          href={`/clusters/${clusterId}`}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          &larr; Back to Cluster
+        </Link>
+        <GraphButton bugId={bug.id} />
+      </div>
       <BugDetailsView bug={bug} userId={session?.user?.id} />
     </PublicPageLayout>
   )

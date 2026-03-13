@@ -182,6 +182,18 @@ export {
 export { buildBugSubgraph } from "./graph/buildSubgraph"
 
 // ============================================================================
+// WORKSPACES
+// ============================================================================
+
+export {
+  WORKSPACE_VIEW_TYPE_VALUES,
+  WORKSPACE_VIEW_TYPE_CATALOG,
+  WORKSPACE_VIEW_TYPE_LOOKUP,
+  normalizeWorkspaceViewType,
+} from "./workspaces/viewTypes"
+export type { WorkspaceViewType, WorkspaceViewTypeDefinition } from "./workspaces/viewTypes"
+
+// ============================================================================
 // VIEWS
 // ============================================================================
 

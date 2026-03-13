@@ -1,16 +1,35 @@
 import { NextResponse } from "next/server"
-import { getSupabaseAdmin, getAuthenticatedUserId, supabase } from "@/lib"
+import { getSupabaseAdmin, getAuthenticatedUserId, supabase, isClusterOwnerOrMember } from "@/lib"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params
-        const { data, error } = await (supabase as any).from("saved_graphs").select("*").eq("id", id).single()
+        const { data, error } = await (supabase as any)
+            .from("saved_graphs")
+            .select("*")
+            .eq("id", id)
+            .single()
 
         if (error || !data) {
             return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
         }
 
-        // Add an isOwner check optionally based on auth (simplifying since RLS handles read restrictions mostly)
+        const userId = await getAuthenticatedUserId()
+
+        const isOwner = userId && data.user_id === userId
+        const isPublic = Boolean(data.is_public)
+        let isClusterMember = false
+
+        if (data.origin_cluster_id && userId) {
+            isClusterMember = await isClusterOwnerOrMember(userId, data.origin_cluster_id)
+        }
+
+        const canView = isPublic || isOwner || isClusterMember
+
+        if (!canView) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        }
+
         return NextResponse.json({ success: true, workspace: data })
     } catch (e: any) {
         return NextResponse.json({ error: e.message || "Failed to load workspace" }, { status: 500 })
@@ -26,11 +45,25 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const body = await request.json()
         const { title, description, nodes, edges } = body
 
-        // Validate Ownership before update via admin or RLS authenticated client
+        // Validate permissions (owner or cluster member) before update
         const supabaseAdmin = await getSupabaseAdmin()
 
-        const { data: ws } = await (supabaseAdmin as any).from("saved_graphs").select("user_id").eq("id", id).single()
-        if (!ws || ws.user_id !== userId) {
+        const { data: ws } = await (supabaseAdmin as any)
+            .from("saved_graphs")
+            .select("user_id, origin_cluster_id")
+            .eq("id", id)
+            .single()
+
+        if (!ws) {
+            return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
+        }
+
+        let canEdit = ws.user_id === userId
+        if (!canEdit && ws.origin_cluster_id) {
+            canEdit = await isClusterOwnerOrMember(userId, ws.origin_cluster_id)
+        }
+
+        if (!canEdit) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 })
         }
 

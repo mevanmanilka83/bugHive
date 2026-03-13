@@ -1,13 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getSupabaseAdmin, getAuthenticatedUserId, generateChatCompletion } from "@/lib"
+import {
+  getSupabaseAdmin,
+  getAuthenticatedUserId,
+  generateChatCompletion,
+  WORKSPACE_VIEW_TYPE_CATALOG,
+  normalizeWorkspaceViewType,
+  type WorkspaceViewType,
+} from "@/lib"
 
 export const runtime = "nodejs"
 
 type Body = { bugIds: string[] }
 
+type WorkspaceIdeaSuggestion = {
+  kind: "idea" | "solution" | "fix"
+  title: string
+  content: string
+  viewType: WorkspaceViewType
+}
+
 /**
  * POST /api/ai-generate-workspace-ideas
- * Analyzes bugs in the graph and returns AI-generated idea/solution suggestions.
+ * Analyzes bugs in the graph and returns AI-generated idea/solution suggestions
+ * grounded in supported BugHive workspace view types.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -34,7 +49,9 @@ export async function POST(req: NextRequest) {
     const supabase = await getSupabaseAdmin()
     const { data: bugs } = await (supabase as any)
       .from("bugs")
-      .select("id, title, description, steps_to_reproduce, expected_behavior, actual_behavior")
+      .select(
+        "id, title, description, steps_to_reproduce, expected_behavior, actual_behavior, priority, status, created_at, visibility, cluster_id, upvotes_count"
+      )
       .in("id", bugIds)
 
     if (!bugs?.length) {
@@ -45,29 +62,66 @@ export async function POST(req: NextRequest) {
     }
 
     const bugSummaries = bugs.map(
-      (b: { title: string; description?: string; steps_to_reproduce?: string; expected_behavior?: string; actual_behavior?: string }) => {
+      (b: {
+        title: string
+        description?: string
+        steps_to_reproduce?: string
+        expected_behavior?: string
+        actual_behavior?: string
+        priority?: string
+        status?: string
+        created_at?: string
+        visibility?: string
+        cluster_id?: string | null
+        upvotes_count?: number
+      }) => {
         const parts = [
           `Title: ${b.title}`,
           b.description && `Description: ${b.description}`,
           b.steps_to_reproduce && `Steps: ${b.steps_to_reproduce}`,
           b.expected_behavior && `Expected: ${b.expected_behavior}`,
           b.actual_behavior && `Actual: ${b.actual_behavior}`,
+          b.priority && `Priority: ${b.priority}`,
+          b.status && `Status: ${b.status}`,
+          b.created_at && `Created: ${b.created_at}`,
+          b.visibility && `Visibility: ${b.visibility}`,
+          b.cluster_id && `Cluster: ${b.cluster_id}`,
+          typeof b.upvotes_count === "number" && `Upvotes: ${b.upvotes_count}`,
         ].filter(Boolean)
         return parts.join("\n")
       }
     )
 
+    const supportedViewsText = WORKSPACE_VIEW_TYPE_CATALOG.map((view) => {
+      const notes = view.notes?.length ? ` Notes: ${view.notes.join(" ")}` : ""
+      return [
+        `- ${view.value} (${view.label})`,
+        `  Show: ${view.whatToShow.join("; ")}`,
+        `  Data: ${view.dataSources.join("; ")}`,
+        `  Usage: ${view.usage}`,
+        notes && `  ${notes.trim()}`,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    }).join("\n")
+
     const systemPrompt = `You are a technical support assistant for BugHive. Given one or more bug reports from a relationship graph, suggest 2-4 potential ideas, solutions, or fixes that could address these bugs.
+Every suggestion must also recommend the best supported BugHive view type for exploring or presenting the idea.
 Return a JSON object with this exact structure:
 {
   "suggestions": [
-    { "kind": "idea" | "solution" | "fix", "title": "Brief title (5-12 words)", "content": "2-5 sentences with actionable details, implementation hints, or approach" },
+    { "kind": "idea" | "solution" | "fix", "title": "Brief title (5-12 words)", "content": "2-5 sentences with actionable details, implementation hints, or approach", "viewType": "timeline" | "bar" | "line" | "stacked-area" | "heatmap" | "network" | "scatter" | "donut" | "kanban" | "hierarchy" },
     ...
   ]
 }
 - "idea": exploratory notes, hypotheses, or investigation directions
 - "solution": concrete fix or workaround
 - "fix": implementation-focused solution
+Choose a view type that matches the suggestion and BugHive's current data model. If a suggestion depends on lifecycle timestamps not explicitly present, prefer views that work with available data today unless the suggestion is specifically about adding that missing tracking.
+
+Supported BugHive workspace views:
+${supportedViewsText}
+
 Be practical and specific. Only return valid JSON.`
 
     const userPrompt = `Analyze these bug(s) and suggest ideas/solutions:\n\n${bugSummaries.join("\n\n---\n\n")}`
@@ -88,7 +142,7 @@ Be practical and specific. Only return valid JSON.`
     // Extract JSON from response (handles markdown code blocks or extra text)
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     const jsonStr = jsonMatch ? jsonMatch[0] : raw
-    let parsed: { suggestions?: Array<{ kind?: string; title?: string; content?: string }> }
+    let parsed: { suggestions?: Array<{ kind?: string; title?: string; content?: string; viewType?: string }> }
     try {
       parsed = JSON.parse(jsonStr)
     } catch (parseErr) {
@@ -100,16 +154,20 @@ Be practical and specific. Only return valid JSON.`
     }
 
     const validKinds = ["idea", "solution", "fix"]
-    const suggestions = (parsed.suggestions ?? [])
+    const suggestions: WorkspaceIdeaSuggestion[] = (parsed.suggestions ?? [])
       .filter((s) => s.title && s.content)
       .map((s) => ({
-        kind: validKinds.includes(s.kind ?? "") ? s.kind : "idea",
+        kind: (validKinds.includes(s.kind ?? "") ? s.kind : "idea") as WorkspaceIdeaSuggestion["kind"],
         title: String(s.title).trim(),
         content: String(s.content).trim(),
+        viewType: normalizeWorkspaceViewType(s.viewType),
       }))
       .slice(0, 4)
 
-    return NextResponse.json({ suggestions })
+    return NextResponse.json({
+      suggestions,
+      supportedViewTypes: WORKSPACE_VIEW_TYPE_CATALOG,
+    })
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error"
     console.error("AI generate workspace ideas error:", msg, error)

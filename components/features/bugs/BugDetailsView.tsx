@@ -4,13 +4,15 @@ import * as React from "react"
 import Link from "next/link"
 import { BugDetailsForm } from "@/components/features/bugs/BugDetailsForm"
 import { BugDescriptionContent } from "@/components/features/bugs/BugDescriptionContent"
+import { BugCommentForm } from "@/components/features/bugs/BugCommentForm"
 import { SolutionDialog } from "@/components/features/bugs/solutions/BugReportSolutionDialog"
 import { VoteButtons } from "@/components/features/bugs/VoteButtons"
 import { SolutionVoteButtons } from "@/components/features/bugs/solutions/SolutionVoteButtons"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
-import { IconBulb, IconChevronDown, IconEye, IconShare3, IconCheck, IconMessageCircle } from "@tabler/icons-react"
+import { IconBulb, IconChevronDown, IconEye, IconShare3, IconCheck, IconMessageCircle, IconTrash } from "@tabler/icons-react"
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { stripHtml, stripMarkdownBold, cn } from "@/lib"
 import { getSupabaseBrowser } from "@/lib/realtime/supabaseBrowser"
 import {
@@ -84,6 +86,8 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
     my_reactions?: string[]
   }>>([])
   const [commentsLoading, setCommentsLoading] = React.useState(true)
+  const [commentToDelete, setCommentToDelete] = React.useState<string | null>(null)
+  const [isDeletingComment, setIsDeletingComment] = React.useState(false)
 
   const REACTION_EMOJIS = ["👍", "🎉", "👀", "❤️"] as const
 
@@ -287,6 +291,32 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
     },
     [fetchComments]
   )
+
+  const handleDeleteComment = React.useCallback(async (commentId: string) => {
+    setCommentToDelete(commentId)
+  }, [])
+
+  const confirmDeleteComment = React.useCallback(async () => {
+    if (!commentToDelete) return
+
+    setIsDeletingComment(true)
+    try {
+      const res = await fetch(`/api/comments/${commentToDelete}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to delete comment")
+      }
+      toast.success("Comment deleted")
+      setCommentToDelete(null)
+      fetchComments()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete comment")
+    } finally {
+      setIsDeletingComment(false)
+    }
+  }, [commentToDelete, fetchComments])
 
   React.useEffect(() => {
     const onCreated = (e: Event) => {
@@ -492,11 +522,22 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                     )}
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      {c.author_name && (
-                        <span className="text-sm font-medium text-[var(--brand-blue)]">
-                          {c.author_name}
-                        </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {c.author_name && (
+                          <span className="text-sm font-medium text-[var(--brand-blue)]">
+                            {c.author_name}
+                          </span>
+                        )}
+                      </div>
+                      {userId && c.user_id === userId && (
+                        <button
+                          onClick={() => handleDeleteComment(c.id)}
+                          className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+                          title="Delete comment"
+                        >
+                          <IconTrash className="size-3.5" />
+                        </button>
                       )}
                     </div>
                     <p className="mt-1 text-sm whitespace-pre-wrap break-words">
@@ -515,7 +556,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                             type="button"
                             onClick={() => toggleReaction(c.id, emoji)}
                             className={cn(
-                              "inline-flex items-center gap-1 rounded-none border px-2 py-1 text-xs transition-colors",
+                              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition-colors",
                               mine ? "bg-primary text-primary-foreground border-primary/50" : "bg-background hover:bg-muted"
                             )}
                             aria-label={`React ${emoji}`}
@@ -541,6 +582,13 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
             ))}
           </div>
         )}
+        <div className="px-4 py-4 md:px-6 border-t bg-muted/5">
+          <BugCommentForm
+            bugId={currentBug.id}
+            userId={userId ?? undefined}
+            onCommentAdded={fetchComments}
+          />
+        </div>
       </div>
 
       <div className="mt-16 rounded-lg border bg-card">
@@ -845,6 +893,16 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
           }}
         />
       )}
+
+      <ConfirmationDialog
+        open={!!commentToDelete}
+        onOpenChange={(open) => !open && setCommentToDelete(null)}
+        onConfirm={confirmDeleteComment}
+        title="Delete Comment"
+        description="Are you sure you want to delete this comment? This action cannot be undone."
+        confirmText="Delete"
+        loading={isDeletingComment}
+      />
     </>
   )
 }

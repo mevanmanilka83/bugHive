@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getSupabaseAdmin, getAuthenticatedUserId } from "@/lib"
+import { getSupabaseAdmin, getAuthenticatedUserId, isClusterOwnerOrMember } from "@/lib"
 
 /**
  * GET /api/workspaces/[id]/ideas
@@ -15,7 +15,7 @@ export async function GET(
 
     const { data: graph } = await (supabase as any)
       .from("saved_graphs")
-      .select("id, user_id, is_public")
+      .select("id, user_id, is_public, origin_cluster_id")
       .eq("id", id)
       .single()
 
@@ -24,7 +24,11 @@ export async function GET(
     }
 
     const userId = await getAuthenticatedUserId()
-    const canView = graph.is_public || (userId && graph.user_id === userId)
+    let isClusterMember = false
+    if (graph.origin_cluster_id && userId) {
+      isClusterMember = await isClusterOwnerOrMember(userId, graph.origin_cluster_id)
+    }
+    const canView = graph.is_public || (userId && graph.user_id === userId) || isClusterMember
     if (!canView) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
@@ -68,12 +72,21 @@ export async function POST(
 
     const { data: graph, error: fetchErr } = await (supabase as any)
       .from("saved_graphs")
-      .select("id, user_id")
+      .select("id, user_id, origin_cluster_id")
       .eq("id", id)
       .single()
 
-    if (fetchErr || !graph || graph.user_id !== userId) {
-      return NextResponse.json({ error: "Graph not found or you are not the owner" }, { status: 403 })
+    if (fetchErr || !graph) {
+      return NextResponse.json({ error: "Graph not found" }, { status: 404 })
+    }
+
+    let canEdit = graph.user_id === userId
+    if (!canEdit && graph.origin_cluster_id) {
+      canEdit = await isClusterOwnerOrMember(userId, graph.origin_cluster_id)
+    }
+
+    if (!canEdit) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const { data: idea, error: insertErr } = await (supabase as any)
@@ -122,12 +135,21 @@ export async function DELETE(
     // Ensure the current user owns the graph
     const { data: graph, error: fetchErr } = await (supabase as any)
       .from("saved_graphs")
-      .select("id, user_id")
+      .select("id, user_id, origin_cluster_id")
       .eq("id", id)
       .single()
 
-    if (fetchErr || !graph || graph.user_id !== userId) {
-      return NextResponse.json({ error: "Graph not found or you are not the owner" }, { status: 403 })
+    if (fetchErr || !graph) {
+      return NextResponse.json({ error: "Graph not found" }, { status: 404 })
+    }
+
+    let canEdit = graph.user_id === userId
+    if (!canEdit && graph.origin_cluster_id) {
+      canEdit = await isClusterOwnerOrMember(userId, graph.origin_cluster_id)
+    }
+
+    if (!canEdit) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const { error: deleteErr } = await (supabase as any)

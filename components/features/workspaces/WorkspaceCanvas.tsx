@@ -205,11 +205,13 @@ const edgeTypes = {
 export function WorkspaceCanvas({
   initialWorkspace,
   isOwner,
+  canEdit,
   userId,
   userName,
 }: {
   initialWorkspace: any
   isOwner: boolean
+  canEdit: boolean
   userId: string
   userName: string
 }) {
@@ -494,7 +496,7 @@ export function WorkspaceCanvas({
                         {presence.size} {presence.size === 1 ? "person" : "people"} viewing
                     </span>
                 )}
-                {isOwner && (
+                {canEdit && (
                     <>
                         <Button size="sm" onClick={handleOpenAddIdea}>
                             <Plus className="h-4 w-4 mr-1" /> Idea Node
@@ -642,7 +644,7 @@ export function WorkspaceCanvas({
                 )}
             </ReactFlow>
 
-            {isOwner && (
+            {canEdit && (
                 <SearchAndAddNodesDialog
                     open={searchAddDialogOpen}
                     onOpenChange={setSearchAddDialogOpen}
@@ -683,7 +685,7 @@ export function WorkspaceCanvas({
                 />
             )}
 
-            {isOwner && (
+            {canEdit && (
                 <GraphIdeaDialog
                     workspaceId={initialWorkspace.id}
                     open={ideaDialogOpen}
