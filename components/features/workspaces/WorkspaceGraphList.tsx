@@ -50,9 +50,13 @@ export function WorkspaceGraphList({
 
   if (graphs.length === 0) {
     return (
-      <div className="p-6 text-sm text-muted-foreground">
-        {emptyMessage}
-        {emptyAction && <div className="mt-3">{emptyAction}</div>}
+      <div className="p-8 text-sm text-muted-foreground flex flex-col items-center justify-center text-center">
+        <p>{emptyMessage}</p>
+        {emptyAction && (
+          <div className="mt-4">
+            {emptyAction}
+          </div>
+        )}
       </div>
     );
   }

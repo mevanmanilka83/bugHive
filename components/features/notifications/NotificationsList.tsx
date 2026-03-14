@@ -97,10 +97,13 @@ export function NotificationsList({ userId }: NotificationsListProps) {
       await markNotificationRead(notification.id)
       toast.success(result.message || "Invitation accepted! You are now a member of the cluster.")
 
-      // Refresh after a short delay to show the cluster
-      setTimeout(() => {
-        window.location.href = '/dashboard/clusters'
-      }, 1000)
+      // After accepting, navigate directly to the cluster detail page
+      const targetClusterId = notification.cluster_id
+      if (targetClusterId) {
+        setTimeout(() => {
+          window.location.href = `/clusters/${targetClusterId}`
+        }, 800)
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to accept invitation")
     }
@@ -342,25 +345,25 @@ function NotificationCard({
             {notification.type === 'cluster_invite' && !notification.read && onAcceptInvite && (
               <div className="flex items-center gap-2">
                 <Button
-                  variant="default"
+                  variant="outline"
                   size="sm"
                   onClick={() => onAcceptInvite(notification)}
-                  className="h-8"
+                  className="h-8 px-4 gap-1"
                   title="Accept invitation"
                 >
-                  <IconUserPlus className="size-4 mr-1" />
-                  Accept
+                  <IconUserPlus className="size-4" />
+                  <span>Accept</span>
                 </Button>
                 {onDeclineInvite && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onDeclineInvite(notification)}
-                    className="h-8"
+                    className="h-8 px-4 gap-1"
                     title="Decline invitation"
                   >
-                    <IconX className="size-4 mr-1" />
-                    Decline
+                    <IconX className="size-4" />
+                    <span>Decline</span>
                   </Button>
                 )}
               </div>
@@ -368,24 +371,24 @@ function NotificationCard({
             {notification.type === 'cluster_join_request' && !notification.read && (
               <div className="flex items-center gap-2">
                 <Button
-                  variant="default"
+                  variant="outline"
                   size="sm"
                   onClick={() => onRespondJoinRequest?.(notification, "accept")}
-                  className="h-8"
+                  className="h-8 px-4 gap-1"
                   title="Accept request"
                 >
-                  <IconCheck className="size-4 mr-1" />
-                  Accept
+                  <IconCheck className="size-4" />
+                  <span>Accept</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onRespondJoinRequest?.(notification, "decline")}
-                  className="h-8"
+                  className="h-8 px-4 gap-1"
                   title="Decline request"
                 >
-                  <IconX className="size-4 mr-1" />
-                  Decline
+                  <IconX className="size-4" />
+                  <span>Decline</span>
                 </Button>
               </div>
             )}

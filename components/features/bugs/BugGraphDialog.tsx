@@ -50,6 +50,8 @@ interface BugGraphDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   bugId: string
+  /** When provided, workspace visibility is cluster-scoped instead of global copy. */
+  clusterId?: string
 }
 
 // --- Local Types to avoid import issues from API routes ---
@@ -429,7 +431,7 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
   }
 }
 
-export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProps) {
+export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGraphDialogProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [loading, setLoading] = React.useState(false)
@@ -443,6 +445,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
   const [saveAsPublic, setSaveAsPublic] = React.useState(false)
   const [timeTravelPercent, setTimeTravelPercent] = React.useState(100)
   const router = useRouter()
+  const isClusterContext = Boolean(clusterId)
 
   React.useEffect(() => {
     if (open && bugId) {
@@ -620,10 +623,19 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          description: `Graph workspace for bug ${bugId.slice(0, 8)}. ${saveAsPublic ? "Public – others can view and copy to build ideas." : "Private – only you can view and add ideas."}`,
+          description: `Graph workspace for bug ${bugId.slice(0, 8)}. ${
+            isClusterContext
+              ? saveAsPublic
+                ? "Cluster public – all cluster members can view and copy to build ideas."
+                : "Cluster private – only you can view and add ideas."
+              : saveAsPublic
+                ? "Public – others can view and copy to build ideas."
+                : "Private – only you can view and add ideas."
+          }`,
           nodes: rfObject.nodes,
           edges: rfObject.edges,
           origin_bug_id: bugId,
+          origin_cluster_id: clusterId ?? null,
           is_public: saveAsPublic,
         }),
       })
@@ -664,15 +676,21 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
             </DialogTitle>
             <div className="flex items-center gap-2  relative z-10">
               <Button
-                className="shrink-0 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                type="button"
+                size="sm"
+                className="shrink-0 gap-2"
                 onClick={openSaveDialog}
                 disabled={saving || nodes.length === 0}
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Save relationship diagram
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                <span>Save relationship diagram</span>
               </Button>
               <DialogClose asChild>
-                <Button size="default" className="shrink-0 gap-2">
+                <Button type="button" size="sm" variant="outline" className="shrink-0 gap-2">
                   <X className="h-4 w-4" />
                   Close
                 </Button>
@@ -834,25 +852,38 @@ export function BugGraphDialog({ open, onOpenChange, bugId }: BugGraphDialogProp
                 <div className="flex items-center gap-3">
                   <RadioGroupItem value="private" id="vis-private" />
                   <Label htmlFor="vis-private" className="font-medium cursor-pointer text-sm text-foreground">
-                    Private (only you)
+                    {isClusterContext ? "Cluster private (only you)" : "Private (only you)"}
                   </Label>
                 </div>
                 <div className="flex items-center gap-3">
                   <RadioGroupItem value="public" id="vis-public" />
                   <Label htmlFor="vis-public" className="font-medium cursor-pointer text-sm text-foreground">
-                    Public (anyone can view)
+                    {isClusterContext ? "Cluster public (cluster members can view)" : "Public (anyone can view)"}
                   </Label>
                 </div>
               </RadioGroup>
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-5">
-            <Button variant="outline" onClick={() => setSaveDialogOpen(false)} className="">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSaveDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveWorkspace} disabled={saving} className=" bg-primary text-primary-foreground font-semibold shadow-md px-6 py-2">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save
+            <Button
+              type="button"
+              onClick={handleSaveWorkspace}
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-4"
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              <span>{saving ? "Saving…" : "Save"}</span>
             </Button>
           </div>
         </DialogContent>

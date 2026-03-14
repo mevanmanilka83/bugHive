@@ -4,14 +4,16 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeftIcon } from "@/components/ui/arrow-left"
-import { IconReport, IconUsers, IconPencil, IconUserPlus, IconCheck, IconX } from "@tabler/icons-react"
+import { IconReport, IconUsers, IconPencil, IconUserPlus, IconCheck, IconX, IconMail } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { BugReportDialog } from "@/components/features/bugs/reports/BugReportDialog"
 import { ClusterBugsList } from "./ClusterBugsList"
+import { ClusterWorkspacesPanel } from "./ClusterWorkspacesPanel"
 import { ClusterMembersDialog } from "./ClusterMembersDialog"
 import { EditClusterDialog } from "./EditClusterDialog"
+import { InviteUserDialog } from "./InviteUserDialog"
 import { ClusterBugsPageSkeleton } from "@/components/features/skeletons/ClusterBugsPageSkeleton"
 
 interface ClusterBugsPageProps {
@@ -40,6 +42,7 @@ export function ClusterBugsPage({
   const [joinRequests, setJoinRequests] = React.useState<any[]>([])
   const [requestingJoin, setRequestingJoin] = React.useState(false)
   const [respondingTo, setRespondingTo] = React.useState<string | null>(null)
+  const [inviteDialogOpen, setInviteDialogOpen] = React.useState(false)
 
   const fetchCluster = React.useCallback(async () => {
     try {
@@ -210,14 +213,25 @@ export function ClusterBugsPage({
           </div>
           <div className="flex w-full items-center justify-end gap-2 shrink-0 sm:w-auto">
             {isOwner && (
-              <Button
-                size="icon"
-                onClick={() => setEditDialogOpen(true)}
-                className="h-9 w-9 shrink-0"
-                aria-label="Edit cluster"
-              >
-                <IconPencil className="size-4" />
-              </Button>
+              <>
+                <Button
+                  size="icon"
+                  onClick={() => setEditDialogOpen(true)}
+                  className="h-9 w-9 shrink-0"
+                  aria-label="Edit cluster"
+                >
+                  <IconPencil className="size-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setInviteDialogOpen(true)}
+                  className="h-9 w-9 shrink-0"
+                  aria-label="Invite to cluster"
+                >
+                  <IconMail className="size-4" />
+                </Button>
+              </>
             )}
             {canReportBug && <BugReportDialog clusterId={clusterId} />}
             {!isMember && isPublic && !myJoinRequest && (
@@ -245,7 +259,7 @@ export function ClusterBugsPage({
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    className=""
+                    variant="outline"
                     disabled={respondingTo !== null}
                     onClick={() => handleRespondToRequest(req.id, "decline")}
                   >
@@ -274,11 +288,14 @@ export function ClusterBugsPage({
       )}
 
       {showBugsList && (
-        <ClusterBugsList
-          clusterId={clusterId}
-          userId={userId || ""}
-          bugDetailsBaseHref={bugDetailsBaseHref}
-        />
+        <>
+          <ClusterWorkspacesPanel clusterId={clusterId} />
+          <ClusterBugsList
+            clusterId={clusterId}
+            userId={userId || ""}
+            bugDetailsBaseHref={bugDetailsBaseHref}
+          />
+        </>
       )}
 
       <ClusterMembersDialog
@@ -295,6 +312,19 @@ export function ClusterBugsPage({
           setCluster((prev: any) => (prev ? { ...prev, name: updated.name, description: updated.description, visibility: updated.visibility ?? prev.visibility } : null))
         }}
       />
+
+      {isOwner && (
+        <InviteUserDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+          cluster={cluster}
+          onSuccess={() => {
+            setInviteDialogOpen(false)
+            fetchCluster()
+            toast.success("Invitation sent successfully")
+          }}
+        />
+      )}
     </div>
   )
 }

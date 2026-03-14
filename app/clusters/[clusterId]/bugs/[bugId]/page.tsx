@@ -55,7 +55,7 @@ export default async function ClusterBugDetailsPage({
         >
           &larr; Back to Cluster
         </Link>
-        <GraphButton bugId={bug.id} />
+        <GraphButton bugId={bug.id} clusterId={clusterId} />
       </div>
       <BugDetailsView bug={bug} userId={session?.user?.id} />
     </PublicPageLayout>

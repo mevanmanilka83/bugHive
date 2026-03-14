@@ -100,7 +100,7 @@ export function TimeTravelBar({
   return (
     <div
       className={cn(
-        "shrink-0 border-t border-white/20 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl px-4 py-3 flex flex-wrap items-center gap-3",
+        "shrink-0 border-t border-white/20 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center",
         className
       )}
     >
