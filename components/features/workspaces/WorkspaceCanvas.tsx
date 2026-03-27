@@ -49,6 +49,7 @@ import { WorkspacePresenceCursors } from "./WorkspacePresenceCursors"
 import { useWorkspaceRealtime } from "@/hooks/useWorkspaceRealtime"
 
 type GraphIdea = { id: string; kind: string; title: string; content: string | null; created_at: string }
+type IdeaKind = "idea" | "solution" | "fix"
 
 const nodeTypeColors: Record<string, string> = {
     bug: "bg-rose-500/10 border-rose-500/50 text-rose-600",          // issue/bug = red
@@ -90,7 +91,7 @@ const ideaKindCardStyles: Record<string, { container: string; badge: string }> =
 
 function IdeaNode({ id, data, selected }: { id: string; data: any; selected: boolean }) {
     const reactFlow = useReactFlow()
-    const kind: "idea" | "solution" | "fix" = (data.kind as any) || "idea"
+    const kind: IdeaKind = (data.kind as any) || "idea"
     const styles = ideaKindStyles[kind] || ideaKindStyles.idea
     const descriptionText =
         typeof data.description === "string" ? stripHtml(data.description).slice(0, 220) : ""
@@ -108,8 +109,14 @@ function IdeaNode({ id, data, selected }: { id: string; data: any; selected: boo
                 <button
                     type="button"
                     className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-background/70 text-muted-foreground hover:bg-primary/10 hover:text-primary shadow-sm transition-colors"
+                    aria-label="Edit idea"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        if (typeof data.onEdit === "function") {
+                            data.onEdit(data.ideaId as string | undefined)
+                        }
+                    }}
                 >
-                    {/* Let click bubble so onNodeClick opens editor */}
                     <Pencil className="h-3 w-3" />
                 </button>
                 <button
@@ -123,6 +130,7 @@ function IdeaNode({ id, data, selected }: { id: string; data: any; selected: boo
                         }
                     }}
                     className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-background/70 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground shadow-sm transition-colors"
+                    aria-label="Delete idea"
                 >
                     <DeleteIcon size={12} className="h-3 w-3" />
                 </button>
@@ -221,22 +229,26 @@ export function WorkspaceCanvas({
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialWorkspace.edges || [])
     const [rfInstance, setRfInstance] = React.useState<ReactFlowInstance | null>(null)
     const [saving, setSaving] = React.useState(false)
+    const [lastSavedAt, setLastSavedAt] = React.useState<Date | null>(null)
+    const [dirty, setDirty] = React.useState(false)
     const [ideas, setIdeas] = React.useState<GraphIdea[]>([])
     const [ideasLoading, setIdeasLoading] = React.useState(true)
     const [addTitle, setAddTitle] = React.useState("")
     const [addContent, setAddContent] = React.useState("")
-    const [addKind, setAddKind] = React.useState<"idea" | "solution" | "fix">("idea")
+    const [addKind, setAddKind] = React.useState<IdeaKind>("idea")
     const [addingIdea, setAddingIdea] = React.useState(false)
     const [selectedIdeaId, setSelectedIdeaId] = React.useState<string | null>(null)
     const [showIdeasPanel, setShowIdeasPanel] = React.useState(true)
     const [ideaDialogOpen, setIdeaDialogOpen] = React.useState(false)
-    const [ideaDialogInitialKind, setIdeaDialogInitialKind] = React.useState<"idea" | "solution" | "fix">("idea")
+    const [ideaDialogInitialKind, setIdeaDialogInitialKind] = React.useState<IdeaKind>("idea")
     const [ideaDialogInitialTitle, setIdeaDialogInitialTitle] = React.useState<string>("")
     const [ideaDialogInitialContent, setIdeaDialogInitialContent] = React.useState<string | null>("")
     const [searchAddDialogOpen, setSearchAddDialogOpen] = React.useState(false)
     const [viewportVersion, setViewportVersion] = React.useState(0)
     const [timeTravelPercent, setTimeTravelPercent] = React.useState(100)
     const autoSaveTimeout = React.useRef<number | null>(null)
+    const lastSavedPayloadRef = React.useRef<string>("")
+    const viewportRafRef = React.useRef<number | null>(null)
 
     const { presence, trackCursorThrottled } = useWorkspaceRealtime({
       workspaceId: initialWorkspace.id,
@@ -286,24 +298,27 @@ export function WorkspaceCanvas({
         10
     )
 
-    React.useEffect(() => {
-        if (timestamps.length === 0) return
-        setNodes((nds) =>
-            nds.map((n) => {
-                const nodeTime = getTime((n.data as any)?.created_at)
-                const opacity = timeToOpacity(nodeTime, selectedTime)
-                return { ...n, style: { ...n.style, opacity, transition: "opacity 0.3s ease" } }
-            })
-        )
-        setEdges((eds) =>
-            eds.map((e) => {
-                const edgeTime = getTime((e.data as any)?.created_at)
-                const opacity = timeToOpacity(edgeTime, selectedTime)
-                return { ...e, style: { ...e.style, opacity, transition: "opacity 0.3s ease" } }
-            })
-        )
-    }, [selectedTime, timestamps.length, setNodes, setEdges])
     const isFirstRender = React.useRef(true)
+
+    const viewNodes = React.useMemo(() => {
+        if (timestamps.length === 0 || timeTravelPercent === 100) return nodes
+        return nodes.map((n) => {
+            const nodeTime = getTime((n.data as any)?.created_at)
+            const opacity = timeToOpacity(nodeTime, selectedTime)
+            const style = { ...(n.style || {}), opacity, transition: "opacity 0.3s ease" }
+            return { ...n, style }
+        })
+    }, [nodes, selectedTime, timeTravelPercent, timestamps.length])
+
+    const viewEdges = React.useMemo(() => {
+        if (timestamps.length === 0 || timeTravelPercent === 100) return edges
+        return edges.map((e) => {
+            const edgeTime = getTime((e.data as any)?.created_at)
+            const opacity = timeToOpacity(edgeTime, selectedTime)
+            const style = { ...(e.style || {}), opacity, transition: "opacity 0.3s ease" }
+            return { ...e, style }
+        })
+    }, [edges, selectedTime, timeTravelPercent, timestamps.length])
 
     const fetchIdeas = React.useCallback(async () => {
         try {
@@ -321,6 +336,14 @@ export function WorkspaceCanvas({
 
     React.useEffect(() => {
         setMounted(true)
+        // Initialize save baseline (prevents "dirty" on load)
+        const initial = JSON.stringify({
+            nodes: (initialWorkspace.nodes || []) as Node[],
+            edges: (initialWorkspace.edges || []) as Edge[],
+        })
+        lastSavedPayloadRef.current = initial
+        setLastSavedAt(null)
+        setDirty(false)
     }, [])
 
     React.useEffect(() => {
@@ -328,14 +351,21 @@ export function WorkspaceCanvas({
     }, [fetchIdeas])
 
     const onConnect = React.useCallback(
-        (params: Connection) => setEdges((eds) => addEdge({
-            ...params,
-            type: 'custom',
-            animated: true,
-            label: "Connected",
-            style: { stroke: "#94a3b8", strokeDasharray: "5,5", strokeWidth: 2 }
-        }, eds)),
-        [setEdges],
+        (params: Connection) =>
+            setEdges((eds) =>
+                addEdge(
+                    {
+                        ...params,
+                        type: "custom",
+                        animated: true,
+                        label: "Connected",
+                        data: { created_at: new Date().toISOString() },
+                        style: { stroke: "#94a3b8", strokeDasharray: "5,5", strokeWidth: 2 },
+                    },
+                    eds
+                )
+            ),
+        [setEdges]
     )
 
     const handleOpenAddIdea = () => {
@@ -368,6 +398,10 @@ export function WorkspaceCanvas({
             if (!isAuto) {
                 toast.success("Workspace saved successfully")
             }
+            const payloadStr = JSON.stringify({ nodes: flow.nodes, edges: flow.edges })
+            lastSavedPayloadRef.current = payloadStr
+            setLastSavedAt(new Date())
+            setDirty(false)
         } catch (e: any) {
             toast.error(e.message || "Failed to save")
         } finally {
@@ -377,7 +411,9 @@ export function WorkspaceCanvas({
 
     const kindIcon = { idea: Lightbulb, solution: Wrench, fix: Sparkles }
 
-    const handleDeleteIdea = React.useCallback(async (ideaId: string, title?: string) => {
+    const handleDeleteIdea = React.useCallback(async (ideaId: string) => {
+        const ok = window.confirm("Delete this idea? This cannot be undone.")
+        if (!ok) return
         try {
             const res = await fetch(`/api/workspaces/${initialWorkspace.id}/ideas`, {
                 method: "DELETE",
@@ -395,14 +431,12 @@ export function WorkspaceCanvas({
                     if (n.type !== "idea") return true
                     const data: any = n.data || {}
                     const dataIdeaId = data.ideaId as string | undefined
-                    const label = data.label as string | undefined
 
                     // Preferred: match by explicit ideaId
                     if (dataIdeaId && dataIdeaId === ideaId) return false
 
-                    // Fallbacks for older nodes: id pattern or matching label
+                    // Fallback for older nodes: id pattern
                     if (n.id === `idea-${ideaId}`) return false
-                    if (title && label && label === title && !dataIdeaId) return false
 
                     return true
                 })
@@ -416,6 +450,21 @@ export function WorkspaceCanvas({
         }
     }, [initialWorkspace.id, selectedIdeaId])
 
+    const handleEditIdea = React.useCallback(
+        (ideaId?: string) => {
+            if (!ideaId) return
+            const matched = ideas.find((i) => i.id === ideaId)
+            if (!matched) return
+            setSelectedIdeaId(matched.id)
+            setIdeaDialogInitialKind(matched.kind as IdeaKind)
+            setIdeaDialogInitialTitle(matched.title)
+            setIdeaDialogInitialContent(matched.content ?? "")
+            setShowIdeasPanel(true)
+            setIdeaDialogOpen(true)
+        },
+        [ideas]
+    )
+
     const handleNodeClick = React.useCallback(
         (_: React.MouseEvent, node: Node) => {
             const nodeType = (node.type || (node.data as any)?.type) as string | undefined
@@ -428,13 +477,21 @@ export function WorkspaceCanvas({
             if (nodeType === "idea") {
                 const label = (node.data?.label as string) || ""
                 const description = (node.data?.description as string) || ""
+                const dataIdeaId = (node.data as any)?.ideaId as string | undefined
 
-                const matched = ideas.find((i) => i.title === label)
-                if (matched) {
-                    setSelectedIdeaId(matched.id)
-                    setIdeaDialogInitialKind(matched.kind as "idea" | "solution" | "fix")
-                    setIdeaDialogInitialTitle(matched.title)
-                    setIdeaDialogInitialContent(matched.content ?? "")
+                if (dataIdeaId) {
+                    const matched = ideas.find((i) => i.id === dataIdeaId)
+                    if (matched) {
+                        setSelectedIdeaId(matched.id)
+                        setIdeaDialogInitialKind(matched.kind as IdeaKind)
+                        setIdeaDialogInitialTitle(matched.title)
+                        setIdeaDialogInitialContent(matched.content ?? "")
+                    } else {
+                        setSelectedIdeaId(dataIdeaId)
+                        setIdeaDialogInitialKind("idea")
+                        setIdeaDialogInitialTitle(label)
+                        setIdeaDialogInitialContent(description)
+                    }
                 } else {
                     setSelectedIdeaId(null)
                     setIdeaDialogInitialKind("idea")
@@ -450,28 +507,86 @@ export function WorkspaceCanvas({
         [ideas]
     )
 
-    // Ensure existing idea nodes know how to delete themselves (link to handleDeleteIdea)
+    // Normalize existing nodes (ideaId/created_at) and inject handlers.
+    // Important: avoid triggering autosave/realtime churn by only updating when needed.
     React.useEffect(() => {
-        setNodes((nds) =>
-            nds.map((n) =>
-                n.type === "idea"
-                    ? {
+        setNodes((nds) => {
+            let changed = false
+            const nowIso = new Date().toISOString()
+
+            const next = nds.map((n) => {
+                if (n.type === "idea") {
+                    const prevData: any = n.data || {}
+                    const derivedIdeaId =
+                        prevData.ideaId ||
+                        (() => {
+                            const m = /^idea-([0-9a-f-]{36})$/i.exec(n.id)
+                            return m?.[1]
+                        })()
+
+                    const needsUpdate =
+                        prevData.onDelete !== handleDeleteIdea ||
+                        prevData.onEdit !== handleEditIdea ||
+                        prevData.ideaId !== derivedIdeaId
+
+                    if (!needsUpdate) return n
+                    changed = true
+                    return {
                         ...n,
                         data: {
-                            ...n.data,
+                            ...prevData,
                             onDelete: handleDeleteIdea,
+                            onEdit: handleEditIdea,
+                            ideaId: derivedIdeaId,
                         },
                     }
-                    : n
-            )
-        )
-    }, [handleDeleteIdea, setNodes])
+                }
+
+                const prevData: any = n.data || {}
+                if (prevData.created_at) return n
+                changed = true
+                return {
+                    ...n,
+                    data: {
+                        ...prevData,
+                        // Best-effort: keep time travel stable by putting unknown items at "now"
+                        created_at: nowIso,
+                    },
+                }
+            })
+
+            return changed ? next : nds
+        })
+    }, [handleDeleteIdea, handleEditIdea, setNodes])
+
+    React.useEffect(() => {
+        setEdges((eds) => {
+            let changed = false
+            const nowIso = new Date().toISOString()
+            const next = eds.map((e) => {
+                const prevData: any = e.data || {}
+                if (prevData.created_at) return e
+                changed = true
+                return { ...e, data: { ...prevData, created_at: nowIso } }
+            })
+            return changed ? next : eds
+        })
+    }, [setEdges])
 
     // Auto-save graph when nodes or edges change (debounced)
     React.useEffect(() => {
         if (!rfInstance) return
         if (isFirstRender.current) {
             isFirstRender.current = false
+            return
+        }
+        if (!canEdit) return
+
+        const payloadStr = JSON.stringify({ nodes, edges })
+        if (payloadStr !== lastSavedPayloadRef.current) {
+            setDirty(true)
+        } else {
+            setDirty(false)
             return
         }
         if (autoSaveTimeout.current !== null) {
@@ -482,7 +597,7 @@ export function WorkspaceCanvas({
                 // errors are already handled inside handleSave
             })
         }, 1500)
-    }, [nodes, edges, rfInstance])
+    }, [nodes, edges, rfInstance, canEdit])
 
     return (
         <div className="w-full h-full relative" style={{ height: "calc(100vh - 56px)" }}>
@@ -508,6 +623,16 @@ export function WorkspaceCanvas({
                             {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
                             Save Changes
                         </Button>
+                        {dirty && (
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                                Unsaved changes
+                            </span>
+                        )}
+                        {lastSavedAt && !dirty && (
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                                Last saved {lastSavedAt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                        )}
                     </>
                 )}
                 <Button size="sm" onClick={() => router.push("/workspaces")}>
@@ -567,13 +692,14 @@ export function WorkspaceCanvas({
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         setSelectedIdeaId(i.id)
-                                                        setIdeaDialogInitialKind(i.kind as "idea" | "solution" | "fix")
+                                                        setIdeaDialogInitialKind(i.kind as IdeaKind)
                                                         setIdeaDialogInitialTitle(i.title)
                                                         setIdeaDialogInitialContent(i.content ?? "")
                                                         setShowIdeasPanel(true)
                                                         setIdeaDialogOpen(true)
                                                     }}
                                                     className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                                    aria-label="Edit idea"
                                                 >
                                                     <Pencil className="h-3 w-3" />
                                                 </button>
@@ -581,9 +707,10 @@ export function WorkspaceCanvas({
                                                     type="button"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
-                                                        handleDeleteIdea(i.id, i.title)
+                                                        handleDeleteIdea(i.id)
                                                     }}
                                                     className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                                    aria-label="Delete idea"
                                                 >
                                                     <DeleteIcon size={12} className="h-3 w-3" />
                                                 </button>
@@ -605,14 +732,20 @@ export function WorkspaceCanvas({
             )}
 
             <ReactFlow
-                nodes={nodes}
-                edges={edges}
+                nodes={viewNodes}
+                edges={viewEdges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onNodeClick={handleNodeClick}
                 onInit={setRfInstance}
-                onViewportChange={() => setViewportVersion((v) => v + 1)}
+                onViewportChange={() => {
+                    if (viewportRafRef.current != null) return
+                    viewportRafRef.current = window.requestAnimationFrame(() => {
+                        viewportRafRef.current = null
+                        setViewportVersion((v) => v + 1)
+                    })
+                }}
                 onPaneMouseMove={(event) => {
                   if (!rfInstance) return
                   const pos = rfInstance.screenToFlowPosition({
@@ -625,21 +758,25 @@ export function WorkspaceCanvas({
                 edgeTypes={edgeTypes}
                 connectionMode={ConnectionMode.Loose}
                 fitView
+                snapToGrid
+                snapGrid={[20, 20]}
             >
                 <Background color="#ccc" gap={20} size={1} />
                 <Controls showInteractive={false} style={{ marginBottom: "2rem" }} />
                 <WorkspacePresenceCursors presence={presence} viewportVersion={viewportVersion} />
                 {milestones.length > 0 && (
-                    <Panel position="bottom-center" className="!relative !transform-none w-full">
-                        <TimeTravelBar
-                            percent={timeTravelPercent}
-                            onPercentChange={setTimeTravelPercent}
-                            milestones={milestones}
-                            minTime={minT}
-                            maxTime={maxT}
-                            isPlaying={isPlaying}
-                            onPlayPause={togglePlayback}
-                        />
+                    <Panel position="bottom-center" className="w-full px-4 pb-3">
+                        <div className="max-w-4xl mx-auto">
+                            <TimeTravelBar
+                                percent={timeTravelPercent}
+                                onPercentChange={setTimeTravelPercent}
+                                milestones={milestones}
+                                minTime={minT}
+                                maxTime={maxT}
+                                isPlaying={isPlaying}
+                                onPlayPause={togglePlayback}
+                            />
+                        </div>
                     </Panel>
                 )}
             </ReactFlow>
@@ -677,7 +814,7 @@ export function WorkspaceCanvas({
                             id: nodeId,
                             type: "cluster",
                             position: { x: baseX + Math.random() * 80 - 40, y: baseY + Math.random() * 80 - 40 },
-                            data: { type: "cluster", label: cluster.name },
+                            data: { type: "cluster", label: cluster.name, created_at: new Date().toISOString() },
                         }
                         setNodes((nds) => nds.concat(newNode))
                         toast.success(`Added cluster: ${cluster.name}`)
@@ -710,6 +847,12 @@ export function WorkspaceCanvas({
                         // Also place an idea node into the graph
                         setNodes((nds) => {
                             const nodeId = idea.id ? `idea-${idea.id}` : `idea-${Date.now()}`
+                            if (
+                                idea.id &&
+                                nds.some((n) => n.type === "idea" && (((n.data as any)?.ideaId as string | undefined) === idea.id || n.id === `idea-${idea.id}`))
+                            ) {
+                                return nds
+                            }
                             if (nds.some((n) => n.id === nodeId)) return nds
 
                             const vp = rfInstance?.getViewport?.()
@@ -730,6 +873,7 @@ export function WorkspaceCanvas({
                                     kind: idea.kind,
                                     ideaId: idea.id,
                                     onDelete: handleDeleteIdea,
+                                    onEdit: handleEditIdea,
                                     created_at: (idea as { created_at?: string }).created_at ?? new Date().toISOString(),
                                 },
                             }

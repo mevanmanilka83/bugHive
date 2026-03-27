@@ -19,7 +19,7 @@ export default async function AdminPage() {
       <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
         Forbidden – admin access only.
       </div>
-    ) as unknown as JSX.Element
+    )
   }
 
   const supabase = (await getSupabaseAdmin()) as any

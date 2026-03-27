@@ -423,7 +423,7 @@ export async function findPotentialDuplicates(draft: PotentialDuplicateDraft): P
 
     let candidateIds: { id: string; similarity_score: number; created_at: string }[] = []
     try {
-        const supabase = getSupabaseAdmin()
+        const supabase = getSupabaseAdmin() as any
         const { data: rpcData, error } = await supabase.rpc("search_bugs_duplicate_candidates", {
             query_text: queryText,
             lim: TRIGRAM_CANDIDATE_LIMIT,
@@ -442,7 +442,7 @@ export async function findPotentialDuplicates(draft: PotentialDuplicateDraft): P
 
     let records: any[] = []
     if (ids.length > 0) {
-        const supabase = getSupabaseAdmin()
+        const supabase = getSupabaseAdmin() as any
         const { data } = await supabase.from("bugs").select("*").in("id", ids)
         records = (data || []).filter((r: any) => String(r.visibility || "").toLowerCase() !== "private")
     }

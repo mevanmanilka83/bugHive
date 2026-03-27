@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
     const q = (searchParams.get("q") ?? "").trim()
     const type = searchParams.get("type") ?? "all" // bugs | clusters | all
 
-    const supabase = await getSupabaseAdmin()
-    const userId = await getAuthenticatedUserId()
+    const supabase = getSupabaseAdmin() as any
 
     const results: { bugs: Array<{ id: string; title: string; description?: string | null }>; clusters: Array<{ id: string; name: string; description?: string | null }> } = {
       bugs: [],
@@ -20,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     if ((type === "bugs" || type === "all") && q.length >= 2) {
-      const { data: bugs } = await (supabase as any)
+      const { data: bugs } = await supabase
         .from("bugs")
         .select("id, title, description")
         .ilike("title", `%${q}%`)
@@ -33,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     if ((type === "clusters" || type === "all") && q.length >= 2) {
-      const { data: clusters } = await (supabase as any)
+      const { data: clusters } = await supabase
         .from("clusters")
         .select("id, name, description")
         .ilike("name", `%${q}%`)

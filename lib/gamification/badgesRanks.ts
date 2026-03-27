@@ -36,7 +36,7 @@ export function getRankLabel(rankId: string): string {
 }
 
 export function getRankForXp(xp: number): (typeof RANKS)[number] {
-  let rank = RANKS[0]
+  let rank: (typeof RANKS)[number] = RANKS[0]
   for (const r of RANKS) {
     if (xp >= r.minXp) rank = r
   }

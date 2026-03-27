@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get("limit") || "10", 10) || 10, 50)
 
   try {
-    const db = getSupabaseAdmin()
+    const db = getSupabaseAdmin() as any
 
     let query = db
       .from("users")
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { getRankForXp } = await import("@/lib")
-    const hunters = (data || []).map((u) => {
+    const hunters = ((data || []) as any[]).map((u) => {
       const pts = u.points ?? 0
       const rank = getRankForXp(pts)
       return {

@@ -20,14 +20,14 @@ export async function DELETE(
 
         const { commentId } = await context.params
         const uuid = ensureValidUUID(commentId)
-        const supabase = getSupabaseAdmin()
+        const supabase = (await getSupabaseAdmin()) as any
 
         // 1. Fetch the comment to check ownership
         const { data: comment, error: fetchError } = await supabase
             .from("bug_comments")
             .select("user_id")
             .eq("id", uuid)
-            .single<{ user_id: string }>()
+            .single()
 
         if (fetchError || !comment) {
             return errorResponse("Comment not found", 404)

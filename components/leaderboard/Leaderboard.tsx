@@ -28,9 +28,9 @@ interface LeaderboardProps {
 }
 
 const RANK_STYLES: Record<number, string> = {
-  1: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-800",
-  2: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-600",
-  3: "bg-amber-50 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+  1: "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200",
+  2: "bg-slate-100 text-slate-800 dark:bg-slate-800/60 dark:text-slate-200",
+  3: "bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200",
 }
 
 export function Leaderboard({ period = "week", limit = 10, className }: LeaderboardProps) {
@@ -83,29 +83,34 @@ export function Leaderboard({ period = "week", limit = 10, className }: Leaderbo
             No hunters yet. Be the first to earn BugXP!
           </p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {hunters.map((hunter, idx) => {
               const rank = idx + 1
               const rankStyle = RANK_STYLES[rank]
+              const isTop3 = rank <= 3
               return (
                 <li
                   key={hunter.id}
                   className={cn(
-                    "flex items-center gap-3 rounded-none border px-3 py-2 transition-colors",
-                    rank === 1 && "border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20"
+                    "flex items-center gap-3 px-3 py-2 transition-colors",
+                    "border border-border/60 bg-background",
+                    "hover:bg-muted/30",
+                    "rounded-lg",
+                    isTop3 && "bg-muted/10"
                   )}
                 >
                   <span
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-none border text-xs font-bold",
-                      rankStyle ?? "bg-muted text-muted-foreground border-border"
+                      "flex size-8 shrink-0 items-center justify-center text-xs font-semibold tabular-nums",
+                      "rounded-md",
+                      rankStyle ?? "bg-muted text-muted-foreground"
                     )}
                   >
                     {rank}
                   </span>
                   <Avatar className="size-8 shrink-0">
                     <AvatarImage src={hunter.image ?? undefined} alt={hunter.name} />
-                    <AvatarFallback className="text-xs">
+                    <AvatarFallback className="text-xs bg-muted/60 text-foreground">
                       {hunter.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -119,7 +124,7 @@ export function Leaderboard({ period = "week", limit = 10, className }: Leaderbo
                         {hunter.badges.slice(0, 3).map((badgeId) => (
                           <span
                             key={badgeId}
-                            className="inline-flex items-center rounded-none border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
+                            className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
                           >
                             {getBadgeLabel(badgeId)}
                           </span>
@@ -127,7 +132,7 @@ export function Leaderboard({ period = "week", limit = 10, className }: Leaderbo
                       </div>
                     )}
                   </div>
-                  <span className="shrink-0 text-sm font-semibold text-[var(--brand-blue)]">
+                  <span className="shrink-0 text-sm font-semibold tabular-nums text-[var(--brand-blue)]">
                     {hunter.points} XP
                   </span>
                 </li>

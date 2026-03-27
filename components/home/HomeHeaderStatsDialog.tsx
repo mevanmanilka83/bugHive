@@ -29,6 +29,7 @@ import {
 import type { OverviewResponse } from "@/app/api/overview/route"
 import { HomeHeaderStatsDialogSkeleton } from "@/components/features/skeletons/HomeHeaderStatsDialogSkeleton"
 import { cn } from "@/lib"
+import { getRecentlyViewedBugs, type RecentlyViewedBug } from "@/lib/utils/client"
 
 const TEAMS_VISIBLE_INITIAL = 2
 
@@ -59,28 +60,23 @@ function BugRow({
   variant: "unanswered" | "recent"
 }) {
   const title = bug.title || "Untitled"
-  const isTruncated = title.length > 45
+  const showTooltip = title.length > 90
 
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between gap-2 rounded-lg border border-transparent px-3 py-2.5 hover:bg-muted/60 hover:border-border/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
+      className="group flex items-center justify-between gap-3 rounded-lg border border-transparent px-3 py-2.5 hover:bg-muted/60 hover:border-border/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
       onClick={onClose}
     >
       <div className="flex flex-col gap-1 min-w-0 flex-1">
         <div className="flex items-center gap-2 min-w-0">
-          <div
-            className={cn(
-              "size-1.5 shrink-0 rounded-full",
-              variant === "unanswered" ? "bg-amber-500/80" : "bg-muted-foreground/50 group-hover:bg-primary/50"
-            )}
-          />
-          {isTruncated ? (
+          {showTooltip ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span
                   className={cn(
-                    "text-sm font-medium truncate leading-snug",
+                    "text-sm font-medium leading-snug",
+                    "line-clamp-2",
                     "text-foreground group-hover:text-primary transition-colors"
                   )}
                 >
@@ -90,8 +86,7 @@ function BugRow({
               <TooltipContent
                 side="top"
                 align="start"
-                sideOffset={6}
-                className="max-w-[280px] border border-border/60 bg-popover text-popover-foreground shadow-md"
+                collisionPadding={12}
               >
                 <p className="text-xs">{title}</p>
               </TooltipContent>
@@ -99,7 +94,8 @@ function BugRow({
           ) : (
             <span
               className={cn(
-                "text-sm font-medium truncate leading-snug",
+                "text-sm font-medium leading-snug",
+                "line-clamp-2",
                 "text-foreground group-hover:text-primary transition-colors"
               )}
             >
@@ -107,25 +103,49 @@ function BugRow({
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 pl-3.5">
-          {bug.priority && (
-            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal capitalize">
+        <div className="grid grid-cols-[auto_auto_1fr] items-center gap-2">
+          {bug.priority ? (
+            <Badge
+              variant="secondary"
+              className="h-5 min-w-14 justify-center px-2 text-[10px] font-normal capitalize"
+            >
               {bug.priority}
             </Badge>
+          ) : (
+            <span className="h-5 min-w-14" aria-hidden />
           )}
-          {bug.status && (
-            <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal capitalize">
+          {bug.status ? (
+            <Badge
+              variant="outline"
+              className="h-5 min-w-14 justify-center px-2 text-[10px] font-normal capitalize"
+            >
               {bug.status}
             </Badge>
+          ) : (
+            <span className="h-5 min-w-14" aria-hidden />
           )}
-          {bug.created_at && (
-            <span className="text-[10px] text-muted-foreground">
+          {bug.created_at ? (
+            <span className="justify-self-end text-[10px] text-muted-foreground tabular-nums">
               {formatTimeAgo(bug.created_at)}
+            </span>
+          ) : (
+            <span className="justify-self-end text-[10px] text-muted-foreground tabular-nums">
+              —
             </span>
           )}
         </div>
       </div>
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
+      <div
+        className={cn(
+          "shrink-0 rounded-full border border-border/50 bg-background/40 p-1.5",
+          "text-muted-foreground/70",
+          "group-hover:bg-background group-hover:text-primary",
+          "transition-colors"
+        )}
+        aria-hidden
+      >
+        <ChevronRight className="size-4" />
+      </div>
     </Link>
   )
 }
@@ -146,8 +166,8 @@ function SectionCard({
   isEmpty: boolean
 }) {
   return (
-    <section className="rounded-xl border border-border/50 bg-card/50 shadow-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-border/40 bg-muted/20">
+    <section className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+      <div className="px-4 py-3 border-b border-border/50 bg-muted/10">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground/90 flex items-center gap-2">
           {icon ?? <div className="size-1.5 rounded-full bg-primary" />}
           {title}
@@ -172,6 +192,7 @@ export function HomeHeaderStatsDialog() {
   const [loading, setLoading] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [teamsExpanded, setTeamsExpanded] = React.useState(false)
+  const [recentlyViewed, setRecentlyViewed] = React.useState<RecentlyViewedBug[]>([])
 
   React.useEffect(() => {
     if (!open) return
@@ -183,42 +204,44 @@ export function HomeHeaderStatsDialog() {
       .finally(() => setLoading(false))
   }, [open])
 
+  React.useEffect(() => {
+    if (!open) return
+
+    const sync = () => setRecentlyViewed(getRecentlyViewedBugs(5))
+    sync()
+
+    window.addEventListener("recentlyViewed:bugs", sync)
+    return () => window.removeEventListener("recentlyViewed:bugs", sync)
+  }, [open])
+
   const clusters = data?.clusters ?? []
   const teamsVisible = teamsExpanded ? clusters.length : Math.min(TEAMS_VISIBLE_INITIAL, clusters.length)
   const hasMoreTeams = clusters.length > TEAMS_VISIBLE_INITIAL
+
+  const recentRows = (recentlyViewed.length > 0
+    ? recentlyViewed.map((b) => ({
+        id: b.id,
+        title: b.title,
+        priority: b.priority,
+        status: b.status,
+        created_at: b.viewed_at,
+      }))
+    : data?.recentBugs ?? [])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button
           type="button"
-          className="border-2 border-icon-orange p-1.5 text-icon-orange hover:bg-icon-orange/10 hover:text-icon-orange/90 focus:outline-none focus:ring-2 focus:ring-icon-orange focus:ring-offset-2 transition-colors relative group/btn"
+          className={cn(
+            "inline-flex h-9 w-9 items-center justify-center rounded-md",
+            "border border-border/60 bg-background text-[var(--icon-orange)]",
+            "hover:bg-muted/40 hover:text-[var(--icon-orange)]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--icon-orange)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "transition-colors"
+          )}
           aria-label="Community stats and quick links"
         >
-          <div className="absolute -left-[1px] -top-[1px] z-10">
-            <div className="relative">
-              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute top-0" />
-              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute left-0" />
-            </div>
-          </div>
-          <div className="absolute -right-[0px] -top-[1px] z-10">
-            <div className="relative">
-              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute top-0" />
-              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute -left-[3.5px]" />
-            </div>
-          </div>
-          <div className="absolute -left-[1px] -bottom-[0px] z-10">
-            <div className="relative">
-              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute -top-[3.5px]" />
-              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute left-0" />
-            </div>
-          </div>
-          <div className="absolute -right-[0px] -bottom-[0px] z-10">
-            <div className="relative">
-              <div className="bg-[#8B5E3C] w-[1px] h-[4px] absolute -top-[3.5px]" />
-              <div className="bg-[#8B5E3C] w-[4px] h-[1px] absolute -left-[3.5px]" />
-            </div>
-          </div>
           <FlameIcon className="size-4" size={16} />
         </button>
       </DialogTrigger>
@@ -317,17 +340,27 @@ export function HomeHeaderStatsDialog() {
                       <li key={c.id}>
                         <Link
                           href={`/clusters/${c.id}`}
-                          className="group flex items-center justify-between rounded-lg border border-transparent px-3 py-2.5 hover:bg-muted/60 hover:border-border/50 transition-all"
+                          className="group flex items-center justify-between gap-3 rounded-lg border border-transparent px-3 py-2.5 hover:bg-muted/60 hover:border-border/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                           onClick={() => setOpen(false)}
                         >
                           <span className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                             {c.name}
                           </span>
                           <div className="flex items-center gap-2 shrink-0">
-                            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal">
+                            <Badge variant="secondary" className="text-[10px] h-5 rounded-full px-2 font-normal">
                               Open
                             </Badge>
-                            <ChevronRight className="size-3.5 text-muted-foreground/40 group-hover:text-primary/60" />
+                            <span
+                              className={cn(
+                                "shrink-0 rounded-full border border-border/50 bg-background/40 p-1",
+                                "text-muted-foreground/70",
+                                "group-hover:bg-background group-hover:text-primary",
+                                "transition-colors"
+                              )}
+                              aria-hidden
+                            >
+                              <ChevronRight className="size-3.5" />
+                            </span>
                           </div>
                         </Link>
                       </li>
@@ -372,9 +405,9 @@ export function HomeHeaderStatsDialog() {
                   title="Recently viewed"
                   icon={<Eye className="size-3.5" />}
                   emptyMessage="No recent activity. Browse bugs to see them here."
-                  isEmpty={data.recentBugs.length === 0}
+                  isEmpty={recentRows.length === 0}
                   footer={
-                    data.recentBugs.length > 0 && (
+                    recentRows.length > 0 && (
                       <Link
                         href="/"
                         className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
@@ -386,7 +419,7 @@ export function HomeHeaderStatsDialog() {
                   }
                 >
                   <ul className="space-y-1.5">
-                    {data.recentBugs.slice(0, 5).map((b) => (
+                    {recentRows.slice(0, 5).map((b) => (
                       <li key={b.id}>
                         <BugRow
                           bug={b}

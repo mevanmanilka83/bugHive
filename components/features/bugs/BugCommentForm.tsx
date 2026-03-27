@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { IconSend } from "@tabler/icons-react"
 import { RichTextEditor } from "@/components/ui/RichTextEditor"
+import { fetchWithRetry } from "@/lib"
 
 interface BugCommentFormProps {
     bugId: string
@@ -22,11 +23,11 @@ export function BugCommentForm({ bugId, userId, onCommentAdded }: BugCommentForm
 
         setIsSubmitting(true)
         try {
-            const res = await fetch(`/api/bugs/${bugId}/comments`, {
+            const res = await fetchWithRetry(`/api/bugs/${bugId}/comments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ content: content.trim() }),
-            })
+            }, { attempts: 2 })
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}))
@@ -59,6 +60,7 @@ export function BugCommentForm({ bugId, userId, onCommentAdded }: BugCommentForm
                 placeholder="Add a comment or ask for more details..."
                 minHeight="100px"
                 maxHeight="220px"
+                toolbar="minimal"
             />
             <div className="flex justify-end">
                 <Button

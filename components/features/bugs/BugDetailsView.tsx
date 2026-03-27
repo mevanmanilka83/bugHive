@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { IconBulb, IconChevronDown, IconEye, IconShare3, IconCheck, IconMessageCircle, IconTrash } from "@tabler/icons-react"
 import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog"
 import { stripHtml, stripMarkdownBold, cn } from "@/lib"
+import { addRecentlyViewedBug } from "@/lib/utils/client"
 import { getSupabaseBrowser } from "@/lib/realtime/supabaseBrowser"
 import {
   DropdownMenu,
@@ -90,6 +91,16 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const [isDeletingComment, setIsDeletingComment] = React.useState(false)
 
   const REACTION_EMOJIS = ["👍", "🎉", "👀", "❤️"] as const
+
+  React.useEffect(() => {
+    // Client-only: maintain a short “recently viewed” list for the community overview dialog.
+    addRecentlyViewedBug({
+      id: String(currentBug.id),
+      title: String(currentBug.title || "Untitled"),
+      priority: typeof currentBug.priority === "string" ? currentBug.priority : undefined,
+      status: typeof currentBug.status === "string" ? currentBug.status : undefined,
+    })
+  }, [currentBug.id, currentBug.title, currentBug.priority, currentBug.status])
 
   const formatCommentBody = React.useCallback((raw: string): string => {
     let text = stripMarkdownBold(stripHtml(raw))
@@ -556,22 +567,19 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                             type="button"
                             onClick={() => toggleReaction(c.id, emoji)}
                             className={cn(
-                              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition-colors",
-                              mine ? "bg-primary text-primary-foreground border-primary/50" : "bg-background hover:bg-muted"
+                              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors",
+                              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                              mine
+                                ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/15"
+                                : "bg-background text-muted-foreground border-border/60 hover:bg-muted/60 hover:text-foreground"
                             )}
                             aria-label={`React ${emoji}`}
+                            aria-pressed={mine}
                           >
-                            <span>{emoji}</span>
-                            {count > 0 ? (
-                              <span
-                                className={cn(
-                                  "tabular-nums",
-                                  mine ? "text-primary-foreground/90" : "text-muted-foreground"
-                                )}
-                              >
-                                {count}
-                              </span>
-                            ) : null}
+                            <span className="text-sm leading-none">{emoji}</span>
+                            <span className={cn("tabular-nums leading-none", count > 0 ? "opacity-100" : "opacity-60")}>
+                              {count > 0 ? count : ""}
+                            </span>
                           </button>
                         )
                       })}
@@ -583,6 +591,10 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
           </div>
         )}
         <div className="px-4 py-4 md:px-6 border-t bg-muted/5">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="text-sm font-semibold text-foreground">Add a comment</div>
+            <div className="text-xs text-muted-foreground">Be respectful and stay on topic.</div>
+          </div>
           <BugCommentForm
             bugId={currentBug.id}
             userId={userId ?? undefined}

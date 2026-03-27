@@ -45,7 +45,7 @@ export const BADGES = {
 export type BadgeId = (typeof BADGES)[keyof typeof BADGES]
 
 export function getRankForXp(xp: number): (typeof RANKS)[number] {
-  let rank = RANKS[0]
+  let rank: (typeof RANKS)[number] = RANKS[0]
   for (const r of RANKS) {
     if (xp >= r.minXp) rank = r
   }
@@ -95,7 +95,7 @@ async function getTodayReportXp(
   timezoneOffsetMinutes?: number
 ): Promise<number> {
   const { from, to } = getTodayUtcRange(timezoneOffsetMinutes)
-  const supabase = await getSupabaseAdmin()
+  const supabase = getSupabaseAdmin() as any
   const { data } = await supabase
     .from("user_xp_history")
     .select("xp_amount")
@@ -103,7 +103,8 @@ async function getTodayReportXp(
     .eq("action_type", "bug_report")
     .gte("created_at", from)
     .lte("created_at", to)
-  const total = (data || []).reduce((s, r) => s + (r.xp_amount || 0), 0)
+  const rows = (data || []) as any[]
+  const total = rows.reduce((s, r) => s + (r.xp_amount || 0), 0)
   return total
 }
 
@@ -129,7 +130,7 @@ export async function awardBugXP(
 ): Promise<number> {
   try {
     const uid = ensureValidUUID(userId)
-    const supabase = await getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
     let xp = 0
     const xpMetadata: Record<string, unknown> = { ...metadata }
 
@@ -195,7 +196,7 @@ export async function awardBugXP(
  */
 async function addBadgeIfMissing(userId: string, badge: string): Promise<void> {
   try {
-    const supabase = await getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
     await supabase.rpc("add_badge_if_missing", { p_user_id: userId, p_badge: badge })
   } catch {
     // ignore
@@ -208,7 +209,7 @@ async function addBadgeIfMissing(userId: string, badge: string): Promise<void> {
 export async function checkFirstResponderBadge(userId: string, bugId: string): Promise<void> {
   try {
     const uid = ensureValidUUID(userId)
-    const supabase = await getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
     const { data: bug } = await supabase.from("bugs").select("created_at").eq("id", bugId).single()
     if (!bug?.created_at) return
 
@@ -228,11 +229,12 @@ export async function checkFirstResponderBadge(userId: string, bugId: string): P
 export async function checkDeepDiverBadge(userId: string): Promise<void> {
   try {
     const uid = ensureValidUUID(userId)
-    const supabase = await getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
     const { data: graphs } = await supabase.from("saved_graphs").select("nodes").eq("user_id", uid)
     let maxNodes = 0
     for (const g of graphs || []) {
-      const nodes = Array.isArray((g as { nodes?: unknown }).nodes) ? (g as { nodes?: unknown[] }).nodes : []
+      const raw = (g as any)?.nodes
+      const nodes: unknown[] = Array.isArray(raw) ? raw : []
       maxNodes = Math.max(maxNodes, nodes.length)
     }
     if (maxNodes < 20) return
@@ -249,7 +251,7 @@ export async function checkDeepDiverBadge(userId: string): Promise<void> {
 export async function checkOnFireBadge(userId: string): Promise<void> {
   try {
     const uid = ensureValidUUID(userId)
-    const supabase = await getSupabaseAdmin()
+    const supabase = getSupabaseAdmin() as any
     const { data: history } = await supabase
       .from("user_xp_history")
       .select("created_at")
@@ -258,7 +260,7 @@ export async function checkOnFireBadge(userId: string): Promise<void> {
       .limit(100)
 
     const dates = new Set<string>()
-    for (const h of history || []) {
+    for (const h of (history || []) as any[]) {
       dates.add(new Date(h.created_at).toISOString().slice(0, 10))
     }
     let streak = 0

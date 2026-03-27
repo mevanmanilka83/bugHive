@@ -59,6 +59,7 @@ export {
   setAppLocale,
   getLocaleLabel,
   type AppLocale,
+  fetchWithRetry,
 } from "./client"
 
 // ============================================================================

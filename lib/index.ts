@@ -68,6 +68,7 @@ export {
   getAppLocale,
   setAppLocale,
   getLocaleLabel,
+  fetchWithRetry,
 } from "./utils/server"
 export type { ClusterViewMode, ClusterVisibility, AppLocale } from "./utils/server"
 
@@ -203,7 +204,13 @@ export { incrementViewCount, getViewCount } from "./views"
 // AI / LLM
 // ============================================================================
 
-export { generateChatCompletion, type ChatMessage, type GenerateOptions, type GenerateResult } from "./ai/llm"
+export {
+  generateChatCompletion,
+  getLlmErrorHttpStatus,
+  type ChatMessage,
+  type GenerateOptions,
+  type GenerateResult,
+} from "./ai/llm"
 
 // ============================================================================
 // FAQ

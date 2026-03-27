@@ -3,6 +3,7 @@
 import * as React from "react"
 import type { Node, Edge } from "@xyflow/react"
 import { getSupabaseBrowser } from "@/lib/realtime/supabaseBrowser"
+import type { RealtimeChannel } from "@supabase/supabase-js"
 
 export type PresenceUser = {
   userId: string
@@ -38,11 +39,11 @@ export function useWorkspaceRealtime({
   enabled = true,
 }: UseWorkspaceRealtimeOptions) {
   const [presence, setPresence] = React.useState<Map<string, PresenceUser>>(new Map())
-  const channelRef = React.useRef<ReturnType<ReturnType<typeof getSupabaseBrowser>["channel"]> | null>(null)
+  const channelRef = React.useRef<RealtimeChannel | null>(null)
   const lastBroadcastRef = React.useRef<string>("")
   const lastReceivedRef = React.useRef<string>("")
   const cursorThrottleRef = React.useRef<number | null>(null)
-  const broadcastDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const broadcastDebounceRef = React.useRef<number | null>(null)
 
   const trackCursor = React.useCallback(
     (x: number, y: number) => {

@@ -26,7 +26,7 @@ export async function POST(
       return errorResponse("Invalid reaction emoji", 400)
     }
 
-    const supabase = getSupabaseAdmin()
+    const supabase = (await getSupabaseAdmin()) as any
 
     // Ensure comment exists (prevents reacting to random UUIDs)
     const { data: comment } = await supabase
@@ -44,7 +44,8 @@ export async function POST(
       .eq("comment_id", cid)
       .eq("user_id", uid)
 
-    const current = (existing || []).find((r: any) => r.emoji === emoji)
+    const existingRows = (existing || []) as Array<{ id: string; emoji: string }>
+    const current = existingRows.find((r) => r.emoji === emoji)
 
     if (current?.id) {
       const { error } = await supabase
@@ -54,8 +55,8 @@ export async function POST(
       if (error) return errorResponse("Failed to remove reaction", 500)
     } else {
       // Ensure only one reaction per user per comment: remove any others first
-      if ((existing || []).length > 0) {
-        const ids = (existing as any[]).map((r) => r.id)
+      if (existingRows.length > 0) {
+        const ids = existingRows.map((r) => r.id)
         const { error: deleteError } = await supabase
           .from("comment_reactions")
           .delete()

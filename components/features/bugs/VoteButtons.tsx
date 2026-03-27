@@ -5,6 +5,7 @@ import { IconArrowUp, IconArrowDown } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib"
 import { toast } from "sonner"
+import { fetchWithRetry } from "@/lib"
 
 interface VoteButtonsProps {
   bugId: string
@@ -33,9 +34,9 @@ export function VoteButtons({
   React.useEffect(() => {
     if (userId && !initialUserVote) {
       setIsLoadingVote(true)
-      fetch(`/api/bugs/${bugId}/vote`, {
+      fetchWithRetry(`/api/bugs/${bugId}/vote`, {
         method: "GET",
-      })
+      }, { attempts: 2 })
         .then(res => res.json())
         .then(data => {
           const voteType = data.data?.vote_type ?? data.vote_type
@@ -61,13 +62,13 @@ export function VoteButtons({
     try {
       setIsVoting(true)
 
-      const response = await fetch(`/api/bugs/${bugId}/vote`, {
+      const response = await fetchWithRetry(`/api/bugs/${bugId}/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ vote_type: voteType }),
-      })
+      }, { attempts: 2 })
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: "Failed to vote" }))

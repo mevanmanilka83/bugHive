@@ -432,6 +432,68 @@ export type RichTextEditorProps = {
   hasError?: boolean
   minHeight?: string
   maxHeight?: string
+  /**
+   * Toolbar complexity:
+   * - "full": formatting + block/list/link/history controls (default)
+   * - "minimal": compact controls intended for short comments (bold/italic/link + clear)
+   * - "none": no toolbar
+   */
+  toolbar?: "full" | "minimal" | "none"
+}
+
+function MinimalToolbar({ hasError }: { hasError?: boolean }) {
+  const { commands, activeStates } = useEditor()
+
+  const clearFormatting = () => {
+    ;(["bold", "italic", "underline", "strikethrough", "code"] as const).forEach((fmt) => {
+      commands.formatText?.(fmt, false)
+    })
+    commands.removeLink?.()
+  }
+
+  return (
+    <div
+      className={`flex flex-wrap items-center gap-0.5 border-b bg-muted/40 px-2 py-1.5 ${hasError ? "border-red-500" : "border-border"}`}
+      role="toolbar"
+    >
+      <button
+        type="button"
+        onClick={() => commands.toggleBold?.()}
+        className={`rounded-none p-1.5 hover:bg-muted ${activeStates?.bold ? "bg-muted font-bold" : ""}`}
+        title="Bold"
+        aria-pressed={!!activeStates?.bold}
+      >
+        <span className="text-sm font-bold">B</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => commands.toggleItalic?.()}
+        className={`rounded-none p-1.5 hover:bg-muted italic ${activeStates?.italic ? "bg-muted" : ""}`}
+        title="Italic"
+        aria-pressed={!!activeStates?.italic}
+      >
+        <span className="text-sm italic">I</span>
+      </button>
+      <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+      <button
+        type="button"
+        onClick={() => commands.removeLink?.()}
+        className="rounded-none px-2 py-1.5 text-sm hover:bg-muted"
+        title="Remove link"
+      >
+        Unlink
+      </button>
+      <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+      <button
+        type="button"
+        onClick={clearFormatting}
+        className="rounded-none px-2 py-1.5 text-sm hover:bg-muted"
+        title="Clear formatting"
+      >
+        Clear
+      </button>
+    </div>
+  )
 }
 
 export function RichTextEditor({
@@ -442,13 +504,15 @@ export function RichTextEditor({
   hasError,
   minHeight = "120px",
   maxHeight = "240px",
+  toolbar = "full",
 }: RichTextEditorProps) {
   return (
     <Provider extensions={extensions}>
       <div
         className={`rounded-none border bg-background ${hasError ? "border-red-500" : "border-input"} ${className}`}
       >
-        <Toolbar hasError={hasError} />
+        {toolbar === "full" ? <Toolbar hasError={hasError} /> : null}
+        {toolbar === "minimal" ? <MinimalToolbar hasError={hasError} /> : null}
         <div style={{ minHeight, maxHeight }} className="px-3 py-2 overflow-y-auto">
           <RichText
             placeholder={placeholder}

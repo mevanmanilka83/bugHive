@@ -21,6 +21,32 @@ function useGemini(): boolean {
   return !!process.env.GEMINI_API_KEY
 }
 
+/** HTTP status from @google/genai ApiError and similar shapes */
+export function getLlmErrorHttpStatus(error: unknown): number | undefined {
+  if (error && typeof error === "object") {
+    const e = error as Record<string, unknown>
+    const s = e.status ?? e.statusCode
+    if (typeof s === "number" && s >= 400) return s
+    if (typeof s === "string" && /^\d+$/.test(s)) {
+      const n = Number(s)
+      if (n >= 400) return n
+    }
+    const cause = e.cause
+    if (cause && typeof cause === "object") {
+      const cs = (cause as Record<string, unknown>).status
+      if (typeof cs === "number" && cs >= 400) return cs
+    }
+  }
+  return undefined
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
+const GEMINI_429_MAX_RETRIES = 3
+const GEMINI_429_BASE_DELAY_MS = 1500
+
 async function generateWithGemini(options: GenerateOptions): Promise<GenerateResult> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
   const { systemPrompt, messages, maxTokens = 500, temperature = 0.7 } = options
@@ -37,15 +63,35 @@ async function generateWithGemini(options: GenerateOptions): Promise<GenerateRes
   }
   if (systemPrompt) config.systemInstruction = systemPrompt
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents,
-    config,
-  })
+  for (let attempt = 0; attempt < GEMINI_429_MAX_RETRIES; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents,
+        config,
+      })
 
-  const text = response.text?.trim()
-  if (!text) throw new Error("No response from Gemini")
-  return { text }
+      const text = response.text?.trim()
+      if (!text) throw new Error("No response from Gemini")
+      return { text }
+    } catch (err) {
+      const status = getLlmErrorHttpStatus(err)
+      const msg = err instanceof Error ? err.message : String(err)
+      const isRateLimited =
+        status === 429 ||
+        msg.toLowerCase().includes("resource_exhausted") ||
+        msg.toLowerCase().includes("too many requests")
+
+      if (isRateLimited && attempt < GEMINI_429_MAX_RETRIES - 1) {
+        const delay = GEMINI_429_BASE_DELAY_MS * 2 ** attempt
+        await sleep(delay)
+        continue
+      }
+      throw err
+    }
+  }
+
+  throw new Error("Gemini request failed")
 }
 
 async function generateWithOpenAI(options: GenerateOptions): Promise<GenerateResult> {
@@ -84,17 +130,25 @@ export async function generateChatCompletion(options: GenerateOptions): Promise<
       return await generateWithGemini(options)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      const status = (error as any)?.status
+      const status = getLlmErrorHttpStatus(error)
 
       const looksLikeQuotaError =
         status === 429 ||
+        status === 503 ||
         message.toLowerCase().includes("quota") ||
         message.toLowerCase().includes("rate limit") ||
-        message.toLowerCase().includes("resource_exhausted")
+        message.toLowerCase().includes("resource_exhausted") ||
+        message.toLowerCase().includes("too many requests")
 
       if (looksLikeQuotaError && process.env.OPENAI_API_KEY) {
         console.error("Gemini quota exceeded, falling back to OpenAI:", error)
         return generateWithOpenAI(options)
+      }
+
+      if (looksLikeQuotaError && !process.env.OPENAI_API_KEY) {
+        throw new Error(
+          "429 quota: Gemini API rate limit or quota exceeded. Try again in a minute."
+        )
       }
 
       throw error

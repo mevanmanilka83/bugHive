@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { IconDashboard } from "@tabler/icons-react"
 
 interface SidebarDashboardActionsProps {
   isAuthenticated: boolean
@@ -10,14 +10,21 @@ interface SidebarDashboardActionsProps {
 export function SidebarDashboardActions({
   isAuthenticated,
 }: SidebarDashboardActionsProps) {
+  const href = isAuthenticated ? "/dashboard" : "/auth/signin"
   return (
-    <div className="flex flex-col gap-2">
-      <Button asChild className="w-full">
-        <Link href={isAuthenticated ? "/dashboard" : "/auth/signin"}>
-          Dashboard
-        </Link>
-      </Button>
-    </div>
+    <Link
+      href={href}
+      className={[
+        "group flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium",
+        "text-foreground/80 hover:text-foreground",
+        "hover:bg-muted/60 focus-visible:bg-muted/60",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+        "transition-colors",
+      ].join(" ")}
+    >
+      <IconDashboard className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+      <span>Dashboard</span>
+    </Link>
   )
 }
 

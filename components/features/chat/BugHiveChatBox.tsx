@@ -199,26 +199,30 @@ export function BugHiveChatBox() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 bg-clip-padding text-xs/relaxed font-medium focus-visible:ring-[2px] aria-invalid:ring-[2px] inline-flex items-center justify-center whitespace-nowrap disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none group/button select-none gap-2! aria-expanded:ring-[2px] aria-expanded:ring-ring/30 cursor-pointer bg-linear-to-t hover:to-muted to-sidebar from-muted dark:from-muted/50 dark:border-border shadow-zinc-950/10 size-7 active:scale-[0.97] transition-all duration-150 fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] bg-chatbot-bg text-primary-foreground border border-chatbot-bg/70 hover:bg-chatbot-bg/90 hover:text-primary-foreground [&_svg]:text-icon-orange",
+          "fixed bottom-6 right-6 z-[9999] h-14 w-14 rounded-full border border-chatbot-bg/70 bg-chatbot-bg text-primary-foreground shadow-lg transition-all duration-150",
+          "inline-flex items-center justify-center cursor-pointer select-none active:scale-[0.97]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "hover:shadow-xl hover:bg-chatbot-bg/90 [&_svg]:pointer-events-none [&_svg]:shrink-0",
           isOpen && "scale-95"
         )}
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
-          <X className="h-6 w-6 text-icon-orange" stroke="currentColor" />
+          <X className="h-6 w-6 text-primary-foreground" stroke="currentColor" />
         ) : (
-          <BotMessageSquareIcon size={24} className="h-6 w-6 text-icon-orange" aria-hidden />
+          <BotMessageSquareIcon size={24} className="h-6 w-6 text-primary-foreground" aria-hidden />
         )}
       </Button>
 
       {isOpen && (
         <Card
           className={cn(
-            "fixed bottom-24 right-6 w-[min(96vw,24rem)] shadow-xl z-[9998] flex flex-col",
+            "fixed bottom-24 right-6 w-[min(96vw,24rem)] z-[9998] flex flex-col",
+            "rounded-xl border border-border/60 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 shadow-2xl",
             "max-h-[min(500px,80vh)]"
           )}
         >
-          <CardHeader className="pb-3 border-b shrink-0 flex flex-row items-center justify-between gap-2">
+          <CardHeader className="shrink-0 flex flex-row items-center justify-between gap-2 border-b border-border/60 bg-muted/10 pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <BotMessageSquareIcon size={20} className="h-5 w-5 text-primary" />
               BugHive Assistant
@@ -228,7 +232,7 @@ export function BugHiveChatBox() {
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 shrink-0 text-black hover:bg-muted dark:text-black"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Close chat"
             >
               <X className="h-5 w-5" />
@@ -270,10 +274,10 @@ export function BugHiveChatBox() {
                   >
                     <div
                       className={cn(
-                        "inline-block p-3 rounded-none text-sm whitespace-pre-wrap",
+                        "inline-block rounded-xl p-3 text-sm whitespace-pre-wrap",
                         message.role === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "bg-muted/80 text-foreground"
                       )}
                     >
                       {message.content}
@@ -288,22 +292,24 @@ export function BugHiveChatBox() {
               {messages.length > 0 &&
                 messages[messages.length - 1].role === "assistant" &&
                 !isLoading && (
-                  <div className="flex flex-wrap gap-2 mt-4 p-3 rounded-none bg-muted/50">
+                  <div className="mt-4 rounded-lg border border-border/50 bg-muted/40 p-3">
                     <p className="w-full text-xs text-muted-foreground mb-2 font-medium">
                       Quick questions:
                     </p>
-                    {suggestionMessages.map((suggestion, index) => (
-                      <Button
-                        key={index}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="text-xs px-3 py-1.5 h-auto rounded-none text-foreground hover:bg-muted"
-                      >
-                        {suggestion}
-                      </Button>
-                    ))}
+                    <div className="flex flex-wrap gap-2">
+                      {suggestionMessages.map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="h-auto rounded-md px-3 py-1.5 text-xs text-foreground hover:bg-muted"
+                        >
+                          {suggestion}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -314,7 +320,7 @@ export function BugHiveChatBox() {
                       <BotMessageSquareIcon size={16} className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-muted p-3 rounded-lg">
+                  <div className="rounded-xl bg-muted p-3">
                     <div className="flex gap-1">
                       {[0, 1, 2].map((i) => (
                         <div
@@ -329,7 +335,7 @@ export function BugHiveChatBox() {
               )}
             </div>
 
-            <div className="p-4 border-t shrink-0">
+            <div className="shrink-0 border-t border-border/60 bg-background/80 p-4">
               <div className="flex gap-2">
                 <Input
                   value={inputValue}
@@ -344,6 +350,7 @@ export function BugHiveChatBox() {
                   onClick={handleSendMessage}
                   disabled={!inputValue.trim() || isLoading}
                   size="icon"
+                  className="shrink-0"
                   aria-label="Send"
                 >
                   <SendIcon size={16} className="h-4 w-4" />

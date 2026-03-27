@@ -51,14 +51,15 @@ export const authConfig = {
       // Attach role from database to token on every JWT callback
       if (token.id) {
         try {
-          const db = getSupabaseAdmin()
+          const db = getSupabaseAdmin() as any
           const { data: userRow } = await db
             .from("users")
             .select("role")
             .eq("id", token.id as string)
             .maybeSingle()
-          if (userRow && typeof userRow.role === "string") {
-            ;(token as any).role = userRow.role
+          const row = userRow as any
+          if (row && typeof row.role === "string") {
+            ;(token as any).role = row.role
           }
         } catch {
           // ignore role fetch errors; default will be used

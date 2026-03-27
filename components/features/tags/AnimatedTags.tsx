@@ -49,7 +49,7 @@ export default function AnimatedTags({
         <div className="flex flex-col items-start justify-center gap-2">
           <p className="text-sm font-medium text-muted-foreground">Selected</p>
           <AnimatePresence>
-            <div className="flex min-h-12 w-full flex-wrap items-center gap-2 rounded-none border bg-background p-2">
+            <div className="grid w-full gap-2 rounded-none border bg-background p-2 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
             {selectedTag?.map((tag) => (
               <motion.div
                 animate={
@@ -57,7 +57,7 @@ export default function AnimatedTags({
                     ? { opacity: 1 }
                     : { y: 0, opacity: 1, filter: "blur(0px)" }
                 }
-                className="group flex cursor-pointer flex-row items-center justify-center gap-2 !rounded-none border px-3 py-1.5 text-sm bg-muted text-foreground hover:bg-muted/70 hover:border-primary/50 transition-colors"
+                className="group flex h-10 cursor-pointer flex-row items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/40 px-3 text-sm text-foreground hover:bg-muted/60 hover:border-primary/40 transition-colors"
                 exit={
                   shouldReduceMotion
                     ? { opacity: 0, transition: { duration: 0 } }
@@ -77,12 +77,14 @@ export default function AnimatedTags({
                     : { duration: 0.25, bounce: 0, type: "spring" }
                 }
               >
-                <span className="font-medium">{tag}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {counts[tag] ?? 0}
-                </Badge>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="font-medium truncate">{tag}</span>
+                  <Badge variant="secondary" className="text-xs tabular-nums">
+                    {counts[tag] ?? 0}
+                  </Badge>
+                </div>
                 <CircleX
-                  className="flex items-center justify-center rounded-full transition-all duration-200 opacity-70 group-hover:opacity-100"
+                  className="shrink-0 flex items-center justify-center rounded-full transition-all duration-200 opacity-70 group-hover:opacity-100"
                   size={14}
                 />
               </motion.div>
@@ -93,7 +95,7 @@ export default function AnimatedTags({
       ) : null}
 
       <AnimatePresence>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
           {tags.map((tag) => (
             <motion.div
               animate={
@@ -101,7 +103,7 @@ export default function AnimatedTags({
                   ? { opacity: 1 }
                   : { y: 0, opacity: 1, filter: "blur(0px)" }
               }
-              className="group flex cursor-pointer flex-row items-center gap-2 !rounded-none border px-3 py-1.5 text-sm transition-colors hover:bg-muted hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group flex h-10 cursor-pointer flex-row items-center justify-between gap-2 rounded-md border border-border/60 bg-background px-3 text-sm transition-colors hover:bg-muted/40 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               exit={
                 shouldReduceMotion
                   ? { opacity: 0, transition: { duration: 0 } }
@@ -121,12 +123,14 @@ export default function AnimatedTags({
                   : { duration: 0.25, bounce: 0, type: "spring" }
               }
             >
-              <span className="font-medium">{tag}</span>
-              <Badge variant="secondary" className="text-xs">
-                {counts[tag] ?? 0}
-              </Badge>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="font-medium truncate">{tag}</span>
+                <Badge variant="secondary" className="text-xs tabular-nums">
+                  {counts[tag] ?? 0}
+                </Badge>
+              </div>
               <Plus
-                className="flex items-center justify-center rounded-full transition-all duration-200 opacity-70 group-hover:opacity-100"
+                className="shrink-0 flex items-center justify-center rounded-full transition-all duration-200 opacity-70 group-hover:opacity-100"
                 size={14}
               />
             </motion.div>

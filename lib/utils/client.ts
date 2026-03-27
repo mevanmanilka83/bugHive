@@ -147,6 +147,56 @@ export function setClusterViewMode(mode: ClusterViewMode): void {
 }
 
 // ============================================================================
+// RECENTLY VIEWED (localStorage)
+// ============================================================================
+
+export const RECENTLY_VIEWED_BUGS_KEY = "bugHive.recentlyViewed.bugs"
+
+export type RecentlyViewedBug = {
+  id: string
+  title: string
+  priority?: string
+  status?: string
+  viewed_at: string
+}
+
+function safeJsonParse<T>(raw: string | null): T | null {
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return null
+  }
+}
+
+export function getRecentlyViewedBugs(limit: number = 5): RecentlyViewedBug[] {
+  if (typeof window === "undefined") return []
+  const parsed = safeJsonParse<unknown>(window.localStorage.getItem(RECENTLY_VIEWED_BUGS_KEY))
+  const list = Array.isArray(parsed) ? (parsed as RecentlyViewedBug[]) : []
+  return list
+    .filter((x) => x && typeof x.id === "string" && typeof x.title === "string" && typeof x.viewed_at === "string")
+    .slice(0, Math.max(0, limit))
+}
+
+export function addRecentlyViewedBug(
+  bug: Omit<RecentlyViewedBug, "viewed_at">,
+  opts: { limit?: number } = {}
+): void {
+  if (typeof window === "undefined") return
+  const limit = Math.max(1, opts.limit ?? 20)
+  const nextItem: RecentlyViewedBug = {
+    ...bug,
+    title: bug.title || "Untitled",
+    viewed_at: new Date().toISOString(),
+  }
+
+  const current = getRecentlyViewedBugs(limit)
+  const deduped = [nextItem, ...current.filter((x) => x.id !== bug.id)]
+  window.localStorage.setItem(RECENTLY_VIEWED_BUGS_KEY, JSON.stringify(deduped.slice(0, limit)))
+  window.dispatchEvent(new Event("recentlyViewed:bugs"))
+}
+
+// ============================================================================
 // CLUSTER PREFERENCES (localStorage)
 // ============================================================================
 
@@ -274,4 +324,49 @@ export function setAppLocale(locale: AppLocale): void {
 
 export function getLocaleLabel(locale: AppLocale): string {
   return LOCALE_LABELS[locale]
+}
+
+// ============================================================================
+// HTTP UTILITIES (client-safe)
+// ============================================================================
+
+type RetryOptions = {
+  attempts?: number
+  baseDelayMs?: number
+  retryOnStatuses?: number[]
+}
+
+/**
+ * Fetch wrapper that retries transient failures (429/5xx + network errors).
+ * Useful for non-idempotent calls when your server endpoints are safe to retry.
+ */
+export async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  opts: RetryOptions = {}
+): Promise<Response> {
+  const attempts = Math.max(1, opts.attempts ?? 2)
+  const baseDelayMs = Math.max(0, opts.baseDelayMs ?? 500)
+  const retryOnStatuses = opts.retryOnStatuses ?? [429, 500, 502, 503, 504]
+
+  let lastErr: unknown = null
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(input, init)
+      if (!res.ok && retryOnStatuses.includes(res.status) && i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, baseDelayMs * (i + 1)))
+        continue
+      }
+      return res
+    } catch (e) {
+      lastErr = e
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, baseDelayMs * (i + 1)))
+        continue
+      }
+      throw lastErr
+    }
+  }
+  // Unreachable, but keeps TS happy.
+  throw lastErr
 }

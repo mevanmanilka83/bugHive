@@ -22,7 +22,7 @@ export async function GET(
   try {
     const { id: bugId } = await context.params
     const uuid = ensureValidUUID(bugId)
-    const supabase = getSupabaseAdmin()
+    const supabase = (await getSupabaseAdmin()) as any
 
     const { data: comments, error } = await supabase
       .from("bug_comments")
@@ -136,7 +136,7 @@ export async function POST(
       return errorResponse("Comment content is required", 400)
     }
 
-    const supabase = getSupabaseAdmin()
+    const supabase = (await getSupabaseAdmin()) as any
     const { data: bug } = await supabase.from("bugs").select("id, visibility, created_by").eq("id", uuid).single()
     if (!bug) {
       return errorResponse("Bug not found", 404)

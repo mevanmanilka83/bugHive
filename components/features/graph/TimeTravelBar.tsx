@@ -100,7 +100,7 @@ export function TimeTravelBar({
   return (
     <div
       className={cn(
-        "shrink-0 border-t border-white/20 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center",
+        "shrink-0 border-t border-white/20 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl px-4 py-3 flex flex-wrap items-center gap-3",
         className
       )}
     >
@@ -125,9 +125,32 @@ export function TimeTravelBar({
           type="range"
           min={0}
           max={100}
+          step={1}
           value={percent}
           onChange={(e) => onPercentChange(Number(e.target.value))}
-          className="w-full h-2 rounded-full appearance-none bg-muted accent-primary cursor-pointer"
+          onKeyDown={(e) => {
+            const step = e.shiftKey ? 10 : 1
+            if (e.key === "Home") {
+              e.preventDefault()
+              onPercentChange(0)
+            } else if (e.key === "End") {
+              e.preventDefault()
+              onPercentChange(100)
+            } else if (e.key === "PageDown") {
+              e.preventDefault()
+              onPercentChange(Math.max(0, percent - 10))
+            } else if (e.key === "PageUp") {
+              e.preventDefault()
+              onPercentChange(Math.min(100, percent + 10))
+            } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+              e.preventDefault()
+              onPercentChange(Math.max(0, percent - step))
+            } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+              e.preventDefault()
+              onPercentChange(Math.min(100, percent + step))
+            }
+          }}
+          className="w-full h-2 rounded-full appearance-none bg-muted accent-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="Slide back in time to see how the graph grew"
         />
         {/* Milestone markers */}

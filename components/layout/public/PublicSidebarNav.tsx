@@ -60,8 +60,11 @@ function resolveHref(
 
 function navLinkClass(isActive: boolean) {
   return [
-    "flex items-center gap-2 rounded-none px-3 py-2 text-sm",
-    isActive ? "bg-muted font-medium text-foreground" : "hover:bg-muted",
+    "group flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+    "text-foreground/80 hover:text-foreground",
+    "hover:bg-muted/60 focus-visible:bg-muted/60",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+    isActive ? "bg-muted text-foreground" : "",
   ].join(" ")
 }
 
@@ -249,8 +252,19 @@ export function PublicSidebarNav({
 
           const isActive = item.key === active
           return (
-            <Link key={item.key} href={href} className={navLinkClass(isActive)}>
-              <item.icon className={`size-4 ${isActive ? "text-icon-orange" : ""}`} />
+            <Link
+              key={item.key}
+              href={href}
+              className={navLinkClass(isActive)}
+              data-active={isActive ? "true" : "false"}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <item.icon
+                className={[
+                  "size-4 transition-colors",
+                  isActive ? "text-icon-orange" : "text-muted-foreground group-hover:text-foreground",
+                ].join(" ")}
+              />
               <span>{item.title}</span>
             </Link>
           )
@@ -277,8 +291,15 @@ export function PublicSidebarNav({
                 key={item.key}
                 href={href}
                 className={navLinkClass(isActive)}
+                data-active={isActive ? "true" : "false"}
+                aria-current={isActive ? "page" : undefined}
               >
-                <item.icon className={`size-4 ${isActive ? "text-icon-orange" : ""}`} />
+                <item.icon
+                  className={[
+                    "size-4 transition-colors",
+                    isActive ? "text-icon-orange" : "text-muted-foreground group-hover:text-foreground",
+                  ].join(" ")}
+                />
                 <span>{item.title}</span>
                 {item.key === "notifications" && isAuthenticated && (
                   <NotificationBadge count={notificationCount} />

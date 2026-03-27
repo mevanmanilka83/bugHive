@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { IconBell, IconCheck, IconUsers, IconMail, IconBug, IconX, IconUserPlus, IconBulb } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -78,6 +79,29 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     } finally {
       window.dispatchEvent(new Event("notification:updated"))
     }
+  }
+
+  const markNotificationUnread = async (notificationId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: false } : n))
+    )
+    try {
+      await fetch(`/api/notifications/${notificationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ read: false }),
+      })
+    } catch {
+      // ignore
+    } finally {
+      window.dispatchEvent(new Event("notification:updated"))
+    }
+  }
+
+  const getNotificationHref = (notification: any) => {
+    if (notification?.bug_id) return `/bugs/${notification.bug_id}`
+    if (notification?.cluster_id) return `/clusters/${notification.cluster_id}`
+    return null
   }
 
   const handleAcceptInvite = async (notification: any) => {
@@ -210,11 +234,17 @@ export function NotificationsList({ userId }: NotificationsListProps) {
     <div>
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "unread")}>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="unread" className="flex-1 sm:flex-initial">
+          <TabsList className="w-full sm:w-auto border border-border/60 bg-muted/40">
+            <TabsTrigger
+              value="unread"
+              className="flex-1 sm:flex-initial data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
               Unread ({unreadCount})
             </TabsTrigger>
-            <TabsTrigger value="all" className="flex-1 sm:flex-initial">
+            <TabsTrigger
+              value="all"
+              className="flex-1 sm:flex-initial data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
               All ({notifications.length})
             </TabsTrigger>
           </TabsList>
@@ -240,9 +270,12 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                 <NotificationCard
                   key={notification.id}
                   notification={notification}
+                  href={getNotificationHref(notification)}
                   onAcceptInvite={handleAcceptInvite}
                   onDeclineInvite={handleDeclineInvite}
                   onRespondJoinRequest={handleRespondJoinRequest}
+                  onMarkRead={() => markNotificationRead(notification.id)}
+                  onMarkUnread={() => markNotificationUnread(notification.id)}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -265,9 +298,12 @@ export function NotificationsList({ userId }: NotificationsListProps) {
                 <NotificationCard
                   key={notification.id}
                   notification={notification}
+                  href={getNotificationHref(notification)}
                   onAcceptInvite={handleAcceptInvite}
                   onDeclineInvite={handleDeclineInvite}
                   onRespondJoinRequest={handleRespondJoinRequest}
+                  onMarkRead={() => markNotificationRead(notification.id)}
+                  onMarkUnread={() => markNotificationUnread(notification.id)}
                   getIcon={getNotificationIcon}
                   getColor={getNotificationColor}
                 />
@@ -282,45 +318,79 @@ export function NotificationsList({ userId }: NotificationsListProps) {
 
 interface NotificationCardProps {
   notification: any
+  href: string | null
   onAcceptInvite?: (notification: any) => void
   onDeclineInvite?: (notification: any) => void
   onRespondJoinRequest?: (notification: any, action: "accept" | "decline") => void
+  onMarkRead: () => void
+  onMarkUnread: () => void
   getIcon: (type: string) => React.ReactNode
   getColor: (type: string) => string
 }
 
 function NotificationCard({
   notification,
+  href,
   onAcceptInvite,
   onDeclineInvite,
   onRespondJoinRequest,
+  onMarkRead,
+  onMarkUnread,
   getIcon,
   getColor,
 }: NotificationCardProps) {
   const created = notification.created_at ? new Date(notification.created_at) : new Date()
   const timeAgo = getTimeAgo(created)
+  const canOpen = Boolean(href)
+  const isUnread = !notification.read
 
   return (
-    <Card className={notification.read ? "opacity-60" : ""}>
-      <CardHeader>
+    <Card
+      className={[
+        "transition-colors",
+        isUnread ? "border-border/70 bg-card" : "border-border/50 bg-card/60",
+        isUnread ? "shadow-sm" : "",
+        isUnread ? "border-l-4 border-l-primary" : "border-l-4 border-l-transparent",
+        canOpen ? "hover:bg-muted/20" : "",
+      ].join(" ")}
+    >
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className={`${getColor(notification.type)} text-white rounded-full p-2 flex-shrink-0`}>
               {getIcon(notification.type)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <CardTitle className="text-base">{notification.title}</CardTitle>
-                {!notification.read && (
-                  <Badge variant="default" className="h-5 px-1.5 text-xs">New</Badge>
-                )}
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="text-base leading-snug">
+                  {canOpen ? (
+                    <Link
+                      href={href as string}
+                      className="hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 rounded-sm"
+                      onClick={() => {
+                        if (isUnread) onMarkRead()
+                      }}
+                    >
+                      {notification.title}
+                    </Link>
+                  ) : (
+                    notification.title
+                  )}
+                </CardTitle>
+                {isUnread ? (
+                  <Badge variant="secondary" className="h-5 rounded-full px-2 text-[11px] font-medium">
+                    New
+                  </Badge>
+                ) : null}
               </div>
-              {notification.message && (
-                <CardDescription className="mt-1">{notification.message}</CardDescription>
-              )}
-              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                <span>{timeAgo}</span>
-                {notification.cluster_id && (
+              {notification.message ? (
+                <CardDescription className="mt-1 line-clamp-2">
+                  {notification.message}
+                </CardDescription>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                <span className="tabular-nums">{timeAgo}</span>
+                {notification.cluster_id ? (
                   <span className="flex items-center gap-1">
                     <IconUsers className="size-3" />
                     {notification.cluster_name ? (
@@ -331,51 +401,78 @@ function NotificationCard({
                       "Cluster"
                     )}
                   </span>
-                )}
-                {notification.bug_id && notification.type !== "cluster_join_request" && (
+                ) : null}
+                {notification.bug_id && notification.type !== "cluster_join_request" ? (
                   <span className="flex items-center gap-1">
                     <IconBug className="size-3" />
                     Bug
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {notification.type === 'cluster_invite' && !notification.read && onAcceptInvite && (
-              <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {canOpen ? (
+              <Button asChild variant="outline" size="sm" className="h-8">
+                <Link
+                  href={href as string}
+                  onClick={() => {
+                    if (isUnread) onMarkRead()
+                  }}
+                >
+                  Open
+                </Link>
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => (isUnread ? onMarkRead() : onMarkUnread())}
+            >
+              {isUnread ? "Mark read" : "Mark unread"}
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      {(notification.type === "cluster_invite" && isUnread && onAcceptInvite) ||
+      (notification.type === "cluster_join_request" && isUnread) ? (
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {notification.type === "cluster_invite" && isUnread && onAcceptInvite ? (
+              <>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onAcceptInvite(notification)}
-                  className="h-8 px-4 gap-1"
-                  title="Accept invitation"
+                  className="h-8 px-3 gap-1"
                 >
                   <IconUserPlus className="size-4" />
                   <span>Accept</span>
                 </Button>
-                {onDeclineInvite && (
+                {onDeclineInvite ? (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onDeclineInvite(notification)}
-                    className="h-8 px-4 gap-1"
-                    title="Decline invitation"
+                    className="h-8 px-3 gap-1"
                   >
                     <IconX className="size-4" />
                     <span>Decline</span>
                   </Button>
-                )}
-              </div>
-            )}
-            {notification.type === 'cluster_join_request' && !notification.read && (
-              <div className="flex items-center gap-2">
+                ) : null}
+              </>
+            ) : null}
+
+            {notification.type === "cluster_join_request" && isUnread ? (
+              <>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onRespondJoinRequest?.(notification, "accept")}
-                  className="h-8 px-4 gap-1"
-                  title="Accept request"
+                  className="h-8 px-3 gap-1"
                 >
                   <IconCheck className="size-4" />
                   <span>Accept</span>
@@ -384,17 +481,16 @@ function NotificationCard({
                   variant="outline"
                   size="sm"
                   onClick={() => onRespondJoinRequest?.(notification, "decline")}
-                  className="h-8 px-4 gap-1"
-                  title="Decline request"
+                  className="h-8 px-3 gap-1"
                 >
                   <IconX className="size-4" />
                   <span>Decline</span>
                 </Button>
-              </div>
-            )}
+              </>
+            ) : null}
           </div>
-        </div>
-      </CardHeader>
+        </CardContent>
+      ) : null}
     </Card>
   )
 }
