@@ -18,7 +18,6 @@ export function CopyGraphButton({ workspaceId }: { workspaceId: string }) {
         if (!res.ok) {
           const err = await res.json().catch(() => null)
           const msg = err?.error || "Failed to copy"
-          // Retry on likely transient errors
           if (i < attempts - 1 && (res.status >= 500 || res.status === 429)) {
             await new Promise((r) => setTimeout(r, 500 * (i + 1)))
             continue

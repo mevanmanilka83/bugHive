@@ -47,12 +47,10 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
   const hasProcessedRef = React.useRef<string | null>(null)
   const onSuccessRef = React.useRef(onSuccess)
 
-  // Keep ref updated
   React.useEffect(() => {
     onSuccessRef.current = onSuccess
   }, [onSuccess])
 
-  // Reset when dialog closes
   React.useEffect(() => {
     if (!open) {
       hasProcessedRef.current = null
@@ -62,7 +60,6 @@ export function CreateClusterDialog({ open, onOpenChange, onSuccess }: CreateClu
   }, [open])
 
   React.useEffect(() => {
-    // Create a unique key for this state to prevent duplicate processing
     const stateKey = state?.success ? 'success' : state?.error ? `error-${state.error}` : null
 
     if (stateKey && state && hasProcessedRef.current !== stateKey) {

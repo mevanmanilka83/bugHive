@@ -18,7 +18,6 @@ interface SolutionStep1BasicProps {
   canNext: boolean
   onNext: () => void
   onCancel: () => void
-  /** Bug context for AI suggestions */
   bugTitle?: string
   bugDescription?: string
 }

@@ -6,11 +6,6 @@ export const dynamic = "force-dynamic"
 
 const TIMEOUT_MS = 8000
 
-/**
- * GET /api/validate-link?url=...
- * Returns { valid: boolean } - true if URL returns 2xx (HEAD or GET), false otherwise.
- * Only allows http/https URLs.
- */
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("url")
   if (!url || typeof url !== "string" || !url.trim()) {

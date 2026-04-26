@@ -6,10 +6,6 @@ interface SettingsNoteProps {
   className?: string
 }
 
-/**
- * Unified informational note for settings pages.
- * Spacing uses shared settings scale for consistent gaps.
- */
 export function SettingsNote({ title, children, className }: SettingsNoteProps) {
   return (
     <div

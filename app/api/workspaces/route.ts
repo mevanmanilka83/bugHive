@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
 
         const supabase = await getSupabaseAdmin()
 
-        // Cluster-scoped listing: workspaces for a specific cluster
         if (clusterId) {
             const baseQuery = (supabase as any)
                 .from("saved_graphs")
@@ -19,14 +18,12 @@ export async function GET(request: NextRequest) {
                 .eq("origin_cluster_id", clusterId)
                 .order("updated_at", { ascending: false })
 
-            // Unauthenticated: only cluster-public workspaces
             if (!userId) {
                 const { data, error } = await baseQuery.eq("is_public", true).limit(50)
                 if (error) throw error
                 return NextResponse.json({ success: true, graphs: data || [] })
             }
 
-            // Authenticated: show all for this cluster; client can filter by private/public
             const { data, error } = await baseQuery.limit(100)
             if (error) throw error
             return NextResponse.json({ success: true, graphs: data || [] })
@@ -97,7 +94,6 @@ export async function POST(request: Request) {
 
         const supabase = await getSupabaseAdmin()
 
-        // Derive origin_cluster_id from origin_bug_id when not explicitly provided
         if (!origin_cluster_id && origin_bug_id) {
             try {
                 const { data: bug } = await (supabase as any)
@@ -110,7 +106,6 @@ export async function POST(request: Request) {
                     origin_cluster_id = bug.cluster_id
                 }
             } catch {
-                // If we fail to look up the bug/cluster, continue without blocking workspace creation.
             }
         }
         const { data, error } = await (supabase as any)

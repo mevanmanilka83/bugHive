@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdmin, getAuthenticatedUserId } from "@/lib"
 
-/**
- * POST /api/workspaces/[id]/copy
- * Copy a public saved graph to the current user's private graphs (so they can add ideas/solutions).
- */
 export async function POST(
   _request: Request,
   context: { params: Promise<{ id: string }> }

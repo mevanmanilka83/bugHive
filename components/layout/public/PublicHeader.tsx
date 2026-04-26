@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import Image from "next/image"
 
 export function PublicHeader({
   user
@@ -23,14 +22,7 @@ export function PublicHeader({
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <div className="flex items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="BugHive Logo"
-            width={20}
-            height={20}
-            className="rounded-md"
-          />
-          <h1 className="text-base font-medium">BugHive Dashboard</h1>
+          <h1 className="text-base font-medium">Dashboard</h1>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-muted-foreground hidden sm:block">

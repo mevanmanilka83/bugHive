@@ -6,7 +6,6 @@ const bugHandler = createBugHandler()
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** GET: List bugs. Public (no auth required) so public bugs show when logged out. */
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)

@@ -1,11 +1,5 @@
 import { z } from "zod"
 
-/**
- * Login/Credentials Validation Schema
- * 
- * Validates login credentials for authentication.
- * This is the single source of truth for login validation.
- */
 export function getLoginValidationSchema() {
   return z.object({
     email: z.string()

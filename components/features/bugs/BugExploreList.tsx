@@ -44,17 +44,17 @@ interface FilterState {
 
 interface BugExploreListProps {
   userId: string
-  /** When set (e.g. from /?tag=...), bugs are filtered to those with this tag. */
   initialTag?: string
-  /** When set (e.g. from /?tags=tag1,tag2), bugs are filtered to those with any of these tags. */
   initialTags?: string[]
   showTitle?: boolean
   showReportButton?: boolean
   currentUserName?: string
   currentUserImage?: string
+  detailBasePath?: string
 }
 
 const ALL_ASSIGNEES_VALUE = "__all_assignees__"
+type AssigneeOption = { id: string; label: string }
 
 export function BugExploreList({
   userId,
@@ -64,6 +64,7 @@ export function BugExploreList({
   showReportButton = true,
   currentUserName,
   currentUserImage,
+  detailBasePath = "/bugs",
 }: BugExploreListProps) {
   const router = useRouter()
   const [bugs, setBugs] = React.useState<any[]>([])
@@ -88,7 +89,7 @@ export function BugExploreList({
     assignee: "",
   })
   const [availableTags, setAvailableTags] = React.useState<string[]>([])
-  const [availableAssignees, setAvailableAssignees] = React.useState<string[]>([])
+  const [availableAssignees, setAvailableAssignees] = React.useState<AssigneeOption[]>([])
 
   const chartConfig: ChartConfig = {
     count: {
@@ -104,17 +105,15 @@ export function BugExploreList({
       if (!res.ok) return
       const data = await res.json()
       const items: any[] = data?.bugs || []
-      // Filter out private bugs - only show public bugs in Bug Explore
       const publicBugs = items.filter(bug => {
         const visibility = (bug.visibility || "public").toLowerCase().trim()
         return visibility !== "private"
       })
       setAllBugs(publicBugs)
 
-      // Extract unique tags and assignees
       const tagSet = new Set<string>()
       const assigneeSet = new Set<string>()
-      items.forEach(bug => {
+      publicBugs.forEach(bug => {
         if (Array.isArray(bug.tags)) {
           bug.tags.forEach((tag: string) => tagSet.add(tag))
         }
@@ -123,7 +122,34 @@ export function BugExploreList({
         }
       })
       setAvailableTags(Array.from(tagSet).sort())
-      setAvailableAssignees(Array.from(assigneeSet).sort())
+
+      const assigneeIds = Array.from(assigneeSet)
+      if (assigneeIds.length === 0) {
+        setAvailableAssignees([])
+        return
+      }
+
+      const usersRes = await fetch(`/api/users/batch?ids=${encodeURIComponent(assigneeIds.join(","))}`)
+      const usersJson = usersRes.ok ? await usersRes.json().catch(() => ({ users: [] })) : { users: [] }
+      const users: any[] = Array.isArray(usersJson?.users) ? usersJson.users : []
+      const userMap = new Map<string, string>()
+      users.forEach((u) => {
+        const id = (u?.id || "").toString().trim()
+        if (!id) return
+        const label =
+          (u?.name || u?.username || u?.email || "").toString().trim() ||
+          id.slice(0, 8)
+        userMap.set(id, label)
+      })
+
+      const options = assigneeIds
+        .map((id) => ({
+          id,
+          label: userMap.get(id) ?? id.slice(0, 8),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+
+      setAvailableAssignees(options)
     } finally {
       setLoading(false)
     }
@@ -132,7 +158,6 @@ export function BugExploreList({
   const applyFilters = React.useCallback((bugsToFilter: any[] = allBugs) => {
     let filtered = [...bugsToFilter]
 
-    // Search query filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(bug => {
@@ -142,7 +167,6 @@ export function BugExploreList({
       })
     }
 
-    // Status filter
     if (filters.status.length > 0) {
       filtered = filtered.filter(bug => {
         const bugStatus = (bug.status || "open").toLowerCase()
@@ -150,7 +174,6 @@ export function BugExploreList({
       })
     }
 
-    // Priority filter
     if (filters.priority.length > 0) {
       filtered = filtered.filter(bug => {
         const bugPriority = (bug.priority || "medium").toLowerCase()
@@ -158,7 +181,6 @@ export function BugExploreList({
       })
     }
 
-    // Tags filter
     if (filters.tags.length > 0) {
       filtered = filtered.filter(bug => {
         const bugTags = Array.isArray(bug.tags) ? bug.tags.map((t: string) => t.toLowerCase()) : []
@@ -166,7 +188,6 @@ export function BugExploreList({
       })
     }
 
-    // Date Created filter
     if (filters.dateCreatedFrom) {
       const fromDate = new Date(filters.dateCreatedFrom)
       filtered = filtered.filter(bug => {
@@ -183,7 +204,6 @@ export function BugExploreList({
       })
     }
 
-    // Date Modified filter
     if (filters.dateModifiedFrom) {
       const fromDate = new Date(filters.dateModifiedFrom)
       filtered = filtered.filter(bug => {
@@ -200,21 +220,19 @@ export function BugExploreList({
       })
     }
 
-    // Environment filters (Browser / OS / Device - simple substring match on environment field)
     if (filters.browser) {
-      const browserQuery = filters.browser.toLowerCase()
+      const browserQuery = filters.browser.trim().toLowerCase()
       filtered = filtered.filter(bug => (bug.environment || "").toLowerCase().includes(browserQuery))
     }
     if (filters.os) {
-      const osQuery = filters.os.toLowerCase()
+      const osQuery = filters.os.trim().toLowerCase()
       filtered = filtered.filter(bug => (bug.environment || "").toLowerCase().includes(osQuery))
     }
     if (filters.device) {
-      const deviceQuery = filters.device.toLowerCase()
+      const deviceQuery = filters.device.trim().toLowerCase()
       filtered = filtered.filter(bug => (bug.environment || "").toLowerCase().includes(deviceQuery))
     }
 
-    // Assignee filter
     if (filters.assignee) {
       filtered = filtered.filter(bug => {
         const assignedTo = (bug.assigned_to || "").toLowerCase()
@@ -224,7 +242,6 @@ export function BugExploreList({
 
     setBugs(filtered)
 
-    // Build chart data
     const byDay = new Map<string, number>()
     for (const bug of filtered) {
       const createdAt = bug.created_at || bug.createdAt || bug.createdat
@@ -242,7 +259,6 @@ export function BugExploreList({
     fetchBugs()
   }, [])
 
-  // Sync tag filter from URL when initialTag(s) change (e.g. user clicked tag(s) on /tags)
   React.useEffect(() => {
     const cleaned =
       Array.isArray(initialTags) && initialTags.length > 0
@@ -299,7 +315,6 @@ export function BugExploreList({
       dateModifiedTo: "",
       assignee: "",
     })
-    // Clear tag from URL so refresh doesn't re-apply it
     if (typeof window !== "undefined" && window.location.search.includes("tag=")) {
       router.replace("/", { scroll: false })
     }
@@ -325,7 +340,6 @@ export function BugExploreList({
   const statusOptions = ["open", "in_progress", "resolved", "closed", "reopened"]
   const priorityOptions = ["low", "medium", "high", "critical"]
 
-  // Reusable filter content component
   const FilterContent = () => (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -348,8 +362,8 @@ export function BugExploreList({
         <div className="space-y-2">
           <Label className="text-sm font-medium">Bug Status</Label>
           <div className="space-y-2">
-            {statusOptions.map(status => (
-              <div key={status} className="flex items-center space-x-2">
+            {statusOptions.map((status, idx) => (
+              <div key={`status-${status}-${idx}`} className="flex items-center space-x-2">
                 <Checkbox
                   id={`status-${status}`}
                   checked={filters.status.includes(status)}
@@ -370,8 +384,8 @@ export function BugExploreList({
         <div className="space-y-2">
           <Label className="text-sm font-medium">Priority Level</Label>
           <div className="space-y-2">
-            {priorityOptions.map(priority => (
-              <div key={priority} className="flex items-center space-x-2">
+            {priorityOptions.map((priority, idx) => (
+              <div key={`priority-${priority}-${idx}`} className="flex items-center space-x-2">
                 <Checkbox
                   id={`priority-${priority}`}
                   checked={filters.priority.includes(priority)}
@@ -399,7 +413,7 @@ export function BugExploreList({
             <Input
               id="env-browser"
               type="text"
-              placeholder="e.g. Chrome"
+                placeholder="e.g. chrome"
               value={filters.browser}
               onChange={(e) => setFilters(prev => ({ ...prev, browser: e.target.value }))}
               className="h-8"
@@ -410,7 +424,7 @@ export function BugExploreList({
             <Input
               id="env-os"
               type="text"
-              placeholder="e.g. macOS, Windows"
+                placeholder="e.g. macos, windows"
               value={filters.os}
               onChange={(e) => setFilters(prev => ({ ...prev, os: e.target.value }))}
               className="h-8"
@@ -421,7 +435,7 @@ export function BugExploreList({
             <Input
               id="env-device"
               type="text"
-              placeholder="e.g. iPhone 15"
+                placeholder="e.g. iphone 15"
               value={filters.device}
               onChange={(e) => setFilters(prev => ({ ...prev, device: e.target.value }))}
               className="h-8"
@@ -507,9 +521,9 @@ export function BugExploreList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL_ASSIGNEES_VALUE}>All assignees</SelectItem>
-              {availableAssignees.map(assignee => (
-                <SelectItem key={assignee} value={assignee}>
-                  {assignee}
+              {availableAssignees.map((assignee, idx) => (
+                <SelectItem key={`assignee-${assignee.id}-${idx}`} value={assignee.id}>
+                  {assignee.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -525,8 +539,8 @@ export function BugExploreList({
             <Label className="text-sm font-medium">Tags</Label>
             <div className="max-h-32 overflow-y-auto">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {availableTags.map(tag => (
-                  <div key={tag} className="flex items-center space-x-2">
+                {availableTags.map((tag, idx) => (
+                  <div key={`tag-${String(tag)}-${idx}`} className="flex items-center space-x-2">
                     <Checkbox
                       id={`tag-${tag}`}
                       checked={filters.tags.includes(tag)}
@@ -550,7 +564,7 @@ export function BugExploreList({
   )
 
   function openBugDetails(bugId: string) {
-    router.push(`/bugs/${bugId}`)
+    router.push(`${detailBasePath}/${bugId}`)
   }
 
   const searchSuggestions = React.useMemo(() => {
@@ -581,18 +595,16 @@ export function BugExploreList({
           />
           {searchSuggestions.length > 0 && (
             <div className="absolute z-20 mt-1 w-full rounded-none border border-border bg-card shadow-sm max-h-48 overflow-y-auto">
-              {searchSuggestions.map((title) => (
+              {searchSuggestions.map((title, idx) => (
                 <button
-                  key={title}
+                  key={`suggestion-${title}-${idx}`}
                   type="button"
                   className="w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
                   onMouseDown={(e) => {
                     e.preventDefault()
                     setSearchQuery(title)
-                    // Immediately apply filters with the selected title
                     const fakeEvent = { target: { value: title } } as React.ChangeEvent<HTMLInputElement>
                     setSearchQuery(title)
-                    // reuse applyFilters logic with updated query
                     const q = title.toLowerCase()
                     const matches = allBugs.filter((bug) => {
                       const t = (bug.title || "").toLowerCase()

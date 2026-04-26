@@ -16,14 +16,12 @@ import { getAcceptInviteValidationSchema } from "@/lib"
 
 export async function acceptClusterInvite(clusterId: string): Promise<ActionResponse<{ message?: string }>> {
   try {
-    // Check authentication
     const authResult = await requireAuth()
     if (!authResult.success) {
       return authResult
     }
     const { session } = authResult
 
-    // Validate clusterId
     const validation = validateWithSchema(getAcceptInviteValidationSchema(), { clusterId })
     if (!validation.success) {
       return validation
@@ -34,22 +32,18 @@ export async function acceptClusterInvite(clusterId: string): Promise<ActionResp
       return { success: false, error: "Unauthorized" }
     }
 
-    // Get cluster
     const clusterResult = await getClusterById(clusterId)
     if (!clusterResult.success) {
       return clusterResult
     }
     const cluster = clusterResult.cluster
 
-    // Check if user has a pending invite
     if (!cluster.invites || !cluster.invites.includes(userId)) {
       return { success: false, error: "No pending invitation found" }
     }
 
-    // Always ensure user record exists and is up-to-date in Supabase
     const username = getUsernameFromSession(session)
     
-    // Upsert user record with current session data
     await supabase
       .from('users')
       .upsert({
@@ -63,7 +57,6 @@ export async function acceptClusterInvite(clusterId: string): Promise<ActionResp
         onConflict: 'id'
       })
 
-    // Remove from invites and add to members
     const updatedInvites = (cluster.invites || []).filter((id: string) => id !== userId)
     const updatedMembers = [...(cluster.members || []), userId]
     const updatedMembersUsernames = [...(cluster.members_usernames || []), username]
@@ -81,7 +74,6 @@ export async function acceptClusterInvite(clusterId: string): Promise<ActionResp
       return handleSupabaseError(updateError, 'Failed to accept invitation')
     }
 
-    // Mark notification as read
     await supabase
       .from('notifications')
       .update({ read: true })

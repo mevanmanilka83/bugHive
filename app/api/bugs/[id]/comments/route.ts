@@ -11,10 +11,6 @@ type PostBody = { content?: string }
 type CommentReactionCount = { emoji: string; count: number }
 type CommentRow = { id: string; content: string; created_at: string; user_id: string | null }
 
-/**
- * GET /api/bugs/[id]/comments
- * List comments for a bug (for display on bug detail page).
- */
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -49,7 +45,6 @@ export async function GET(
         .select("comment_id, emoji")
         .in("comment_id", commentIds)
 
-      // aggregate counts in-process (small list; avoids DB RPC complexity)
       const agg = new Map<string, Map<string, number>>()
       for (const r of (countsRows ?? []) as Array<{ comment_id: string; emoji: string }>) {
         if (!agg.has(r.comment_id)) agg.set(r.comment_id, new Map())
@@ -63,7 +58,6 @@ export async function GET(
         ])
       )
 
-      // If logged in, include which emojis the current user has reacted with.
       const authResult = await checkAuth()
       if (!(authResult instanceof NextResponse)) {
         const uid = ensureValidUUID(authResult.user.id)
@@ -114,10 +108,6 @@ export async function GET(
   }
 }
 
-/**
- * POST /api/bugs/[id]/comments
- * Add a comment on a bug (e.g. "Merge & Follow" from Duplicate Radar).
- */
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

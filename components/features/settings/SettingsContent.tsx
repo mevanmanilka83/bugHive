@@ -43,9 +43,7 @@ function SettingsRow({
 }: {
   label: string
   description?: string
-  /** Shown on the right before the chevron for navigation rows */
   valueLabel?: string
-  /** When set, row navigates to this URL (same pattern as other settings rows) */
   href?: string
   children?: React.ReactNode
   onClick?: () => void
@@ -112,9 +110,10 @@ function SettingsRow({
   )
 }
 
-export function SettingsContent() {
+export function SettingsContent({ basePath = "/settings" }: { basePath?: string }) {
   const [clusterViewMode, setStateViewMode] = React.useState<ClusterViewMode>("list")
   const [isLoading, setIsLoading] = React.useState(true)
+  const to = (path: string) => `${basePath}${path}`
 
   React.useEffect(() => {
     setStateViewMode(getClusterViewMode())
@@ -132,17 +131,17 @@ export function SettingsContent() {
   }
 
   return (
-    <div className="max-w-2xl p-6">
+    <div className="w-full">
       <SettingsSection title="Account Settings">
         <SettingsRow
           label="Profile"
           description="Name, email, avatar"
-          href="/settings/profile"
+          href={to("/profile")}
         />
         <SettingsRow
           label="Password"
           description="Change your password"
-          href="/settings/password"
+          href={to("/password")}
         />
       </SettingsSection>
 
@@ -150,13 +149,13 @@ export function SettingsContent() {
         <SettingsRow
           label="Profile visibility"
           description="Who can see your profile"
-          href="/settings/profile-visibility"
+          href={to("/profile-visibility")}
         />
         <div className="mb-6">
           <SettingsRow
             label="Activity visibility"
             description="Show your activity on bugs and clusters"
-            href="/settings/activity-visibility"
+            href={to("/activity-visibility")}
           />
         </div>
       </SettingsSection>
@@ -165,13 +164,13 @@ export function SettingsContent() {
         <SettingsRow
           label="Email notifications"
           description="Cluster invites, join requests, mentions"
-          href="/settings/notifications/email"
+          href={to("/notifications/email")}
         />
         <div className="mb-6">
           <SettingsRow
             label="In-app notifications"
             description="Badge and notification center"
-            href="/settings/notifications/in-app"
+            href={to("/notifications/in-app")}
           />
         </div>
       </SettingsSection>
@@ -180,12 +179,12 @@ export function SettingsContent() {
         <SettingsRow
           label="Default cluster visibility"
           description="When creating a new cluster"
-          href="/settings/clusters/visibility"
+          href={to("/clusters/visibility")}
         />
         <SettingsRow
           label="Invitation defaults"
           description="How you receive cluster invites"
-          href="/settings/clusters/invitations"
+          href={to("/clusters/invitations")}
         />
       </SettingsSection>
 
@@ -193,13 +192,13 @@ export function SettingsContent() {
         <SettingsRow
           label="Theme"
           description="Light, dark, or system"
-          href="/settings/theme"
+          href={to("/theme")}
         />
         <div className="mb-6">
           <SettingsRow
             label="Language"
             description="App language and locale"
-            href="/settings/language"
+            href={to("/language")}
           />
         </div>
       </SettingsSection>
@@ -209,7 +208,7 @@ export function SettingsContent() {
           label="Cluster list view"
           description="How clusters are shown on Teams & clusters"
           valueLabel={VIEW_MODE_LABELS[clusterViewMode]}
-          href="/settings/display"
+          href={to("/display")}
         />
       </SettingsSection>
     </div>

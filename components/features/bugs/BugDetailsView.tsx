@@ -93,7 +93,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
   const REACTION_EMOJIS = ["👍", "🎉", "👀", "❤️"] as const
 
   React.useEffect(() => {
-    // Client-only: maintain a short “recently viewed” list for the community overview dialog.
     addRecentlyViewedBug({
       id: String(currentBug.id),
       title: String(currentBug.title || "Untitled"),
@@ -120,7 +119,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
         return true
       }
     } catch {
-      // Fall back to legacy copy method below.
     }
 
     try {
@@ -213,7 +211,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
     return () => window.removeEventListener("bug:comment-added", onComment)
   }, [currentBug.id, fetchComments])
 
-  // Realtime: live comments + reactions (war room)
   React.useEffect(() => {
     const supabase = getSupabaseBrowser()
     if (!supabase) return
@@ -224,7 +221,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "bug_comments", filter: `bug_id=eq.${currentBug.id}` },
         () => {
-          // refresh to include reaction aggregates + my_reactions
           fetchComments()
         }
       )
@@ -249,7 +245,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
 
   const toggleReaction = React.useCallback(
     async (commentId: string, emoji: (typeof REACTION_EMOJIS)[number]) => {
-      // Optimistic update: enforce 1 reaction per user per comment
       setComments((prev) =>
         prev.map((c) => {
           if (c.id !== commentId) return c
@@ -257,7 +252,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
           const reactions = new Map((c.reactions ?? []).map((r) => [r.emoji, r.count]))
 
           const hadEmoji = currentMine.has(emoji)
-          // Remove all my previous reactions from counts
           for (const e of currentMine) {
             const count = reactions.get(e) ?? 0
             if (count <= 1) reactions.delete(e)
@@ -265,7 +259,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
           }
 
           if (hadEmoji) {
-            // Toggled off: no reactions left for this user
             return {
               ...c,
               reactions: Array.from(reactions, ([e, count]) => ({ emoji: e, count })),
@@ -273,7 +266,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
             }
           }
 
-          // Toggled on: only this emoji remains for this user
           const nextCount = (reactions.get(emoji) ?? 0) + 1
           reactions.set(emoji, nextCount)
           return {
@@ -295,7 +287,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
           throw new Error(body?.error || "Failed to react")
         }
       } catch (e) {
-        // Roll back on failure by refetching
         fetchComments()
         toast.error(e instanceof Error ? e.message : "Failed to react")
       }

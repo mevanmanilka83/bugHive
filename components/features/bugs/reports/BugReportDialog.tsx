@@ -16,7 +16,6 @@ import BugReportStep3Behavior from "@/components/features/bugs/reports/BugReport
 import BugReportStep4Details from "@/components/features/bugs/reports/BugReportStep4Details"
 import BugReportStep5Review from "@/components/features/bugs/reports/BugReportStep5Review"
 
-// Using shared schema and type from schema module
 const bugReportSchema = getBugReportSchema()
 
 type AttachmentFile = {
@@ -83,7 +82,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       .map((s) => s.trim())
       .filter(Boolean)
 
-    // Combine environment fields into a formatted string
     const environmentParts: string[] = []
     if (environmentBrowser) environmentParts.push(`Browser: ${environmentBrowser}`)
     if (environmentOs.length > 0) environmentParts.push(`OS: ${environmentOs.join(", ")}`)
@@ -107,7 +105,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     }
   }
 
-  // Step field definitions for validation
   const stepFields: Record<number, (keyof BugPayload)[]> = {
     1: ['title', 'description'], // Required fields
     2: clusterId ? ['priority'] : ['priority', 'visibility'], // Required fields (exclude visibility for cluster bugs)
@@ -116,7 +113,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     5: [] // Review step
   }
 
-  // AI-based tag validation (Gemini) – debounce while typing
   React.useEffect(() => {
     const trimmedTitle = title.trim()
     const plainDescription = description.trim()
@@ -160,7 +156,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
         })
         setAiTagValidity(next)
       } catch {
-        // ignore errors / aborts
       }
     }, 600)
 
@@ -205,7 +200,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       )
       partialSchema.parse(stepPayload)
 
-      // Clear errors for validated fields
       setErrors(prev => {
         const newErrors = { ...prev }
         fieldsToValidate.forEach(field => {
@@ -256,7 +250,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     const errors: string[] = []
 
     files.forEach((file) => {
-      // Create a test payload with this file to validate against schema
       const testPayload = {
         title: "test", // minimal valid title
         description: "test", // minimal valid description
@@ -277,7 +270,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
           if (attachmentErrors.length > 0) {
             errors.push(...attachmentErrors)
           } else {
-            // If no specific attachment error, the file is valid
             validFiles.push(file)
           }
         }
@@ -294,7 +286,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     const fileArray = Array.from(files)
     const { valid, errors } = validateAttachments(fileArray)
 
-    // Show errors if any
     errors.forEach(error => toast.error(error))
 
     if (valid.length === 0) return
@@ -303,7 +294,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       const id = Math.random().toString(36).substr(2, 9)
       let preview: string | undefined
 
-      // Create preview for images
       if (file.type.startsWith('image/')) {
         preview = URL.createObjectURL(file)
       }
@@ -338,7 +328,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
   }
 
   async function handleSubmit() {
-    // Validate all fields before submission
     if (!validateAll()) {
       const errorMessages = Object.values(errors).filter(Boolean)
       if (errorMessages.length > 0) {
@@ -354,7 +343,6 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
     try {
       setIsSubmitting(true)
 
-      // Create FormData for file uploads
       const formData = new FormData()
       formData.append('title', payload.title)
       formData.append('description', payload.description)
@@ -368,19 +356,16 @@ export function BugReportDialog({ clusterId }: { clusterId?: string }) {
       if (payload.actual_behavior) formData.append('actual_behavior', payload.actual_behavior)
       if (payload.cluster_id) formData.append('cluster_id', payload.cluster_id)
 
-      // Add attachments
       payload.attachments?.forEach((file, index) => {
         formData.append(`attachment_${index}`, file)
       })
 
-      // Use server action instead of fetch
       const result = await createBugReport(formData)
 
       if (!result.success) {
         throw new Error(result.error || "Failed to create bug report")
       }
 
-      // Broadcast an app-wide event for dashboards/widgets
       if (typeof window !== 'undefined' && result.bug) {
         window.dispatchEvent(new CustomEvent('bug:created', { detail: result.bug }))
       }

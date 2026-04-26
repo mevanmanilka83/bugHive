@@ -6,10 +6,6 @@ import { ensureValidUUID } from "@/lib"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-/**
- * DELETE /api/comments/[commentId]
- * Delete a comment. Only the author can delete.
- */
 export async function DELETE(
     request: NextRequest,
     context: { params: Promise<{ commentId: string }> }
@@ -22,7 +18,6 @@ export async function DELETE(
         const uuid = ensureValidUUID(commentId)
         const supabase = (await getSupabaseAdmin()) as any
 
-        // 1. Fetch the comment to check ownership
         const { data: comment, error: fetchError } = await supabase
             .from("bug_comments")
             .select("user_id")
@@ -33,12 +28,10 @@ export async function DELETE(
             return errorResponse("Comment not found", 404)
         }
 
-        // 2. Security: Check if the current user is the author
         if (comment.user_id !== authResult.user.id) {
             return errorResponse("Unauthorized: You can only delete your own comments", 403)
         }
 
-        // 3. Delete the comment
         const { error: deleteError } = await supabase
             .from("bug_comments")
             .delete()

@@ -4,7 +4,6 @@ import * as React from "react"
 import { LevelProgress } from "@/components/leaderboard/LevelProgress"
 
 interface HunterLevelProgressProps {
-  /** If null, will fetch from /api/users/me */
   points?: number | null
   size?: number
   className?: string

@@ -2,12 +2,12 @@
 
 import * as React from "react"
 import {
-  IconDashboard,
   IconFileDescription,
   IconSearch,
   IconGitBranch,
 } from "@tabler/icons-react"
-import { GalleryVerticalEnd, Share2 } from "lucide-react"
+import { Share2 } from "lucide-react"
+import Image from "next/image"
 import { BellIcon } from "@/components/ui/bell"
 import { SettingsIcon } from "@/components/ui/settings"
 import { UsersIcon } from "@/components/ui/users"
@@ -31,6 +31,7 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user?: {
+    id?: string
     name?: string | null
     email?: string | null
     image?: string | null
@@ -68,7 +69,6 @@ export function AppSidebar({
           setNotificationCount(unreadCount)
         }
       } catch (error) {
-        // Silently fail
       }
     }
 
@@ -98,11 +98,6 @@ export function AppSidebar({
 
   const navMain = [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
       title: "Bug Explore",
       url: "/dashboard/bugs",
       icon: IconSearch,
@@ -118,13 +113,8 @@ export function AppSidebar({
       icon: ClustersNavIcon,
     },
     {
-      title: "Admin",
-      url: "/admin",
-      icon: IconDashboard,
-    },
-    {
       title: "Saved Graphs",
-      url: "/workspaces",
+      url: "/dashboard/workspaces",
       icon: IconGitBranch,
     },
   ]
@@ -132,20 +122,20 @@ export function AppSidebar({
   const navSecondary = [
     {
       title: "Notifications",
-      url: "/notifications",
+      url: "/dashboard/notifications",
       icon: BellNavIcon,
       notificationCount,
     },
     {
       title: "Settings",
-      url: "/settings",
+      url: "/dashboard/settings",
       icon: SettingsNavIcon,
     },
   ]
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <GlobalGraphDialog open={graphOpen} onOpenChange={setGraphOpen} />
+      <GlobalGraphDialog open={graphOpen} onOpenChange={setGraphOpen} userId={user?.id} />
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -154,9 +144,13 @@ export function AppSidebar({
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="/dashboard" className="flex items-center gap-2">
-                <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-                  <GalleryVerticalEnd className="size-4" />
-                </div>
+                <Image
+                  src="/logo.png"
+                  alt="BugHive logo"
+                  width={20}
+                  height={20}
+                  className="rounded-sm"
+                />
                 <span className="text-base font-semibold">BugHive</span>
               </a>
             </SidebarMenuButton>

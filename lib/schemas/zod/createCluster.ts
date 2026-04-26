@@ -1,14 +1,5 @@
 import { z } from "zod"
 
-/**
- * Cluster Creation Validation Schema
- * 
- * Single source of truth for cluster validation.
- * Used by both server actions and client components.
- * 
- * Naming Convention: Primary export uses shorter name (getClusterSchema)
- * Alias provided for backward compatibility (getCreateClusterValidationSchema)
- */
 export function getClusterSchema() {
   return z.object({
     name: z.string()
@@ -24,5 +15,4 @@ export function getClusterSchema() {
   })
 }
 
-// Alias for backward compatibility
 export const getCreateClusterValidationSchema = getClusterSchema

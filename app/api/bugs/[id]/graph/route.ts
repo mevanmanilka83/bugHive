@@ -35,11 +35,6 @@ export type GraphResponse = {
   }
 }
 
-/**
- * GET /api/bugs/[id]/graph?depth=2&limit=25
- * Returns a focused subgraph for the bug: center node + direct relationships + top similar (above threshold).
- * Response shape: { center, nodes, edges [, insights] }.
- */
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

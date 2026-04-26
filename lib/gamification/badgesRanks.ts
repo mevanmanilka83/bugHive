@@ -1,7 +1,3 @@
-/**
- * BugHive Hunter Program - Client-safe constants and helpers
- * (No server-only imports - safe for use in client components)
- */
 
 export const RANKS = [
   { id: "larva", label: "Larva", minXp: 0 },

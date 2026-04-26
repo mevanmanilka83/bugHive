@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
 
   const userId = ensureValidUUID(session.user.id)
 
-  // Get all clusters and filter where user is owner/member or public
   const { data: allClusters, error } = await supabase
     .from('clusters')
     .select('*')
@@ -31,7 +30,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
   
-  // Filter clusters where user is owner/member or public
   const clusters = (allClusters || []).filter((cluster: any) => {
     const isOwner = cluster.owner_id === userId
     const isMember = cluster.members && 
@@ -62,7 +60,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Cluster name is required and must be at least 3 characters" }, { status: 400 })
   }
 
-  // Get owner username
   const ownerEmail = user.email || ''
   const ownerUsername = user.name || extractUsernameFromEmail(ownerEmail)
 

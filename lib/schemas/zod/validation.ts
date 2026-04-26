@@ -1,19 +1,5 @@
 import { z } from "zod"
 
-/**
- * Generic Zod validation helper
- *
- * Validates data against a Zod schema and returns a standardized result.
- *
- * Usage:
- * ```ts
- * const result = validateWithSchema(getBugReportSchema(), data)
- * if (!result.success) {
- *   return { success: false, error: result.error }
- * }
- * const validatedData = result.data
- * ```
- */
 export function validateWithSchema<T>(
   schema: z.ZodSchema<T>,
   data: unknown

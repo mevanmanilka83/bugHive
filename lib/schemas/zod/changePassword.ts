@@ -1,8 +1,5 @@
 import { z } from "zod"
 
-/**
- * Validation schema for changing password
- */
 export function getChangePasswordValidationSchema() {
   return z.object({
     currentPassword: z.string()

@@ -4,10 +4,6 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
 let _client: SupabaseClient | null = null
 
-/**
- * Browser Supabase client for Realtime (Presence, Broadcast).
- * Uses NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.
- */
 export function getSupabaseBrowser(): SupabaseClient | null {
   if (typeof window === "undefined") return null
   if (_client) return _client

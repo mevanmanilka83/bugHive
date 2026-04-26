@@ -50,7 +50,6 @@ interface BugGraphDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   bugId: string
-  /** When provided, workspace visibility is cluster-scoped instead of global copy. */
   clusterId?: string
 }
 
@@ -181,14 +180,12 @@ const nodeTypeIcons: Record<string, React.ReactNode> = {
 }
 
 const edgeTypeStyles: Record<string, { stroke: string; strokeDasharray?: string }> = {
-  // Normalized API types (from subgraph builder)
   SIMILAR: { stroke: "#94a3b8", strokeDasharray: "5,5" },
   DUPLICATE: { stroke: "#64748b", strokeDasharray: "5,5" },
   CAUSE_OF: { stroke: "#475569" },
   EVIDENCE_FOR: { stroke: "#0ea5e9" },
   SOLUTION_FOR: { stroke: "#10b981" },
   RELATE: { stroke: "#cbd5e1" },
-  // Legacy / display names
   similar_to: { stroke: "#94a3b8", strokeDasharray: "5,5" },
   duplicate_of: { stroke: "#64748b", strokeDasharray: "5,5" },
   solution_for: { stroke: "#10b981" },
@@ -372,8 +369,6 @@ function mergeStackOverflowIntoGraph(graph: GraphData, relatedItems: RelatedBugI
   const centerX = centerNode?.position?.x ?? 0
   const centerY = centerNode?.position?.y ?? 0
 
-  // Place Stack Overflow nodes in a vertical column to the right of the main circle (radius 320)
-  // so they don't overlap circle nodes and have clear, consistent spacing
   const mainCircleRadius = 320
   const soColumnOffsetX = 220
   const soRowSpacing = 220
@@ -568,7 +563,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
     setEdges(flowEdges)
   }
 
-  // Apply full graph with opacity (fade: ghost out-of-range nodes instead of hard filter)
   React.useEffect(() => {
     if (!graphData?.nodes?.length || !Array.isArray(graphData.edges)) return
     applyGraphToFlow(graphData, { selectedTime })
@@ -577,7 +571,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
   React.useEffect(() => {
     if (!open || loading || nodes.length === 0 || !reactFlowInstance) return
 
-    // Small delay to ensure rendering
     const timer = setTimeout(() => {
       reactFlowInstance.fitView({ padding: 0.2, duration: 800 })
     }, 100)
@@ -588,7 +581,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
   const onNodeClick = React.useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNode(node)
 
-    // dim other nodes logic could go here
     setNodes((nds) =>
       nds.map((n) => ({
         ...n,

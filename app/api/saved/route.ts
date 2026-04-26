@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-/** GET: List saved bug IDs for the current user. */
 export async function GET() {
   const authResult = await checkAuth()
   if (authResult instanceof NextResponse) return authResult
@@ -24,7 +23,6 @@ export async function GET() {
   return NextResponse.json({ savedBugIds })
 }
 
-/** POST: Save a bug. Body: { bug_id: string } */
 export async function POST(request: NextRequest) {
   const authResult = await checkAuth()
   if (authResult instanceof NextResponse) return authResult
@@ -50,7 +48,6 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ saved: true })
 }
 
-/** DELETE: Unsave a bug. Query: ?bug_id=... */
 export async function DELETE(request: NextRequest) {
   const authResult = await checkAuth()
   if (authResult instanceof NextResponse) return authResult

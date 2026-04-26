@@ -1,11 +1,5 @@
 import { z } from "zod"
 
-/**
- * User Invitation Validation Schema
- * 
- * Validates user invitation data for cluster invites.
- * Either email or username must be provided.
- */
 export function getInviteUserValidationSchema() {
   return z.object({
     clusterId: z.string().uuid("Invalid cluster ID"),
@@ -20,7 +14,6 @@ export function getInviteUserValidationSchema() {
       .optional(),
   }).refine(
     (data) => {
-      // Either email or username must be provided
       return !!(data.inviteeEmail || data.inviteeUsername)
     },
     {

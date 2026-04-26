@@ -11,7 +11,6 @@ import {
 
 export async function getClusters(): Promise<ActionResponse<{ clusters: any[] }>> {
   try {
-    // Check authentication
     const authResult = await requireAuth()
     if (!authResult.success) {
       return { ...authResult, clusters: [] }
@@ -22,7 +21,6 @@ export async function getClusters(): Promise<ActionResponse<{ clusters: any[] }>
       return { success: false, error: "Unauthorized", clusters: [] }
     }
 
-    // Get all clusters and filter where user is owner or member
     const { data: allClusters, error } = await supabase
       .from('clusters')
       .select('*')
@@ -34,7 +32,6 @@ export async function getClusters(): Promise<ActionResponse<{ clusters: any[] }>
       }
     }
     
-    // Filter clusters where user is owner or member
     const clusters = (allClusters || []).filter((cluster: any) => {
       const isOwner = cluster.owner_id === userId
       const isMember = cluster.members && 

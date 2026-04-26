@@ -1,8 +1,5 @@
 import { z } from "zod"
 
-/**
- * Validation schema for updating user profile
- */
 export function getUpdateProfileValidationSchema() {
   return z.object({
     name: z.string()

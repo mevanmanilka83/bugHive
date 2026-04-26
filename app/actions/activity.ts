@@ -10,6 +10,12 @@ export type ActivitySummaryData = {
   recentActivity: RecentActivityItem[]
 }
 
+export type ActivityTrendPoint = {
+  date: string
+  bugReports: number
+  solutions: number
+}
+
 export type RecentActivityItem = {
   id: string
   type:
@@ -80,6 +86,67 @@ export async function getActivitySummary(): Promise<
     return {
       success: false,
       error: e instanceof Error ? e.message : "Failed to load activity",
+    }
+  }
+}
+
+export async function getActivityTrend(days: number = 90): Promise<
+  | { success: true; data: ActivityTrendPoint[] }
+  | { success: false; error: string; data?: null }
+> {
+  const authResult = await requireAuth()
+  if (!authResult.success) {
+    return { success: false, error: authResult.error }
+  }
+  const userId = ensureValidUUID(authResult.session.user.id)
+  const safeDays = Math.min(Math.max(days, 7), 365)
+
+  try {
+    const start = new Date()
+    start.setDate(start.getDate() - (safeDays - 1))
+    const startIso = start.toISOString()
+
+    const [bugsRes, solutionsRes] = await Promise.all([
+      supabase
+        .from("bugs")
+        .select("created_at")
+        .eq("created_by", userId)
+        .gte("created_at", startIso),
+      supabase
+        .from("bug_solution_details")
+        .select("created_at")
+        .eq("created_by", userId)
+        .gte("created_at", startIso),
+    ])
+
+    const bucket = new Map<string, ActivityTrendPoint>()
+    for (let i = 0; i < safeDays; i++) {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      const key = d.toISOString().slice(0, 10)
+      bucket.set(key, { date: key, bugReports: 0, solutions: 0 })
+    }
+
+    for (const row of bugsRes.data ?? []) {
+      const key = (row.created_at ?? "").slice(0, 10)
+      const point = bucket.get(key)
+      if (point) point.bugReports += 1
+    }
+    for (const row of solutionsRes.data ?? []) {
+      const key = (row.created_at ?? "").slice(0, 10)
+      const point = bucket.get(key)
+      if (point) point.solutions += 1
+    }
+
+    return {
+      success: true,
+      data: Array.from(bucket.values()),
+    }
+  } catch (e) {
+    console.error("getActivityTrend error:", e)
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "Failed to load activity trend",
     }
   }
 }

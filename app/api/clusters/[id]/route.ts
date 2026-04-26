@@ -41,7 +41,6 @@ export async function PATCH(
   const { id } = await context.params
   const body = await request.json().catch(() => ({}))
 
-  // Verify ownership
   const cluster = await getSingleRecord('clusters', id)
   if (cluster.owner_id !== ensureValidUUID(user.id)) {
     return NextResponse.json({ error: "Only cluster owners can update clusters" }, { status: 403 })
@@ -116,7 +115,6 @@ export async function DELETE(
   const { user } = authResult
   const { id } = await context.params
 
-  // Verify ownership
   const cluster = await getSingleRecord('clusters', id)
   if (cluster.owner_id !== ensureValidUUID(user.id)) {
     return NextResponse.json({ error: "Only cluster owners can delete clusters" }, { status: 403 })

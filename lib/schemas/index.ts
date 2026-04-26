@@ -1,9 +1,3 @@
-/**
- * Schemas - Zod validation and TypeScript types
- *
- * Import schemas and validation: from "@/lib/schemas"
- * Import types: from "@/lib/schemas/types"
- */
 
 export * from "./zod"
 export type {

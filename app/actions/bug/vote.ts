@@ -18,17 +18,11 @@ export interface VoteResult {
   downvotes_count: number
 }
 
-/**
- * Vote on a bug (upvote or downvote)
- * If user already voted with the same type, removes the vote
- * If user voted with different type, changes the vote
- */
 export async function voteOnBug(
   bugId: string,
   voteType: VoteType
 ): Promise<ActionResponse<VoteResult>> {
   try {
-    // Check authentication
     const authResult = await requireAuth()
     if (!authResult.success) {
       return authResult
@@ -37,7 +31,6 @@ export async function voteOnBug(
     const userId = ensureValidUUID(session.user.id)
     const db = getSupabaseAdmin() as any
 
-    // Validate bug exists
     const { data: bug, error: bugError } = await db
       .from('bugs')
       .select('id')
@@ -51,7 +44,6 @@ export async function voteOnBug(
       }
     }
 
-    // Check if user already voted
     const { data: existingVote, error: voteError } = await db
       .from('bug_votes')
       .select('id, vote_type')
@@ -65,7 +57,6 @@ export async function voteOnBug(
 
     if (existingVote) {
       if (existingVote.vote_type === voteType) {
-        // Same vote type - remove the vote (toggle off)
         const { error: deleteError } = await db
           .from('bug_votes')
           .delete()
@@ -75,7 +66,6 @@ export async function voteOnBug(
           return handleSupabaseError(deleteError, 'Failed to remove vote')
         }
       } else {
-        // Different vote type - switch vote (update row)
         const { error: updateError } = await db
           .from('bug_votes')
           .update({ vote_type: voteType, updated_at: new Date().toISOString() })
@@ -86,7 +76,6 @@ export async function voteOnBug(
         }
       }
     } else {
-      // New vote - insert
       const { error: insertError } = await db
         .from('bug_votes')
         .insert({
@@ -100,7 +89,6 @@ export async function voteOnBug(
       }
     }
 
-    // Get updated vote counts and user's current vote
     const { data: bugWithVotes, error: fetchError } = await db
       .from('bugs')
       .select('upvotes_count, downvotes_count')
@@ -111,7 +99,6 @@ export async function voteOnBug(
       return handleSupabaseError(fetchError, 'Failed to fetch vote counts')
     }
 
-    // Get user's current vote status
     const { data: userVote } = await db
       .from('bug_votes')
       .select('vote_type')
@@ -131,9 +118,6 @@ export async function voteOnBug(
   }
 }
 
-/**
- * Get user's vote status for a bug
- */
 export async function getUserVote(
   bugId: string,
   userId: string

@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
 
   const baseNotifications = notifications || []
 
-  // Attach cluster name for nicer UI badges.
   const clusterIds = [
     ...new Set(baseNotifications.map((n: any) => n.cluster_id).filter(Boolean)),
   ] as string[]

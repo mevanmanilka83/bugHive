@@ -20,7 +20,6 @@ export default async function WorkspacesPage({
     : {}
   const showSuccess = resolved.saved === "1"
 
-  // Include workspaces the user owns OR where they are a member of the origin cluster
   const userClusterIds = await getUserClusterIds(session.user.id)
 
   const ownerPromise = (supabase as any)

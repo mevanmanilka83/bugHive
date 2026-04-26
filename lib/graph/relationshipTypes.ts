@@ -57,7 +57,6 @@ function normalizeTerm(term: string): string {
     return term.trim().toLowerCase()
 }
 
-/** Stack trace frame patterns (Java, JS, Python, C#, etc.) */
 const STACK_FRAME_REGEX = [
     /\bat\s+([A-Za-z0-9_.]+)\.([A-Za-z0-9_]+)\s*\(([^)]*)(?::(\d+))?\)/g,
     /\b(?:at|#)\s*([A-Za-z0-9_.]+)\s*\(([^)]*):(\d+)\)/g,
@@ -65,10 +64,6 @@ const STACK_FRAME_REGEX = [
     /\s+at\s+([^\s(]+)\s*\(([^)]+)\)/g,
 ]
 
-/**
- * Extract top 3 stack trace frames from pasted logs for fingerprinting.
- * Identical crashes (same top frames) get high-priority weight (0.8+) in duplicate matching.
- */
 export function extractStackTraceFingerprint(text: string): string[] {
     if (!text || typeof text !== "string") return []
     const frames: string[] = []
@@ -157,7 +152,6 @@ export function extractBugSignature(params: {
     }
 }
 
-/** Temporal boost: issues created in last 48h (outage burst) get this added to score. */
 export const TEMPORAL_BOOST_48H_SCORE = 0.15
 export const STACK_TRACE_MATCH_SCORE = 0.82
 
@@ -169,7 +163,6 @@ export function calculateRelevance(bugA: any, bugB: any): { score: number; reaso
         errorMessage: bugA.actual_behavior
     })
 
-    // Bug B might be partial, so handle gracefully
     const titleB = bugB.title || bugB.header || ""
     const descB = bugB.description || bugB.snippet || ""
     const tagsB = bugB.tags || []
@@ -179,7 +172,6 @@ export function calculateRelevance(bugA: any, bugB: any): { score: number; reaso
     let score = 0
     const reasons: string[] = []
 
-    // 0. Stack trace fingerprint: identical top frames = strongest duplicate signal (+0.82)
     const draftText = (bugA.description || "") + " " + (bugA.actual_behavior || "") + " " + (bugA.title || "")
     const fingerprintA = extractStackTraceFingerprint(draftText)
     if (fingerprintA.length > 0) {
@@ -191,20 +183,16 @@ export function calculateRelevance(bugA: any, bugB: any): { score: number; reaso
         }
     }
 
-    // 1. Language Match (+0.3)
     const langMatch = sigA.languageTerms.some(term => textB.includes(term))
     if (langMatch) {
         score += 0.3
-        // reasons.push("Same Language/Stack")
     }
 
-    // 2. Hard Error Match (+0.4)
     if (sigA.hardError && textB.includes(sigA.hardError.toLowerCase())) {
         score += 0.4
         reasons.push(`Shared Error: ${sigA.hardError}`)
     }
 
-    // 3. Symptom Phrase Match (+0.2 each)
     sigA.symptomPhrases.forEach(phrase => {
         if (textB.includes(phrase)) {
             score += 0.2
@@ -212,7 +200,6 @@ export function calculateRelevance(bugA: any, bugB: any): { score: number; reaso
         }
     })
 
-    // 4. API/term overlap
     let termMatches = 0
     sigA.apiTerms.forEach(term => {
         if (textB.includes(term)) termMatches++
@@ -223,7 +210,6 @@ export function calculateRelevance(bugA: any, bugB: any): { score: number; reaso
         reasons.push(`${termMatches} shared technical terms`)
     }
 
-    // Tag overlap
     const tagsA = (bugA.tags || []).map((t: string) => t.toLowerCase())
     const sharedTags = tagsA.filter((t: string) => textB.includes(t))
     if (sharedTags.length > 0) {

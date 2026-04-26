@@ -1,9 +1,3 @@
-/**
- * Form Data Utilities
- *
- * Non-Zod helpers for form/data processing.
- * For Zod validation, use @/lib/schemas/zod.
- */
 
 const EMPTY_RICH_TEXT_MARKUP = new Set([
   "",

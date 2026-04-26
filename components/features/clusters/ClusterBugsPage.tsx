@@ -20,9 +20,7 @@ interface ClusterBugsPageProps {
   clusterId: string
   userId?: string
   isAuthenticated?: boolean
-  /** Link for "Back to Clusters" and error redirects (e.g. "/clusters" or "/dashboard/clusters") */
   clustersHref?: string
-  /** Base href for bug details, e.g. "/bugs" or "/clusters/:id/bugs" */
   bugDetailsBaseHref?: string
 }
 

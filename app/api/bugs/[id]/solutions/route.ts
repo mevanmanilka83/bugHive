@@ -6,7 +6,6 @@ const solutionHandler = createSolutionHandler()
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** Public GET: anyone can read solutions for a bug (no auth required). */
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

@@ -31,11 +31,9 @@ import { stripHtml, getClusterViewMode, setClusterViewMode } from "@/lib"
 interface ClustersListProps {
   userId?: string
   isAuthenticated: boolean
-  /** Base path for cluster links (e.g. "/clusters" for homepage UI, "/dashboard" for dashboard) */
   basePath?: string
   title?: string
   description?: string
-  /** Layout variant: default = standalone card, embedded = inside another card (e.g. /clusters page) */
   variant?: "default" | "embedded"
 }
 
@@ -75,7 +73,6 @@ export function ClustersList({
   const [requestingClusterId, setRequestingClusterId] = React.useState<string | null>(null)
   const [requestedClusters, setRequestedClusters] = React.useState<Set<string>>(new Set())
 
-  // Hydrate view mode from localStorage before paint to avoid layout shift
   React.useLayoutEffect(() => {
     setViewMode(getClusterViewMode())
   }, [])
@@ -99,7 +96,6 @@ export function ClustersList({
       const data = await res.json()
       setClusters(data?.clusters || [])
     } catch (error) {
-      // Handle error silently
     } finally {
       setLoading(false)
     }
@@ -381,7 +377,6 @@ export function ClustersList({
                 key={cluster.id}
                 className={`cursor-pointer hover:bg-accent/50 transition-colors ${isCompact ? "" : ""}`}
                 onClick={(e) => {
-                  // Don't navigate if clicking on action buttons
                   if ((e.target as HTMLElement).closest('button')) {
                     return
                   }

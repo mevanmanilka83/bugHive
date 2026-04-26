@@ -1,16 +1,3 @@
-/**
- * Generic API Handler Wrapper for Next.js App Router
- * 
- * This is a generic API handler wrapper for a Next.js (App Router) backend.
- * Its purpose is to centralize authentication and error handling so individual
- * API routes stay small and focused.
- * 
- * Features:
- * - Automatic authentication checking
- * - Centralized error handling
- * - Consistent response formatting
- * - Reduces boilerplate in individual route handlers
- */
 import { NextRequest, NextResponse } from "next/server"
 import { checkAuth } from "../auth/helpers"
 import { errorResponse, successResponse } from "../errors/httpResponses"
@@ -26,13 +13,6 @@ import { processFormDataWithUploads } from "../storage/s3Uploads"
 import { parseArrayField, addTimestamps, ensureValidUUID, extractRouteId } from "../utils/server"
 import { supabase } from "../config"
 
-/**
- * Creates a generic API route handler with authentication and error handling
- * 
- * @param handler - The actual handler function that processes the request
- * @param statusCode - HTTP status code to return on success (default: 200)
- * @returns A Next.js API route handler function
- */
 export function createApiHandler<T = any>(
   handler: (request: NextRequest, context?: any, authResult?: any) => Promise<T>,
   statusCode: number = 200
@@ -50,9 +30,6 @@ export function createApiHandler<T = any>(
   }
 }
 
-/**
- * Generic GET handler for fetching single or multiple records
- */
 function createGetHandler(table: string, idField: string = 'id') {
   return createApiHandler(async (request, context) => {
     if (context?.params) {
@@ -75,9 +52,6 @@ function createGetHandler(table: string, idField: string = 'id') {
   })
 }
 
-/**
- * Generic POST handler for creating records
- */
 function createPostHandler(
   table: string,
   requiredFields: string[],
@@ -93,7 +67,6 @@ function createPostHandler(
       formData = await parseFormData(request)
     }
     
-    // Validate required fields
     for (const field of requiredFields) {
       if (!formData[field]) {
         throw new Error(`${field} is required`)
@@ -107,9 +80,6 @@ function createPostHandler(
   }, 201)
 }
 
-/**
- * Generic PATCH handler for updating records
- */
 function createPatchHandler(table: string, allowedFields: string[], idField: string = 'id') {
   return createApiHandler(async (request, context) => {
     const id = await extractRouteId(context)
@@ -131,9 +101,6 @@ function createPatchHandler(table: string, allowedFields: string[], idField: str
   })
 }
 
-/**
- * Generic DELETE handler for removing records
- */
 function createDeleteHandler(table: string, idField: string = 'id') {
   return createApiHandler(async (request, context) => {
     const id = await extractRouteId(context)
@@ -142,9 +109,6 @@ function createDeleteHandler(table: string, idField: string = 'id') {
   })
 }
 
-/**
- * Specialized Bug Handler
- */
 export function createBugHandler() {
   return {
     GET: createGetHandler('bugs'),
@@ -173,9 +137,6 @@ export function createBugHandler() {
   }
 }
 
-/**
- * Specialized Solution Handler
- */
 export function createSolutionHandler() {
   return {
     GET: createApiHandler(async (request, context) => {

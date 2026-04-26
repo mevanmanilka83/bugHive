@@ -19,7 +19,6 @@ type AttachmentFile = {
   preview?: string
 }
 
-// Using shared schema and type from schema module
 const solutionSchema = getBugSolutionSchema()
 
 export function SolutionDialog({
@@ -78,7 +77,6 @@ export function SolutionDialog({
     }
   }
 
-  // Step field definitions for validation
     const stepFields: Record<number, (keyof SolutionPayload)[]> = {
       1: ['title', 'description'], // Required fields
       2: ['solution_type', 'priority', 'status'], // Required fields
@@ -137,7 +135,6 @@ export function SolutionDialog({
     }
   }
 
-  // Reset form when dialog opens/closes
   React.useEffect(() => {
     if (open) {
       setStep(1)
@@ -162,13 +159,11 @@ export function SolutionDialog({
       return
     }
 
-    // Check if bug is closed or resolved
     if (isBugClosedOrResolved) {
       toast.error("Cannot submit solutions to closed or resolved bugs")
       return
     }
 
-    // Validate form data before submission
     if (!formData.title.trim()) {
       toast.error("Title is required")
       return
@@ -182,7 +177,6 @@ export function SolutionDialog({
       return
     }
 
-    // Check if a solution with the same title already exists
     const existingSolution = solutions.find(
       (sol) => sol.title?.toLowerCase().trim() === formData.title.toLowerCase().trim()
     )
@@ -202,25 +196,21 @@ export function SolutionDialog({
       fd.set("status", formData.status)
       if (formData.assignee) fd.set("assignee", formData.assignee)
       if (formData.estimated_hours) fd.set("estimated_hours", formData.estimated_hours)
-      // Send links as comma-separated string for validation (validation expects string, not JSON array)
       if (formData.links?.trim()) fd.set("links", formData.links.trim())
       attachments.forEach((att, idx) => {
         fd.append(`attachment_${idx}`, att.file)
       })
 
-      // Use server action instead of fetch
       const result = await createBugSolution(fd, bugData.id)
 
       if (!result.success) {
         throw new Error(result.error || "Failed to save solution")
       }
 
-      // Dispatch event to notify other components (like charts) to refresh
       if (typeof window !== 'undefined' && result.solution) {
         window.dispatchEvent(new CustomEvent('solution:created', { detail: { solution: result.solution, bugId: bugData.id } }))
       }
 
-      // Use neutral toast styling instead of green success variant
       toast("Solution submitted")
       onOpenChange(false)
     } catch (err: any) {
@@ -241,13 +231,11 @@ export function SolutionDialog({
     const newAttachments: AttachmentFile[] = []
     
     Array.from(files).forEach((file) => {
-      // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`File ${file.name} is too large. Maximum size is 10MB.`)
         return
       }
 
-      // Validate file type
       const allowedTypes = [
         'image/jpeg', 'image/png', 'image/gif', 'image/webp',
         'text/plain', 'text/csv', 'application/json',
@@ -259,7 +247,6 @@ export function SolutionDialog({
         return
       }
 
-      // Check total attachment count
       if (attachments.length + newAttachments.length >= 5) {
         toast.error("Maximum 5 attachments allowed")
         return
@@ -268,7 +255,6 @@ export function SolutionDialog({
       const id = Math.random().toString(36).substr(2, 9)
       let preview: string | undefined
 
-      // Create preview for images
       if (file.type.startsWith('image/')) {
         preview = URL.createObjectURL(file)
       }
@@ -305,13 +291,11 @@ export function SolutionDialog({
   const canNextFromStep1 = React.useMemo(() => validateStep(1), [formData.title, formData.description, errors])
   const canNextFromStep2 = React.useMemo(() => validateStep(2), [formData.solution_type, formData.priority, formData.status, errors])
 
-  // Check if bug is closed or resolved
   const isBugClosedOrResolved = React.useMemo(() => {
     const status = bugData?.status?.toLowerCase()
     return status === 'closed' || status === 'resolved'
   }, [bugData?.status])
 
-  // Prevent dialog from opening if bug is closed or resolved
   React.useEffect(() => {
     if (open && isBugClosedOrResolved) {
       toast.error("Cannot add solutions to closed or resolved bugs")

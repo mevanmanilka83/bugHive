@@ -1,15 +1,6 @@
 import { z } from "zod"
 import { getAttachmentSchema, getLinksSchema, PRIORITY_ENUM, STRING_VALIDATIONS } from "./shared"
 
-/**
- * Bug Solution Validation Schema
- * 
- * Single source of truth for bug solution validation.
- * Used by both server actions and client components.
- * 
- * Naming Convention: Primary export uses shorter name (getBugSolutionSchema)
- * Alias provided for backward compatibility (getBugSolutionValidationSchema)
- */
 export function getBugSolutionSchema() {
   return z.object({
     title: z.string()
@@ -36,5 +27,4 @@ export function getBugSolutionSchema() {
   })
 }
 
-// Alias for backward compatibility
 export const getBugSolutionValidationSchema = getBugSolutionSchema

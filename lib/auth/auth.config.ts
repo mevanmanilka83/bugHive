@@ -48,7 +48,6 @@ export const authConfig = {
       } else if (token.email && token.id) {
         token.id = generateUUIDFromEmailSync(token.email as string)
       }
-      // Attach role from database to token on every JWT callback
       if (token.id) {
         try {
           const db = getSupabaseAdmin() as any
@@ -62,7 +61,6 @@ export const authConfig = {
             ;(token as any).role = row.role
           }
         } catch {
-          // ignore role fetch errors; default will be used
         }
       }
       if (!(token as any).role) {

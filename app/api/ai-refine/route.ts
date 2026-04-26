@@ -4,17 +4,10 @@ import { generateChatCompletion } from "@/lib"
 export const runtime = "nodejs"
 
 type RefineBody = {
-  /** Plain text or HTML to refine */
   text: string
-  /** Optional extra instructions for how to rewrite */
   instructions?: string
 }
 
-/**
- * POST /api/ai-refine
- * Refines/rewrites text using AI.
- * Uses Gemini when GEMINI_API_KEY is set, otherwise OpenAI.
- */
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {

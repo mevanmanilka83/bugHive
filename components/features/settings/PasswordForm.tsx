@@ -11,7 +11,6 @@ import { changePassword } from "@/app/actions/profile"
 import { cn } from "@/lib"
 
 interface PasswordFormProps {
-  /** Auth provider from session: "credentials" = email/password; "github" etc. = OAuth */
   authProvider?: string
 }
 
@@ -25,7 +24,6 @@ export function PasswordForm({ authProvider }: PasswordFormProps) {
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
-  /** If not logged in with an OAuth provider, user can change password (credentials or legacy session). */
   const isOAuth = authProvider && OAUTH_PROVIDERS.includes(authProvider.toLowerCase())
   const canChangePassword = !isOAuth
 

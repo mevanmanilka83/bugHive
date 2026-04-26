@@ -6,9 +6,6 @@ import { getUpdateProfileValidationSchema, getChangePasswordValidationSchema } f
 import { auth } from "@/lib/auth/config"
 import type { ActionResponse } from "@/lib/auth/helpers" 
 
-/**
- * Update user profile (name and email)
- */
 export async function updateProfile(formData: FormData): Promise<ActionResponse> {
   try {
     const session = await auth()
@@ -16,7 +13,6 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
       return { success: false, error: "Not authenticated" }
     }
 
-    // Email field is disabled in the form so it may not be submitted; use session email when missing
     const nameFromForm = (formData.get("name") ?? "") as string
     const emailFromForm = (formData.get("email") ?? "") as string
     const email = emailFromForm.trim() || session.user.email?.trim() || ""
@@ -33,7 +29,6 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
     const { name } = validation.data
     const currentUserId = session.user.id
 
-    // Check if email is being changed and if it's already taken by another user
     if (email.toLowerCase() !== session.user.email?.toLowerCase()) {
       const { data: existingUser } = await supabase
         .from('users')
@@ -45,18 +40,14 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
         return { success: false, error: "This email is already in use" }
       }
 
-      // If email changed, generate new UUID
       const newUserId = generateUUIDFromEmailSync(email)
       
-      // Note: Email changes require careful handling of related records
-      // For now, we'll prevent email changes to avoid data integrity issues
       return { 
         success: false, 
         error: "Email changes are currently not supported. Please contact support." 
       }
     }
 
-    // Update user profile (name only for now)
     const { error: updateError } = await supabase
       .from('users')
       .update({
@@ -77,10 +68,6 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
   }
 }
 
-/**
- * Upload avatar image and save URL to the database (users.image).
- * If you don't have an avatar from your auth provider, you can upload one here.
- */
 export async function uploadAvatar(formData: FormData): Promise<
   ActionResponse<{ imageUrl?: string }>
 > {
@@ -113,10 +100,6 @@ export async function uploadAvatar(formData: FormData): Promise<
   }
 }
 
-/**
- * Change user password (credentials / email-password users only).
- * Verifies current password, then hashes and stores the new password.
- */
 export async function changePassword(formData: FormData): Promise<ActionResponse> {
   try {
     const session = await auth()

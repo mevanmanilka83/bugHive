@@ -1,14 +1,3 @@
-/**
- * User Signup API Route
- * 
- * Purpose: HTTP endpoint for user registration
- * - Accepts signup requests from client-side forms
- * - Creates user record in Supabase database
- * - Returns success/error response for client handling
- * 
- * Note: This is an API route (HTTP endpoint) vs server action (direct function call)
- * Use API routes when you need HTTP endpoints for external clients or form submissions
- */
 import { NextRequest } from "next/server"
 import { errorResponse, successResponse, validateWithSchema } from "@/lib"
 import { hashPassword } from "@/lib/password"
@@ -22,7 +11,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Validate with zod schema
     const validation = validateWithSchema(getSignupValidationSchema(), body)
     if (!validation.success) {
       return errorResponse(validation.error, 400)
@@ -32,7 +20,6 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(password)
 
-    // Save user to Supabase (includes hashed password for credentials login)
     const result = await saveUserToSupabase(
       email,
       name,

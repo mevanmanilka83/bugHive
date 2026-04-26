@@ -1,11 +1,5 @@
 import { z } from "zod"
 
-/**
- * Signup Validation Schema
- * 
- * Validates user signup data for registration.
- * This is the single source of truth for signup validation.
- */
 export function getSignupValidationSchema() {
   return z.object({
     name: z.string()

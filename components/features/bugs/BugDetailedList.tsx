@@ -43,10 +43,8 @@ interface BugDetailedListProps {
   onOpenFilters?: () => void
   filtersOpen?: boolean
   renderFiltersPanel?: () => React.ReactNode
-  /** When the bug creator is the current user, use this name if batch user fetch didn't return them */
   currentUserName?: string
   currentUserImage?: string
-  /** Visual/layout variant. "saved" is a simplified header for the Saved page. */
   variant?: "default" | "saved"
   isLoading?: boolean
 }
@@ -120,7 +118,6 @@ export function BugDetailedList({
         return true
       }
     } catch {
-      // Fall back to legacy copy method below.
     }
 
     try {
@@ -140,20 +137,17 @@ export function BugDetailedList({
   }, [])
 
   React.useEffect(() => {
-    // Fetch solution counts and user info for all bugs
     const fetchData = async () => {
       const counts: Record<string, number> = {}
       const users: Record<string, { name?: string; image?: string; reputation?: number }> = {}
       const uniqueUserIds = new Set<string>()
 
-      // Collect unique user IDs
       bugs.forEach(bug => {
         if (bug.created_by) {
           uniqueUserIds.add(bug.created_by)
         }
       })
 
-      // Fetch solution counts
       await Promise.all(
         bugs.map(async (bug) => {
           try {
@@ -170,7 +164,6 @@ export function BugDetailedList({
         })
       )
 
-      // Fetch user info in batch
       if (uniqueUserIds.size > 0) {
         try {
           const idsParam = Array.from(uniqueUserIds).join(',')
@@ -187,7 +180,6 @@ export function BugDetailedList({
             })
           }
         } catch {
-          // Silently fail
         }
       }
 
@@ -200,7 +192,6 @@ export function BugDetailedList({
   const sortedBugs = React.useMemo(() => {
     let working = [...bugs]
 
-    // Filter-based modes
     if (sortBy === "unanswered") {
       working = working.filter(bug => (solutionCounts[bug.id] ?? 0) === 0)
     }
@@ -209,7 +200,6 @@ export function BugDetailedList({
       working = working.filter(bug => bug.created_by === userId)
     }
 
-    // Then sort
     switch (sortBy) {
       case "newest":
       case "unanswered":
@@ -246,12 +236,10 @@ export function BugDetailedList({
   const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0
 
   React.useEffect(() => {
-    // Reset to first page when sort or page size change
     setCurrentPage(1)
   }, [sortBy, pageSize])
 
   React.useEffect(() => {
-    // Clamp to valid page when total pages shrinks (e.g. after filter)
     if (totalPages > 0 && currentPage > totalPages) {
       setCurrentPage(totalPages)
     }
@@ -291,7 +279,6 @@ export function BugDetailedList({
       return pages
     }
 
-    // Always show first page
     pages.push(1)
 
     const start = Math.max(2, currentPage - 1)
@@ -376,7 +363,6 @@ export function BugDetailedList({
         )}
 
         {variant === "saved" ? (
-          // Simplified header for Saved page (no tabs, no filters)
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="shrink-0 text-sm text-muted-foreground">
               {displayCount === 0
@@ -665,7 +651,6 @@ export function BugDetailedList({
                       className="text-brand-blue hover:underline text-xs transition-all"
                       onClick={(e) => {
                         e.stopPropagation()
-                        // Navigate to user profile if needed
                       }}
                     >
                       {userName}

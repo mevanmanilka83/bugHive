@@ -28,7 +28,6 @@ function AvatarImage({
   fetchPriority,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image> & {
-  /** Hint the browser to load this image eagerly (e.g. above-the-fold avatars). */
   priority?: boolean
 }) {
   return (

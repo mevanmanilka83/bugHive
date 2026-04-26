@@ -12,9 +12,15 @@ import { NotificationsListSkeleton } from "@/components/features/skeletons/Notif
 
 interface NotificationsListProps {
   userId: string
+  bugDetailBasePath?: string
+  clusterDetailBasePath?: string
 }
 
-export function NotificationsList({ userId }: NotificationsListProps) {
+export function NotificationsList({
+  userId,
+  bugDetailBasePath = "/bugs",
+  clusterDetailBasePath = "/clusters",
+}: NotificationsListProps) {
   const [notifications, setNotifications] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState<"all" | "unread">("unread")
@@ -64,7 +70,6 @@ export function NotificationsList({ userId }: NotificationsListProps) {
   }
 
   const markNotificationRead = async (notificationId: string) => {
-    // Best-effort: we also update local state so UI feels instant.
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
     )
@@ -97,8 +102,8 @@ export function NotificationsList({ userId }: NotificationsListProps) {
   }
 
   const getNotificationHref = (notification: any) => {
-    if (notification?.bug_id) return `/bugs/${notification.bug_id}`
-    if (notification?.cluster_id) return `/clusters/${notification.cluster_id}`
+    if (notification?.bug_id) return `${bugDetailBasePath}/${notification.bug_id}`
+    if (notification?.cluster_id) return `${clusterDetailBasePath}/${notification.cluster_id}`
     return null
   }
 
@@ -119,11 +124,10 @@ export function NotificationsList({ userId }: NotificationsListProps) {
       await markNotificationRead(notification.id)
       toast.success(result.message || "Invitation accepted! You are now a member of the cluster.")
 
-      // After accepting, navigate directly to the cluster detail page
       const targetClusterId = notification.cluster_id
       if (targetClusterId) {
         setTimeout(() => {
-          window.location.href = `/clusters/${targetClusterId}`
+          window.location.href = `${clusterDetailBasePath}/${targetClusterId}`
         }, 800)
       }
     } catch (error) {

@@ -15,7 +15,6 @@ export async function POST(
   const { id: clusterId } = await context.params
   const userId = ensureValidUUID(user.id)
 
-  // Get cluster
   const { data: cluster, error: clusterError } = await supabase
     .from('clusters')
     .select('*')
@@ -26,16 +25,13 @@ export async function POST(
     return NextResponse.json({ error: "Cluster not found" }, { status: 404 })
   }
 
-  // Check if user has a pending invite
   if (!cluster.invites || !cluster.invites.includes(userId)) {
     return NextResponse.json({ error: "No pending invitation found" }, { status: 400 })
   }
 
-  // Always ensure user record exists and is up-to-date in Supabase
   const userEmail = user.email || ''
   const username = user.name || extractUsernameFromEmail(userEmail)
   
-  // Upsert user record with current session data
   const { error: userUpsertError } = await supabase
     .from('users')
     .upsert({
@@ -50,10 +46,8 @@ export async function POST(
     })
 
   if (userUpsertError) {
-    // Continue anyway - user creation is not critical for accepting invitation
   }
 
-  // Remove from invites and add to members
   const updatedInvites = (cluster.invites || []).filter((id: string) => id !== userId)
   const updatedMembers = [...(cluster.members || []), userId]
   const updatedMembersUsernames = [...(cluster.members_usernames || []), username]
@@ -71,7 +65,6 @@ export async function POST(
     return NextResponse.json({ error: updateError.message || 'Failed to accept invitation' }, { status: 500 })
   }
 
-  // Mark notification as read
   await supabase
     .from('notifications')
     .update({ read: true })
@@ -79,7 +72,6 @@ export async function POST(
     .eq('cluster_id', clusterId)
     .eq('type', 'cluster_invite')
 
-  // Create a notification for joining
   await supabase
     .from('notifications')
     .insert({

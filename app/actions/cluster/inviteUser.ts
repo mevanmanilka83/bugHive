@@ -22,14 +22,12 @@ export async function inviteUserToCluster(
   inviteeUsername?: string
 ): Promise<ActionResponse<{ message?: string }>> {
   try {
-    // Check authentication
     const authResult = await requireAuth()
     if (!authResult.success) {
       return authResult
     }
     const { session } = authResult
 
-    // Validate input
     const validation = validateWithSchema(getInviteUserValidationSchema(), {
       clusterId,
       inviteeEmail,
@@ -44,22 +42,18 @@ export async function inviteUserToCluster(
       return { success: false, error: "Unauthorized" }
     }
 
-    // Get cluster to verify ownership
     const clusterResult = await getClusterById(clusterId)
     if (!clusterResult.success) {
       return clusterResult
     }
     const cluster = clusterResult.cluster
 
-    // Check if user is the owner
     if (!verifyClusterOwnership(cluster, userId)) {
       return { success: false, error: "Only cluster owners can invite members" }
     }
 
-    // Determine the email to use for invitation
     let finalEmail = inviteeEmail?.trim().toLowerCase()
 
-    // If email is not provided but username is, look up user by username
     if (!finalEmail && inviteeUsername) {
       const trimmedUsername = inviteeUsername.trim()
       
@@ -67,7 +61,6 @@ export async function inviteUserToCluster(
         return { success: false, error: "Username cannot be empty" }
       }
 
-      // Use function to lookup user by username (bypasses RLS)
       const { data: userData, error: userError } = await supabase
         .rpc('lookup_user_by_username', { p_username: trimmedUsername })
 
@@ -85,24 +78,20 @@ export async function inviteUserToCluster(
       finalEmail = userData[0].email
     }
 
-    // Email validation is handled by Zod schema, but double-check here
     if (!finalEmail) {
       return { success: false, error: "Email is required" }
     }
 
     const inviteeUserId = generateUUIDFromEmailSync(finalEmail)
 
-    // Check if user is already a member
     if (cluster.members && cluster.members.includes(inviteeUserId)) {
       return { success: false, error: "User is already a member of this cluster" }
     }
 
-    // Check if user already has a pending invite
     if (cluster.invites && cluster.invites.includes(inviteeUserId)) {
       return { success: false, error: "User already has a pending invitation" }
     }
 
-    // Create user record in Supabase if it doesn't exist
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
@@ -110,7 +99,6 @@ export async function inviteUserToCluster(
       .single()
 
     if (!existingUser) {
-      // User doesn't exist, create a basic user record
       const username = extractUsernameFromEmail(finalEmail)
       await supabase
         .from('users')
@@ -126,10 +114,8 @@ export async function inviteUserToCluster(
         })
     }
 
-    // Add invitee to invites array
     const updatedInvites = [...(cluster.invites || []), inviteeUserId]
 
-    // Update cluster with new invite
     const { error: updateError } = await supabase
       .from('clusters')
       .update({ invites: updatedInvites })
@@ -139,7 +125,6 @@ export async function inviteUserToCluster(
       return handleSupabaseError(updateError, 'Failed to send invitation')
     }
 
-    // Create notification for the invitee
     const notificationData = {
       user_id: inviteeUserId,
       type: 'cluster_invite',

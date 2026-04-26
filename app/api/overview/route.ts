@@ -17,7 +17,6 @@ export type OverviewResponse = {
   recentBugs: { id: string; title: string; priority?: string; status?: string; created_at?: string }[]
 }
 
-/** GET: Community overview for the fire-icon dialog (stats, clusters, unanswered, recent). */
 export async function GET() {
   try {
     const [

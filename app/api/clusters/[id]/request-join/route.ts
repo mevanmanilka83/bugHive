@@ -49,7 +49,6 @@ export async function POST(
     if (existing.status === 'accepted') {
       return NextResponse.json({ error: "You are already a member" }, { status: 400 })
     }
-    // declined: allow re-request by inserting again (we use UNIQUE so we need to update or delete first)
     await supabase
       .from('cluster_join_requests')
       .delete()
@@ -83,7 +82,6 @@ export async function POST(
       read: false,
     })
   if (notificationError) {
-    // Join request is still valid; notification is best-effort.
     console.error("Failed to create join-request notification:", notificationError)
   }
 

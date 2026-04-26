@@ -1,15 +1,3 @@
-/**
- * Core Utility Functions
- * 
- * ⚠️ SINGLE SOURCE OF TRUTH FOR UTILITY FUNCTIONS ⚠️
- * 
- * This file consolidates all utility functions.
- * Client-safe functions are re-exported from client.ts
- * Server-specific utilities are defined here.
- * 
- * For client components, import from @/lib/utils/client to avoid server-side code.
- * For server components/API routes, import from @/lib or @/lib/utils.
- */
 
 export {
   cn,
@@ -58,9 +46,6 @@ export {
   fetchWithRetry,
 } from "./client"
 
-/**
- * Adds created_at and updated_at timestamps to data
- */
 export function addTimestamps(data: Record<string, any>): Record<string, any> {
   const now = new Date().toISOString()
   return {
@@ -70,9 +55,6 @@ export function addTimestamps(data: Record<string, any>): Record<string, any> {
   }
 }
 
-/**
- * Parses an array field from string or JSON
- */
 export function parseArrayField(value: string | null): string[] | null {
   if (!value) return null
   
@@ -88,9 +70,6 @@ export function parseArrayField(value: string | null): string[] | null {
   return null
 }
 
-/**
- * Parses query parameters for filtering and limiting records
- */
 export function parseQueryFilters(searchParams: URLSearchParams | null): {
   filterField?: string
   filterValue?: string
@@ -109,15 +88,10 @@ export function parseQueryFilters(searchParams: URLSearchParams | null): {
   return { filterField, filterValue, limit }
 }
 
-/**
- * Extract route ID from Next.js 15 App Router context params
- * Handles both string and Promise-based params
- */
 export async function extractRouteId(context: any): Promise<string> {
   const params = context?.params
   if (!params) throw new Error("Missing route params")
   
-  // Handle Promise-based params (Next.js 15+)
   const resolvedParams = typeof params.then === 'function' ? await params : params
   const id = resolvedParams.id || resolvedParams.bugId || resolvedParams.clusterId
   

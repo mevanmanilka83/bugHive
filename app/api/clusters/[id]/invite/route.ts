@@ -19,7 +19,6 @@ export async function POST(
   try {
     const body = await request.json()
 
-    // Validate with zod schema (clusterId comes from route params)
     const validation = validateWithSchema(
       getInviteUserValidationSchema(),
       { ...body, clusterId }
@@ -31,7 +30,6 @@ export async function POST(
 
     const { inviteeEmail, inviteeUsername } = validation.data
 
-    // Get cluster to verify ownership
     const { data: cluster, error: clusterError } = await supabase
       .from('clusters')
       .select('*')
@@ -42,17 +40,13 @@ export async function POST(
       return NextResponse.json({ error: "Cluster not found" }, { status: 404 })
     }
 
-    // Check if user is the owner
     if (cluster.owner_id !== userId) {
       return NextResponse.json({ error: "Only cluster owners can invite members" }, { status: 403 })
     }
 
-    // Determine the email to use for invitation
     let finalEmail = inviteeEmail
 
-    // If email is not provided but username is, look up user by username
     if (!finalEmail && inviteeUsername) {
-      // Use function to lookup user by username (bypasses RLS)
       const { data: userData, error: userError } = await supabase
         .rpc('lookup_user_by_username', { p_username: inviteeUsername })
 
@@ -77,17 +71,14 @@ export async function POST(
 
     const inviteeUserId = generateUUIDFromEmailSync(finalEmail)
 
-    // Check if user is already a member
     if (cluster.members && cluster.members.includes(inviteeUserId)) {
       return NextResponse.json({ error: "User is already a member of this cluster" }, { status: 400 })
     }
 
-    // Check if user already has a pending invite
     if (cluster.invites && cluster.invites.includes(inviteeUserId)) {
       return NextResponse.json({ error: "User already has a pending invitation" }, { status: 400 })
     }
 
-    // Create user record in Supabase if it doesn't exist
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
@@ -95,7 +86,6 @@ export async function POST(
       .single()
 
     if (!existingUser) {
-      // User doesn't exist, create a basic user record
       const username = extractUsernameFromEmail(finalEmail)
       await supabase
         .from('users')
@@ -111,10 +101,8 @@ export async function POST(
         })
     }
 
-    // Add invitee to invites array
     const updatedInvites = [...(cluster.invites || []), inviteeUserId]
 
-    // Update cluster with new invite
     const { error: updateError } = await supabase
       .from('clusters')
       .update({ invites: updatedInvites })
@@ -126,7 +114,6 @@ export async function POST(
       }, { status: 500 })
     }
 
-    // Create notification for the invitee
     const notificationData = {
       user_id: inviteeUserId,
       type: 'cluster_invite',

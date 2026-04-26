@@ -55,7 +55,6 @@ export function SignupForm({
         throw new Error(errorData.error || "Failed to create account")
       }
 
-      // Auto sign in after successful signup
       const result = await signIn("credentials", {
         email,
         password,

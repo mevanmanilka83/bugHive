@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ArrowDown, ArrowUp, Save } from "lucide-react"
+import { Loader2, ExternalLink, Bug, Tag, Globe, Code, Github, MessageSquare, AlertCircle, Share2, Layers, AlertTriangle, FileText, CheckCircle, ArrowDown, ArrowUp, Save, X } from "lucide-react"
 import { TimeTravelBar, timeToOpacity, useTimeTravelPlayback } from "@/components/features/graph/TimeTravelBar"
 import {
     ReactFlow,
@@ -38,11 +38,12 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { toast } from "sonner"
-import { cn } from "@/lib"
+import { cn, stripHtml } from "@/lib"
 
 interface GlobalGraphDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    userId?: string
 }
 
 const nodeTypeColors: Record<string, string> = {
@@ -71,11 +72,13 @@ const nodeTypeIcons: Record<string, React.ReactNode> = {
     solution: <CheckCircle className="h-4 w-4" />,
 }
 
-// Responsive node sizing
 function CustomNode({ data, selected }: { data: any; selected: boolean }) {
     const nodeType = data.type || "bug"
     const styles = nodeTypeColors[nodeType] || "bg-muted/50 border-border text-foreground"
     const icon = nodeTypeIcons[nodeType] || <Bug className="h-4 w-4" />
+    const plainDescription = stripHtml(String(data.description || "")).trim()
+    const shortDescription =
+        plainDescription.length > 180 ? `${plainDescription.slice(0, 180)}...` : plainDescription
 
     return (
         <div
@@ -120,9 +123,9 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
                 </div>
             )}
 
-            {data.description && (
+            {shortDescription && (
                 <div className="px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-xs text-muted-foreground bg-muted/30 rounded-none border-t border-border/10 line-clamp-2 hidden sm:block">
-                    {data.description}
+                    {shortDescription}
                 </div>
             )}
             <Handle type="source" position={Position.Bottom} className="!w-2.5 !h-2.5 !bg-muted-foreground/30 !border-[1.5px] !border-background !bottom-[-5px]" />
@@ -211,7 +214,7 @@ const edgeTypes = {
     custom: CustomBadgeEdge,
 }
 
-export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps) {
+export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDialogProps) {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
     const [loading, setLoading] = React.useState(false)
@@ -225,20 +228,26 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
     const bugId = params?.bugId as string | undefined
 
     async function handleSaveWorkspace() {
-        if (!reactFlowInstance || !bugId) return
+        if (!reactFlowInstance) return
         try {
             setSaving(true)
             const rfObject = reactFlowInstance.toObject()
+            const derivedBugId =
+                bugId ||
+                (rfObject.nodes || []).find((n: any) => n?.type === "bug" && typeof n?.id === "string")?.id ||
+                null
 
             const res = await fetch("/api/workspaces", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    title: `Workspace: Graph Context`,
-                    description: `Global context graph derived from Bug #${bugId.slice(0, 8)}`,
+                    title: `Workspace: Global Graph Context`,
+                    description: derivedBugId
+                        ? `Global context graph derived from Bug #${String(derivedBugId).slice(0, 8)}`
+                        : "Global context graph from dashboard Graph View",
                     nodes: rfObject.nodes,
                     edges: rfObject.edges,
-                    origin_bug_id: bugId
+                    origin_bug_id: derivedBugId
                 })
             })
 
@@ -253,7 +262,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
             }
             onOpenChange(false)
             setTimeout(() => {
-                router.push(`/workspaces/${data.graph.id}`)
+                router.push(`/dashboard/workspaces/${data.graph.id}`)
             }, 150)
         } catch (e: any) {
             console.error("Failed to save workspace:", e)
@@ -273,13 +282,13 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
             setLoading(true)
             const query = new URLSearchParams()
             if (bugId) query.set("bugId", bugId)
+            if (userId) query.set("userId", userId)
             query.set("t", Date.now().toString())
 
             const res = await fetch(`/api/graph?${query.toString()}`)
             if (!res.ok) return
             const data = await res.json()
 
-            // Convert to React Flow format
             const flowNodes: Node[] = (data.nodes || []).map((node: any) => ({
                 id: node.id,
                 type: node.type || "default",
@@ -289,14 +298,21 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
 
             const flowEdges: Edge[] = (data.edges || []).map((edge: any, idx: number) => {
                 let stroke = "hsl(var(--muted-foreground))" // default gray
-                const type = edge.type || ""
-                if (type === "solution_for" || type === "verified_by") stroke = "#10b981" // green
-                else if (type === "cause_of") stroke = "hsl(var(--muted-foreground))"
-                else if (type === "contradicts" || type === "disputes" || type === "conflicts" || type === "condractary" || type === "condractary-dispute" || type === "conflict") stroke = "#ef4444" // red
-                else if (type === "similar_to" || type === "duplicate_of") stroke = "#3b82f6" // blue
-                else if (type === "occurs_on") stroke = "hsl(var(--muted-foreground))"
-                else if (type === "supports" || type === "complements" || type === "support" || type === "complement" || type === "complementary -support") stroke = "#8b5cf6" // violet
-                else if (type === "belongs_to") stroke = "#a855f7" // purple
+                const type = String(edge.type || "")
+                const normalizedType = type.toUpperCase()
+                if (normalizedType === "SOLUTION_FOR" || normalizedType === "EVIDENCE_FOR" || type === "solution_for" || type === "verified_by") {
+                    stroke = "#10b981" // green
+                } else if (normalizedType === "CAUSE_OF" || type === "cause_of") {
+                    stroke = "#64748b" // slate
+                } else if (normalizedType === "SIMILAR" || normalizedType === "DUPLICATE" || type === "similar_to" || type === "duplicate_of") {
+                    stroke = "#3b82f6" // blue
+                } else if (type === "contradicts" || type === "disputes" || type === "conflicts" || type === "condractary" || type === "condractary-dispute" || type === "conflict") {
+                    stroke = "#ef4444" // red
+                } else if (type === "supports" || type === "complements" || type === "support" || type === "complement" || type === "complementary -support") {
+                    stroke = "#8b5cf6" // violet
+                } else if (type === "belongs_to") {
+                    stroke = "#a855f7" // purple
+                }
 
                 return {
                     id: edge.id || `ge-${edge.source}-${edge.target}-${idx}`,
@@ -305,7 +321,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                     type: "custom",
                     animated: true,
                     label: edge.label || type.replace(/_/g, " "),
-                    data: { type, created_at: edge.data?.created_at },
+                    data: { type: normalizedType || type, created_at: edge.data?.created_at },
                     style: { stroke, strokeWidth: Math.max(1.5, (edge.weight || 0.5) * 3), opacity: 0.8 },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
@@ -383,7 +399,6 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
         )
     }, [selectedTime, timestamps.length, setNodes, setEdges])
 
-    // Handle fitView on open or data change
     React.useEffect(() => {
         if (open && !loading && nodes.length > 0 && reactFlowInstance) {
             window.requestAnimationFrame(() => {
@@ -429,9 +444,10 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                         )}
                         <button
                             onClick={() => onOpenChange(false)}
-                            className="rounded-full p-2 hover:bg-muted/50 transition-colors"
+                            className="inline-flex items-center justify-center rounded-md p-2 hover:bg-muted/50 transition-colors"
+                            aria-label="Close dialog"
                         >
-                            <ExternalLink className="h-4 w-4 rotate-45" />
+                            <X className="h-4 w-4" />
                             <span className="sr-only">Close</span>
                         </button>
                     </div>
@@ -479,7 +495,10 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
                             />
 
                             {milestones.length > 0 && (
-                                <Panel position="bottom-center" className="!relative !transform-none w-full">
+                                <Panel
+                                    position="bottom-center"
+                                    className="w-full max-w-4xl px-4 pb-3"
+                                >
                                     <TimeTravelBar
                                         percent={timeTravelPercent}
                                         onPercentChange={setTimeTravelPercent}
@@ -545,7 +564,7 @@ export function GlobalGraphDialog({ open, onOpenChange }: GlobalGraphDialogProps
 
                                         {(selectedNode.data as any).description && (
                                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                                {(selectedNode.data as any).description}
+                                                {stripHtml(String((selectedNode.data as any).description || ""))}
                                             </p>
                                         )}
 

@@ -18,14 +18,15 @@ type GraphItem = {
 interface WorkspaceGraphsPanelProps {
   myGraphs: GraphItem[]
   publicGraphs: GraphItem[]
-  /** Action button shown when there are no saved graphs yet (e.g. 'Browse bugs') */
   myEmptyAction: React.ReactNode
+  detailBasePath?: string
 }
 
 export function WorkspaceGraphsPanel({
   myGraphs,
   publicGraphs,
   myEmptyAction,
+  detailBasePath = "/workspaces",
 }: WorkspaceGraphsPanelProps) {
   const [visibilityFilter, setVisibilityFilter] = React.useState<VisibilityFilter>("private")
 
@@ -131,6 +132,7 @@ export function WorkspaceGraphsPanel({
         graphs={filteredMyGraphs}
         emptyMessage='No graphs yet. Open a bug, click the relationship graph icon, then "Save relationship diagram" (as private or public).'
         emptyAction={myEmptyAction}
+        detailBasePath={detailBasePath}
       />
     </div>
   )

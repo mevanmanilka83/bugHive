@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib"
 import { RelatedBugsPanelSkeleton } from "@/components/features/skeletons/RelatedBugsPanelSkeleton"
 
-/** Normalized shape from API */
 export type RelatedBugSource =
   | "github_issue"
   | "github_repo"

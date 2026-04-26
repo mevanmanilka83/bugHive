@@ -45,7 +45,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const body = await request.json()
         const { title, description, nodes, edges } = body
 
-        // Validate permissions (owner or cluster member) before update
         const supabaseAdmin = await getSupabaseAdmin()
 
         const { data: ws } = await (supabaseAdmin as any)
@@ -67,7 +66,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Forbidden" }, { status: 403 })
         }
 
-        // Perform update
         const { data, error } = await (supabaseAdmin as any)
             .from("saved_graphs")
             .update({

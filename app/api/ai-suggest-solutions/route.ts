@@ -8,11 +8,6 @@ type SuggestBody = {
   bugDescription?: string
 }
 
-/**
- * POST /api/ai-suggest-solutions
- * Returns AI-generated solution suggestions (title + description) for a bug.
- * Uses Gemini when GEMINI_API_KEY is set, otherwise OpenAI.
- */
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {
@@ -61,7 +56,6 @@ Do not add greetings, explanations, or markdown. Only return valid JSON.`
       )
     }
 
-    // Parse JSON (handle markdown code blocks)
     let parsed: { suggestions?: Array<{ title?: string; description?: string }> }
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     try {

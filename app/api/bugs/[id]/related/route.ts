@@ -13,10 +13,6 @@ const MAX_RESULTS_PER_SOURCE = 6
 const GITHUB_PAGE_SIZE = 15
 const MAX_QUERY_TEXT = 600
 
-/**
- * Normalized result shape for related items. Same structure can be used when
- * adding Reddit or Stack Overflow later (add new source values and fetchers).
- */
 export type RelatedResult = {
   id: string
   title: string
@@ -41,7 +37,6 @@ type StackOverflowQuestion = {
   tags: string[]
 }
 
-// ... (Add normalizeStackOverflowQuestion)
 function normalizeStackOverflowQuestion(item: StackOverflowQuestion): RelatedResult {
   const tagStr = item.tags && item.tags.length > 0 ? `Tags: ${item.tags.join(", ")}` : ""
   const bodySnippet = toSnippet(item.body_markdown)
@@ -185,7 +180,6 @@ async function generateQueries(params: {
   return { issueQuery, repoQuery: "" }
 }
 
-/** GitHub search query length limit (keep under 256) */
 const MAX_QUERY_LEN = 200
 
 function truncateQuery(q: string): string {
@@ -193,7 +187,6 @@ function truncateQuery(q: string): string {
   return t.length <= MAX_QUERY_LEN ? t : t.slice(0, MAX_QUERY_LEN)
 }
 
-/** Terms that identify language/framework or specific error type. */
 const STRONG_TERMS = new Set([
   "python", "react", "vue", "angular", "javascript", "java", "flutter", "swift", "kotlin",
   "zerodivisionerror", "typeerror", "nullpointerexception", "keyerror", "valueerror",
@@ -302,10 +295,6 @@ const DOMAIN_BLOCKLISTS = [
   },
 ]
 
-/**
- * Extract key technical terms and strong terms (language/error) from the bug.
- * Strong terms are used to require that results match the same tech or error type.
- */
 function extractKeyTerms(params: {
   title: string
   description: string
@@ -487,10 +476,6 @@ function extractBugSignature(params: {
   }
 }
 
-/**
- * Fallback when Gemini is unavailable or fails: build queries from error
- * message, title, and tags so results are still relevant to the bug.
- */
 function buildFallbackQueries(signature: BugSignature): GeminiQueries {
   return {
     issueQuery: buildSignatureQuery(signature),
@@ -653,7 +638,6 @@ export async function GET(
       issueItems = Array.isArray(issuesData?.items)
         ? (issuesData.items as GitHubIssue[])
         : []
-      // Fail closed: no generic fallback query to avoid irrelevant results.
     } catch {
       issueItems = []
     }
@@ -668,7 +652,6 @@ export async function GET(
       .slice(0, GITHUB_PAGE_SIZE)
       .map(normalizeIssue)
 
-    // Stack Overflow fetch
     let stackItems: StackOverflowQuestion[] = []
 
     if (issueQuery) {
@@ -691,7 +674,6 @@ export async function GET(
             soUrl.searchParams.set("key", stackExchangeKey)
           }
 
-          // Primary fetch
           soUrl.searchParams.set("q", stackQuery)
           const soRes = await fetch(soUrl.toString())
 
@@ -704,7 +686,6 @@ export async function GET(
             console.error(`Stack Overflow API Error: ${soRes.status}`, await soRes.text())
           }
 
-          // Fallback 1: Signature-based (Language + Error/Symptom)
           if (stackItems.length === 0) {
             const fallbackTerms = [
               signature.languageTerms[0],
@@ -729,7 +710,6 @@ export async function GET(
             }
           }
 
-          // Fallback 2: Title-based (Simple keywords)
           if (stackItems.length === 0 && title) {
             const cleanTitle = title
               .replace(/bug|issue|problem|error|fail|failure|crash/gi, "")
@@ -870,8 +850,6 @@ export async function GET(
     const chosen = strictIssues.length > 0 ? strictIssues : relaxedIssues
     const issues = chosen.slice(0, MAX_RESULTS_PER_SOURCE).map((x) => x.item)
 
-    // Ensure we surface at least some Stack Overflow results when available,
-    // even if the strict relevance filters are too aggressive.
     const hasStackInIssues = issues.some(
       (item) => item.source === "stack_overflow_question"
     )

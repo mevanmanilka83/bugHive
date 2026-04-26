@@ -17,6 +17,7 @@ interface MyBugsListProps {
   visibilityFilter?: "private" | "public" | "cluster-private" | "cluster-public"
   onVisibilityChange?: (value: "private" | "public" | "cluster-private" | "cluster-public") => void
   showVisibilityToggle?: boolean
+  detailBasePath?: string
 }
 
 export function MyBugsList({
@@ -27,6 +28,7 @@ export function MyBugsList({
   visibilityFilter,
   onVisibilityChange,
   showVisibilityToggle = true,
+  detailBasePath = "/bugs",
 }: MyBugsListProps) {
   const router = useRouter()
   const [bugs, setBugs] = React.useState<any[]>([])
@@ -74,7 +76,6 @@ export function MyBugsList({
               if (visibility === "public" || visibility === "private") meta.visibility = visibility
               if (meta.name || meta.visibility) clusterMetaMap.set(clusterId, meta)
             } catch {
-              // Ignore cluster lookup failures
             }
           })
         )
@@ -90,11 +91,9 @@ export function MyBugsList({
 
       setBugs(enriched)
 
-      // Fetch solutions for bugs created by this user and build chart data
       const solutionsResult = await getSolutionsByUser(userId)
       const solutions: any[] = solutionsResult?.solutions || []
 
-      // Build chart data from solutions and convert to cumulative
       const byDay = new Map<string, number>()
       for (const solution of solutions) {
         const createdAt = solution.created_at || solution.createdAt || solution.createdat
@@ -105,7 +104,6 @@ export function MyBugsList({
       const sorted = Array.from(byDay.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
 
-      // Convert to cumulative (running total) - starts from flow (low) to high
       let cumulative = 0
       const cumulativeData = sorted.map(([date, count]) => {
         cumulative += count
@@ -137,7 +135,7 @@ export function MyBugsList({
   }, [fetchBugs])
 
   function openBugDetails(bugId: string) {
-    router.push(`/bugs/${bugId}`)
+    router.push(`${detailBasePath}/${bugId}`)
   }
 
   const activeVisibilityFilter = visibilityFilter ?? internalVisibilityFilter

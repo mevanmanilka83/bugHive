@@ -35,7 +35,6 @@ export async function createCluster(
   formData: FormData
 ): Promise<ActionResponse<{ cluster?: any }>> {
   try {
-    // Check authentication
     const authResult = await requireAuth()
     if (!authResult.success) {
       return authResult
@@ -46,7 +45,6 @@ export async function createCluster(
       return { success: false, error: "Form data is required" }
     }
 
-    // Extract and validate form data
     const rawData = {
       name: (formData.get('name') as string) || '',
       description: (formData.get('description') as string) || '',
@@ -81,7 +79,6 @@ export async function createCluster(
       }
     }
 
-    // Get owner username
     const ownerUsername = getUsernameFromSession(session)
     const userId = ensureValidUUID(session.user.id)
     const ownerEmail = (session.user.email || "").toLowerCase().trim()

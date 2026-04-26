@@ -18,7 +18,6 @@ import {
   RichText,
 } from "@lexkit/editor"
 
-// Do NOT include richTextExtension: it would add a second editable + "Start writing...". We use <RichText /> only.
 const extensions = [
   boldExtension,
   italicExtension,
@@ -60,7 +59,6 @@ function EditorContent({
   const initialSync = React.useRef(false)
   const hasHydratedRef = React.useRef(false)
 
-  // Sync initial value into editor (and when parent resets the form)
   React.useEffect(() => {
     const normalized = ensureBlockHtml(stripEmptyParagraphs(value))
     if (!hasHydratedRef.current) {
@@ -82,7 +80,6 @@ function EditorContent({
     if (normalized === "" && lastEmittedRef.current === "") return
     if (normalized === lastEmittedRef.current) return
     initialSync.current = true
-    // Use htmlExtension commands if available
     if (commands.importFromHTML) {
       commands.importFromHTML(normalized || "<p></p>", { preventFocus: true }).then(() => {
         lastEmittedRef.current = normalized
@@ -93,11 +90,9 @@ function EditorContent({
     }
   }, [value, commands])
 
-  // On editor update, export HTML and notify parent
   React.useEffect(() => {
     const unregister = listeners?.registerUpdate?.(() => {
       if (initialSync.current) return
-      // Prefer htmlExtension export command if available
       if (commands.exportToHTML) {
         const html = commands.exportToHTML()
         const out = stripEmptyParagraphs(html ?? "")
@@ -139,7 +134,6 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
 
     setBlockOpen(false)
 
-    // Focus the editor root element to ensure commands work
     const rootElement = editor.getRootElement()
     if (rootElement) {
       rootElement.focus()
@@ -147,14 +141,10 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       editor.focus()
     }
 
-    // Small delay to ensure focus is set before applying format
     setTimeout(() => {
-      // Apply the block format command
-      // Try toggleBlockFormat first (more direct), fallback to specific commands
       if (commands.toggleBlockFormat) {
         commands.toggleBlockFormat(value as "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "quote")
       } else {
-        // Fallback to specific commands if toggleBlockFormat isn't available
         if (value === "p") {
           commands.toggleParagraph?.()
         } else if (value === "quote") {
@@ -432,12 +422,6 @@ export type RichTextEditorProps = {
   hasError?: boolean
   minHeight?: string
   maxHeight?: string
-  /**
-   * Toolbar complexity:
-   * - "full": formatting + block/list/link/history controls (default)
-   * - "minimal": compact controls intended for short comments (bold/italic/link + clear)
-   * - "none": no toolbar
-   */
   toolbar?: "full" | "minimal" | "none"
 }
 

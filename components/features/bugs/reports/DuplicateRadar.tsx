@@ -2,11 +2,9 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Radar, ThumbsUp, MessageSquare, Merge, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn, isValidUUID } from "@/lib"
-import { toast } from "sonner"
+import { usePathname } from "next/navigation"
+import { Crosshair } from "lucide-react"
+import { cn } from "@/lib"
 
 export type PotentialDuplicateItem = {
   id: string
@@ -27,11 +25,22 @@ type Props = {
   className?: string
 }
 
+function toDashboardBugUrl(url: string) {
+  if (typeof url !== "string") return "/dashboard/bugs"
+  return url.startsWith("/bugs/") ? url.replace("/bugs/", "/dashboard/bugs/") : url
+}
+
+function toPublicBugUrl(url: string) {
+  if (typeof url !== "string") return "/bugs"
+  return url.startsWith("/dashboard/bugs/")
+    ? url.replace("/dashboard/bugs/", "/bugs/")
+    : url
+}
+
 export function DuplicateRadar({ title, description, tags = [], className }: Props) {
-  const router = useRouter()
+  const pathname = usePathname()
   const [duplicates, setDuplicates] = React.useState<PotentialDuplicateItem[]>([])
   const [loading, setLoading] = React.useState(false)
-  const [mergeTargetId, setMergeTargetId] = React.useState<string | null>(null)
   const abortRef = React.useRef<AbortController | null>(null)
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -91,27 +100,21 @@ export function DuplicateRadar({ title, description, tags = [], className }: Pro
   return (
     <div
       className={cn(
-        "flex flex-col rounded-lg border border-amber-500/30 bg-amber-500/5 dark:bg-amber-950/20 min-w-0",
+        "flex min-w-0 flex-col rounded-lg border border-[#dbc9a6] bg-[#f7f2e9]",
         className
       )}
       aria-label="Potential duplicates"
     >
-      <div className="flex items-center gap-2 border-b border-amber-500/20 px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[#dbc9a6] px-3 py-2">
         <span
-          className="flex size-8 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400"
+          className="flex size-8 items-center justify-center rounded-full bg-[#ecd8af] text-[#5c4f3e]"
           aria-hidden
         >
-          <Radar
-            className="size-4 animate-pulse"
-            style={{ animationDuration: "2s" }}
-          />
+          <Crosshair className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#243148]">
             Duplicate radar
-          </p>
-          <p className="text-[11px] text-muted-foreground">
-            Potential duplicates as you type
           </p>
         </div>
       </div>
@@ -129,15 +132,20 @@ export function DuplicateRadar({ title, description, tags = [], className }: Pro
           <ul className="space-y-2">
             {duplicates.map((item) => {
               const pct = Math.round(item.relevanceScore * 100)
-              const isMerging = mergeTargetId === item.id
+              const duplicateUrl = pathname?.startsWith("/dashboard")
+                ? toDashboardBugUrl(item.url)
+                : toPublicBugUrl(item.url)
               return (
-                <li key={item.id} className="rounded-md border border-border/60 bg-card/50 p-2">
+                <li
+                  key={item.id}
+                  className="rounded-md border border-[#dbc9a6] bg-[#faf7f1] p-2"
+                >
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                    <span className="text-[10px] font-semibold text-[#445676]">
                       {pct}% match
                     </span>
                     <Link
-                      href={item.url}
+                      href={duplicateUrl}
                       className="text-xs font-medium text-primary underline-offset-2 hover:underline truncate max-w-[70%]"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -154,73 +162,12 @@ export function DuplicateRadar({ title, description, tags = [], className }: Pro
                     <ul className="mt-1.5 space-y-0.5 text-[10px] text-muted-foreground">
                       {item.relevanceReasons.slice(0, 4).map((reason, i) => (
                         <li key={i} className="flex items-start gap-1">
-                          <span className="text-amber-600 dark:text-amber-400 shrink-0">•</span>
+                          <span className="shrink-0 text-[#7a879b]">•</span>
                           <span>{reason}</span>
                         </li>
                       ))}
                     </ul>
                   )}
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-7 gap-1.5 text-[11px] bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 border-amber-500/30"
-                      disabled={isMerging}
-                      onClick={async () => {
-                        if (!isValidUUID(item.id)) {
-                          toast.error("Invalid bug link")
-                          return
-                        }
-                        const bugId = item.id
-                        setMergeTargetId(bugId)
-                        try {
-                          const commentBody = [
-                            "Me too – same issue.",
-                            "",
-                            plainDescription.slice(0, 2000),
-                          ].join("\n")
-                          const res = await fetch(`/api/bugs/${bugId}/comments`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ content: commentBody }),
-                          })
-                          const errBody = await res.json().catch(() => ({}))
-                          if (!res.ok) {
-                            const message =
-                              res.status === 401
-                                ? "Please sign in to use Merge & Follow"
-                                : (errBody?.error as string) || "Failed to add comment"
-                            throw new Error(message)
-                          }
-                          window.dispatchEvent(
-                            new CustomEvent("bug:comment-added", { detail: { bugId } })
-                          )
-                          router.push(item.url)
-                        } catch (e) {
-                          console.error(e)
-                          setMergeTargetId(null)
-                          toast.error(e instanceof Error ? e.message : "Failed to add comment")
-                        }
-                      }}
-                    >
-                      {isMerging ? (
-                        <Loader2 className="size-3 animate-spin" />
-                      ) : (
-                        <Merge className="size-3" />
-                      )}
-                      Merge &amp; Follow
-                    </Button>
-                    <Link
-                      href={item.url}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ThumbsUp className="size-3" />
-                      <MessageSquare className="size-3" />
-                      Me Too there →
-                    </Link>
-                  </div>
                 </li>
               )
             })}

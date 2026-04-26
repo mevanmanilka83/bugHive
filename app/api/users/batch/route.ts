@@ -1,12 +1,3 @@
-/**
- * Batch User Fetch API Route
- * 
- * Purpose: HTTP endpoint for fetching multiple users at once
- * - GET /api/users/batch?ids=id1,id2,id3 - Fetch multiple users by their IDs
- * 
- * Public (no auth required) so that bug list can show creator names for everyone,
- * including when viewing public bugs while logged out.
- */
 import { supabase } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 

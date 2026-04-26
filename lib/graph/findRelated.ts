@@ -372,14 +372,12 @@ export async function findRelatedItems(bug: any) {
     }
 }
 
-/** Draft shape for duplicate detection (title + description as user types). */
 export type PotentialDuplicateDraft = {
     title?: string
     description?: string
     tags?: string[]
 }
 
-/** Result item for potential duplicate (internal bug only, with score). */
 export type PotentialDuplicateResult = {
     id: string
     title: string
@@ -396,10 +394,6 @@ const TRIGRAM_CANDIDATE_LIMIT = 25
 const TRIGRAM_MIN_SIMILARITY = 0.08
 const TEMPORAL_48H_MS = 48 * 60 * 60 * 1000
 
-/**
- * Duplicate search: PostgreSQL trigram (GIN) for fast candidate retrieval, then
- * heuristic scoring (stack trace fingerprint 0.8+, temporal boost 48h, calculateRelevance).
- */
 export async function findPotentialDuplicates(draft: PotentialDuplicateDraft): Promise<PotentialDuplicateResult[]> {
     const title = String(draft.title || "").trim()
     const description = String(draft.description || "").trim()
@@ -428,7 +422,6 @@ export async function findPotentialDuplicates(draft: PotentialDuplicateDraft): P
             candidateIds = rpcData as { id: string; similarity_score: number; created_at: string }[]
         }
     } catch {
-        // fallback: no trigram or RPC missing
     }
 
     const ids = candidateIds.map((r) => r.id)

@@ -16,7 +16,6 @@ interface LeaderboardDialogProps {
   period?: "week" | "all"
   limit?: number
   className?: string
-  /** Use header style (orange border, brackets) to match Community stats / Account buttons */
   headerStyle?: boolean
 }
 

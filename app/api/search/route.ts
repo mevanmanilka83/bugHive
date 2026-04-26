@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseAdmin } from "@/lib"
 
-/**
- * GET /api/search?q=...&type=bugs|clusters|all
- * Search bugs and clusters for adding to workspace graphs.
- */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)

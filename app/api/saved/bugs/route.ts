@@ -4,7 +4,6 @@ import { NextResponse } from "next/server"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-/** GET: List full bug objects for the current user's saved bugs. */
 export async function GET() {
   const authResult = await checkAuth()
   if (authResult instanceof NextResponse) return authResult

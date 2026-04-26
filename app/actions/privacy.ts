@@ -6,9 +6,6 @@ import type { ProfileVisibility } from "@/lib/schemas/types"
 import { auth } from "@/lib/auth/config"
 import type { ActionResponse } from "@/lib/auth/helpers"
 
-/**
- * Update profile visibility settings
- */
 export async function updateProfileVisibility(visibility: ProfileVisibility): Promise<ActionResponse> {
   try {
     const session = await auth()
@@ -16,13 +13,11 @@ export async function updateProfileVisibility(visibility: ProfileVisibility): Pr
       return { success: false, error: "Not authenticated" }
     }
 
-    // Validate the visibility value
     const validation = getPrivacySettingsValidationSchema().shape.profile_visibility.safeParse(visibility)
     if (!validation.success) {
       return { success: false, error: "Invalid visibility setting" }
     }
 
-    // Update user's profile visibility setting
     const { error } = await supabase
       .from('users')
       .update({
@@ -43,9 +38,6 @@ export async function updateProfileVisibility(visibility: ProfileVisibility): Pr
   }
 }
 
-/**
- * Update activity visibility setting
- */
 export async function updateActivityVisibility(showActivity: boolean): Promise<ActionResponse> {
   try {
     const session = await auth()
@@ -53,7 +45,6 @@ export async function updateActivityVisibility(showActivity: boolean): Promise<A
       return { success: false, error: "Not authenticated" }
     }
 
-    // Update user's activity visibility setting
     const { error } = await supabase
       .from('users')
       .update({
@@ -79,9 +70,6 @@ export async function updateActivityVisibility(showActivity: boolean): Promise<A
   }
 }
 
-/**
- * Get user's current privacy settings
- */
 export async function getPrivacySettings() {
   try {
     const session = await auth()
@@ -99,7 +87,6 @@ export async function getPrivacySettings() {
       .single()
 
     if (error || !data) {
-      // Return defaults if user not found or error
       return { 
         profile_visibility: "public" as ProfileVisibility, 
         show_activity: true 

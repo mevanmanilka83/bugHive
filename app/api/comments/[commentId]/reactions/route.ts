@@ -28,7 +28,6 @@ export async function POST(
 
     const supabase = (await getSupabaseAdmin()) as any
 
-    // Ensure comment exists (prevents reacting to random UUIDs)
     const { data: comment } = await supabase
       .from("bug_comments")
       .select("id")
@@ -54,7 +53,6 @@ export async function POST(
         .eq("id", current.id)
       if (error) return errorResponse("Failed to remove reaction", 500)
     } else {
-      // Ensure only one reaction per user per comment: remove any others first
       if (existingRows.length > 0) {
         const ids = existingRows.map((r) => r.id)
         const { error: deleteError } = await supabase

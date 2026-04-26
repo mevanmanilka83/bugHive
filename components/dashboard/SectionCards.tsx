@@ -19,16 +19,11 @@ export function SectionCards({ userId }: SectionCardsProps) {
       setIsLoading(true)
     }
     try {
-      const res = await fetch("/api/bugs?limit=200")
+      const res = await fetch(`/api/bugs?created_by=${encodeURIComponent(userId)}&limit=200`)
       if (!res.ok) return
       const data = await res.json()
       const items: any[] = data?.bugs || []
-      // Filter out private bugs - only show public bugs
-      const publicBugs = items.filter(bug => {
-        const visibility = (bug.visibility || "public").toLowerCase().trim()
-        return visibility !== "private"
-      })
-      setBugs(publicBugs)
+      setBugs(items)
     } catch (error) {
       console.error("Failed to fetch bugs:", error)
     } finally {
@@ -50,7 +45,7 @@ export function SectionCards({ userId }: SectionCardsProps) {
       window.removeEventListener("bug:created", onCreated as EventListener)
       window.removeEventListener("solution:created", onSolutionCreated as EventListener)
     }
-  }, [])
+  }, [userId])
 
   function openBugDetails(bugId: string) {
     router.push(`/bugs/${bugId}`)
@@ -61,7 +56,7 @@ export function SectionCards({ userId }: SectionCardsProps) {
     {/* Separate grid for individual bug cards to avoid colliding with summary cards */}
     <div className="px-4 lg:px-6 mt-4">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground">Recent Bugs</h3>
+        <h3 className="text-sm font-medium text-muted-foreground">My Recent Bugs</h3>
       </div>
       {isLoading ? (
         <HomeBugsListSkeleton />

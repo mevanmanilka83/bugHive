@@ -18,11 +18,6 @@ export interface SolutionVoteResult {
   downvotes_count: number
 }
 
-/**
- * Vote on a solution (upvote or downvote)
- * If user already voted with the same type, removes the vote
- * If user voted with different type, changes the vote
- */
 export async function voteOnSolution(
   solutionId: string,
   voteType: SolutionVoteType
@@ -36,7 +31,6 @@ export async function voteOnSolution(
     const userId = ensureValidUUID(session.user.id)
     const db = getSupabaseAdmin() as any
 
-    // Validate solution exists
     const { data: solution, error: solutionError } = await db
       .from("bug_solution_details")
       .select("id")
@@ -50,10 +44,7 @@ export async function voteOnSolution(
       }
     }
 
-    // Check if user already voted
     const { data: existingVoteData, error: voteError } = await db
-      // Some Supabase client typings can infer `never` for table names in strict mode.
-      // We keep runtime behavior identical but provide an explicit shape for TypeScript.
       .from("solution_votes" as any)
       .select("id, vote_type")
       .eq("solution_id", ensureValidUUID(solutionId))
@@ -68,7 +59,6 @@ export async function voteOnSolution(
 
     if (existingVote) {
       if (existingVote.vote_type === voteType) {
-        // Same type: remove vote
         const { error: deleteError } = await db
           .from("solution_votes")
           .delete()
@@ -78,7 +68,6 @@ export async function voteOnSolution(
           return handleSupabaseError(deleteError, "Failed to remove vote")
         }
       } else {
-        // Different type: switch vote
         const { error: updateError } = await db
           .from("solution_votes")
           .update({ vote_type: voteType, updated_at: new Date().toISOString() })
@@ -89,7 +78,6 @@ export async function voteOnSolution(
         }
       }
     } else {
-      // New vote
       const { error: insertError } = await db
         .from("solution_votes")
         .insert({
@@ -103,7 +91,6 @@ export async function voteOnSolution(
       }
     }
 
-    // Get updated vote counts
     const { data: solutionWithVotes, error: fetchError } = await db
       .from("bug_solution_details")
       .select("upvotes_count, downvotes_count")
@@ -114,7 +101,6 @@ export async function voteOnSolution(
       return handleSupabaseError(fetchError, "Failed to fetch vote counts")
     }
 
-    // Get user's current vote
     const { data: userVote } = await db
       .from("solution_votes")
       .select("vote_type")

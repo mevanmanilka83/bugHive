@@ -1,27 +1,9 @@
-/**
- * Database Operations
- * 
- * ⚠️ SINGLE SOURCE OF TRUTH FOR ALL DATABASE OPERATIONS ⚠️
- * 
- * All database operations including:
- * - Generic CRUD operations
- * - Cluster-specific queries and validations
- * - Bug access control
- * 
- * Usage:
- * ```ts
- * import { getSingleRecord, insertRecord, getClusterById, isClusterOwnerOrMember } from "@/lib"
- * ```
- */
 
 import { notFound } from "next/navigation"
 import { supabase } from "../config"
 import { ensureValidUUID } from "../utils/client"
 import type { ActionResponse } from "../auth/helpers"
 
-/**
- * Fetches a single record by ID
- */
 export async function getSingleRecord(
   table: string,
   id: string,
@@ -33,9 +15,6 @@ export async function getSingleRecord(
   return data
 }
 
-/**
- * Fetches a single record by ID or calls notFound(). Use in server components to avoid repeated try/catch.
- */
 export async function getRecordOrNotFound(
   table: string,
   id: string,
@@ -48,9 +27,6 @@ export async function getRecordOrNotFound(
   }
 }
 
-/**
- * Fetches multiple records with optional filtering
- */
 export async function getMultipleRecords(
   table: string,
   filterField?: string,
@@ -71,9 +47,6 @@ export async function getMultipleRecords(
   return data || []
 }
 
-/**
- * Inserts a new record into the database
- */
 export async function insertRecord(
   table: string,
   data: Record<string, any>
@@ -83,9 +56,6 @@ export async function insertRecord(
   return result
 }
 
-/**
- * Updates an existing record
- */
 export async function updateRecord(
   table: string,
   id: string,
@@ -104,9 +74,6 @@ export async function updateRecord(
   return result
 }
 
-/**
- * Deletes a record from the database
- */
 export async function deleteRecord(
   table: string,
   id: string,
@@ -123,18 +90,6 @@ export async function deleteRecord(
   if (error) throw error
 }
 
-/**
- * Fetch cluster by ID with error handling
- * 
- * Usage:
- * ```ts
- * const result = await getClusterById(clusterId)
- * if (!result.success) {
- *   return { success: false, error: result.error }
- * }
- * const cluster = result.cluster
- * ```
- */
 export async function getClusterById(
   clusterId: string
 ): Promise<ActionResponse<{ cluster: any }>> {
@@ -155,26 +110,10 @@ export async function getClusterById(
   return { success: true, cluster }
 }
 
-/**
- * Verify user is cluster owner
- * 
- * Usage:
- * ```ts
- * if (!verifyClusterOwnership(cluster, userId)) {
- *   return { success: false, error: "Unauthorized" }
- * }
- * ```
- */
 export function verifyClusterOwnership(cluster: any, userId: string): boolean {
   return cluster.owner_id === userId
 }
 
-/**
- * Get user's cluster IDs (where user is owner or member)
- * 
- * @param userId - The user ID to check
- * @returns Set of cluster IDs the user belongs to
- */
 export async function getUserClusterIds(userId: string): Promise<Set<string>> {
   const userUuid = ensureValidUUID(userId)
   const clusterIds = new Set<string>()
@@ -194,13 +133,6 @@ export async function getUserClusterIds(userId: string): Promise<Set<string>> {
   return clusterIds
 }
 
-/**
- * Check if user is owner or member of a cluster
- * 
- * @param userId - The user ID to check
- * @param clusterId - The cluster ID to check
- * @returns true if user is owner or member, false otherwise
- */
 export async function isClusterOwnerOrMember(userId: string, clusterId: string): Promise<boolean> {
   const userUuid = ensureValidUUID(userId)
   const { data: cluster } = await supabase
@@ -211,10 +143,8 @@ export async function isClusterOwnerOrMember(userId: string, clusterId: string):
   
   if (!cluster) return false
   
-  // Check if user is owner
   if (cluster.owner_id === userUuid) return true
   
-  // Check if user is member
   if (Array.isArray(cluster.members) && cluster.members.includes(userUuid)) {
     return true
   }
@@ -222,17 +152,8 @@ export async function isClusterOwnerOrMember(userId: string, clusterId: string):
   return false
 }
 
-/**
- * Check if user can view a bug with cluster context
- * 
- * @param userId - The user ID to check
- * @param bug - The bug record
- * @returns true if user can view the bug, false otherwise
- */
 export async function canUserViewBug(userId: string, bug: any): Promise<boolean> {
-  // Global bugs (no cluster_id) are visible to all
   if (!bug.cluster_id) return true
   
-  // Cluster bugs require membership
   return await isClusterOwnerOrMember(userId, bug.cluster_id)
 }

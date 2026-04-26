@@ -19,10 +19,12 @@ export function WorkspaceGraphList({
   graphs,
   emptyMessage,
   emptyAction,
+  detailBasePath = "/workspaces",
 }: {
   graphs: GraphItem[]
   emptyMessage: string
   emptyAction?: React.ReactNode
+  detailBasePath?: string
 }) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortBy, setSortBy] = React.useState("newest");
@@ -113,7 +115,7 @@ export function WorkspaceGraphList({
             .map((g) => (
               <Link
                 key={g.id}
-                href={`/workspaces/${g.id}`}
+                href={`${detailBasePath}/${g.id}`}
                 className="group flex items-center justify-between gap-3 py-3 px-4 border-b hover:bg-muted/40 transition-colors sm:gap-3"
               >
                 {/* Main Content Area */}

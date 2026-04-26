@@ -1,9 +1,3 @@
-/**
- * BugHunter Leaderboard API
- *
- * GET /api/leaderboard?period=week|all&limit=10
- * Returns top hunters by BugXP. Public endpoint (no auth required).
- */
 import { getSupabaseAdmin } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -25,11 +19,7 @@ export async function GET(request: NextRequest) {
       .order("points", { ascending: false })
       .limit(limit)
 
-    // For "week" we'd need to filter by recent activity - for now we use all-time
-    // A future enhancement could use a user_activity or points_history table
     if (period === "week") {
-      // Still return top by total points; "weekly" could be a materialized view later
-      // For MVP, we show all-time top hunters
     }
 
     const { data, error } = await query

@@ -1,7 +1,3 @@
-/**
- * POST /api/solutions/[id]/verify
- * Verify a solution (another user confirms it works). Awards +150 BugXP to solution creator.
- */
 import { NextRequest, NextResponse } from "next/server"
 import { checkAuth, supabase, ensureValidUUID } from "@/lib"
 import { awardBugXP, checkDeepDiverBadge, checkOnFireBadge } from "@/lib"

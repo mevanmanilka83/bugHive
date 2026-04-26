@@ -1,16 +1,6 @@
 import { z } from "zod"
 import { getAttachmentSchema, PRIORITY_ENUM, STRING_VALIDATIONS } from "./shared"
 
-/**
- * Bug Report Validation Schema
- * 
- * Single source of truth for bug report validation.
- * Used by both server actions and client components.
- * Visibility is required only when cluster_id is not present.
- * 
- * Naming Convention: Primary export uses shorter name (getBugReportSchema)
- * Alias provided for backward compatibility (getBugReportValidationSchema)
- */
 export function getBugReportSchema() {
   return z.object({
     title: z.string()
@@ -48,7 +38,6 @@ export function getBugReportSchema() {
     cluster_id: z.string().uuid().optional(),
   }).refine(
     (data) => {
-      // Visibility is required only when cluster_id is not present
       if (!data.cluster_id && !data.visibility) {
         return false
       }
@@ -61,5 +50,4 @@ export function getBugReportSchema() {
   )
 }
 
-// Alias for backward compatibility
 export const getBugReportValidationSchema = getBugReportSchema

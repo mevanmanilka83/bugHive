@@ -37,10 +37,8 @@ export interface BugDetailsFormProps {
     [key: string]: unknown
   }
   userId?: string
-  /** Display name for the current assignee (e.g. from user batch fetch) */
   assigneeDisplayName?: string | null
   onStatusChange?: (bugId: string, newStatus: string) => void | Promise<void>
-  /** Called when assignee is set or cleared. Only shown when bug creator is viewing. */
   onAssigneeChange?: (bugId: string, assignedTo: string | null) => void | Promise<void>
 }
 

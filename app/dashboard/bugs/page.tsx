@@ -31,6 +31,7 @@ export default async function BugExplorePage() {
                   userId={session.user.id}
                   currentUserName={session.user.name ?? session.user.email ?? undefined}
                   currentUserImage={session.user.image ?? undefined}
+                  detailBasePath="/dashboard/bugs"
                 />
               </div>
             </div>

@@ -1,9 +1,3 @@
-/**
- * NextAuth Configuration
- * 
- * Centralized authentication configuration for the application.
- * This is the single source of truth for all auth settings.
- */
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { getSupabaseAdmin } from "../config"
@@ -46,7 +40,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const ok = await verifyPassword(password, storedHash)
           if (!ok) return null
         } else {
-          // Legacy user without stored hash: accept this password and store its hash for next time
           const newHash = await hashPassword(password)
           await db.from("users").update({ password_hash: newHash, updated_at: new Date().toISOString() } as never).eq("id", row.id)
         }

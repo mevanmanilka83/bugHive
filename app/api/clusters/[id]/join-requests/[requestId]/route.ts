@@ -72,7 +72,6 @@ export async function POST(
     return NextResponse.json({ message: "Join request declined" })
   }
 
-  // accept: add user to members
   const members = cluster.members || []
   const membersUsernames = cluster.members_usernames || []
   if (members.includes(requesterId)) {

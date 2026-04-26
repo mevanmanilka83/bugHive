@@ -70,7 +70,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "decorations", size, animation, asChild = false, children, ...props }, ref) => {
     const Comp = (asChild ? Slot : ButtonPrimitive) as any;
 
-    // Core button content
     const content = (
       <>
         {children}

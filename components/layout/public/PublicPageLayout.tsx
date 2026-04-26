@@ -20,20 +20,12 @@ type NavActive =
 interface PublicPageLayoutProps {
   children: React.ReactNode
   session: Session | AuthenticatedSession | null
-  /** Sidebar active item; matches PublicSidebarNav `active` prop */
   sidebarActive: NavActive
-  /** Use auth fallback for sidebar (e.g. show sign-in for protected links) */
   useAuthFallback?: boolean
-  /** Optional right column (e.g. RelatedBugsPanel) */
   aside?: React.ReactNode
-  /** Extra class for main content section */
   sectionClassName?: string
 }
 
-/**
- * Shared layout for public-facing pages: header, sidebar, main content, optional aside, footer, mobile nav.
- * Use this to keep layout consistent and avoid duplicating the same markup across pages.
- */
 export function PublicPageLayout({
   children,
   session,

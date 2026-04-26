@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseAdmin, getAuthenticatedUserId, isClusterOwnerOrMember } from "@/lib"
 
-/**
- * GET /api/workspaces/[id]/ideas
- * List ideas/solutions for a saved graph (owner or public graph).
- */
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -47,10 +43,6 @@ export async function GET(
   }
 }
 
-/**
- * POST /api/workspaces/[id]/ideas
- * Add an idea/solution/fix to a saved graph (owner only).
- */
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -109,11 +101,6 @@ export async function POST(
   }
 }
 
-/**
- * DELETE /api/workspaces/[id]/ideas
- * Delete an idea/solution/fix from a saved graph (owner only).
- * Expects JSON body: { id: string }
- */
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -132,7 +119,6 @@ export async function DELETE(
 
     const supabase = await getSupabaseAdmin()
 
-    // Ensure the current user owns the graph
     const { data: graph, error: fetchErr } = await (supabase as any)
       .from("saved_graphs")
       .select("id, user_id, origin_cluster_id")

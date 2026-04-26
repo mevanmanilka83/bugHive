@@ -17,7 +17,6 @@ export async function PATCH(
 
   const userId = ensureValidUUID(user.id)
 
-  // Verify ownership
   const { data: notification, error: fetchError } = await supabase
     .from('notifications')
     .select('*')
@@ -63,7 +62,6 @@ export async function DELETE(
   const { id } = await context.params
   const userId = ensureValidUUID(user.id)
 
-  // Verify ownership
   const { data: notification, error: fetchError } = await supabase
     .from('notifications')
     .select('*')

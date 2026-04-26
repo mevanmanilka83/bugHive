@@ -30,7 +30,6 @@ export function VoteButtons({
   const [isVoting, setIsVoting] = React.useState(false)
   const [isLoadingVote, setIsLoadingVote] = React.useState(false)
 
-  // Fetch user's vote status on mount
   React.useEffect(() => {
     if (userId && !initialUserVote) {
       setIsLoadingVote(true)
@@ -43,7 +42,6 @@ export function VoteButtons({
           if (voteType) setUserVote(voteType)
         })
         .catch(() => {
-          // Silently fail - user might not have voted
         })
         .finally(() => setIsLoadingVote(false))
     }

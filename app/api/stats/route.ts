@@ -15,7 +15,6 @@ export type StatsResponse = {
   usersOnline?: number | null
 }
 
-/** GET: Public platform stats (questions, answers, upvotes, teams/clusters, unanswered). */
 export async function GET() {
   try {
     const [

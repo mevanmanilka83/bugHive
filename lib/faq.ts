@@ -1,6 +1,5 @@
 import type { FaqItem } from "@/components/features/faq/faq"
 
-/** FAQ entries for the dedicated FAQ settings page. */
 export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What is BugHive?",

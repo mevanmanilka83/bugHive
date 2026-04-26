@@ -1,15 +1,3 @@
-/**
- * Application Configuration
- * 
- * ⚠️ SINGLE SOURCE OF TRUTH FOR ALL CONFIGURATION ⚠️
- * 
- * This is the ONLY file that should be imported for configuration.
- * 
- * Usage:
- * ```ts
- * import { supabase, auth, env } from "@/lib/config"
- * ```
- */
 
 import { S3Client } from "@aws-sdk/client-s3"
 import { env } from "./environment"

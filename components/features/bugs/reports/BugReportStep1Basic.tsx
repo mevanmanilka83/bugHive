@@ -82,7 +82,6 @@ export function BugReportStep1Basic({
             onChange={(e) => onChangeTitle(e.target.value)}
             onFocus={() => setShowTitleSuggestions(true)}
             onBlur={() => {
-              // small delay so click on suggestion still registers
               setTimeout(() => setShowTitleSuggestions(false), 120)
             }}
             className={errors.title ? "border-red-500" : ""}

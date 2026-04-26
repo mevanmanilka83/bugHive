@@ -9,12 +9,14 @@ interface MyBugsPageContentProps {
   userId: string
   currentUserName?: string
   currentUserImage?: string
+  detailBasePath?: string
 }
 
 export function MyBugsPageContent({
   userId,
   currentUserName,
   currentUserImage,
+  detailBasePath = "/bugs",
 }: MyBugsPageContentProps) {
   type VisibilityFilter = "private" | "public" | "cluster-private" | "cluster-public"
   const [visibilityFilter, setVisibilityFilter] = React.useState<VisibilityFilter>("private")
@@ -96,6 +98,7 @@ export function MyBugsPageContent({
         showReportButton={false}
         visibilityFilter={visibilityFilter}
         showVisibilityToggle={false}
+        detailBasePath={detailBasePath}
       />
     </>
   )

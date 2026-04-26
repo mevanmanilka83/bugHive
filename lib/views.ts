@@ -1,12 +1,8 @@
-/**
- * Database utilities for view tracking
- */
 
 import { supabase } from "./config"
 
 export async function incrementViewCount(table: string, id: string): Promise<boolean> {
   try {
-    // Get current views count
     const { data, error: fetchError } = await supabase
       .from(table)
       .select("views")
@@ -20,7 +16,6 @@ export async function incrementViewCount(table: string, id: string): Promise<boo
 
     const currentViews = (data?.views as number) || 0
 
-    // Increment views count
     const { error: updateError } = await supabase
       .from(table)
       .update({ views: currentViews + 1 })

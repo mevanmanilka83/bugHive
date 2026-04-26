@@ -47,17 +47,13 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
           return
         }
 
-        // Use stored usernames from cluster, but still fetch user details for email/image
-        // First, ensure all members have user records
         try {
           await fetch(`/api/clusters/${cluster.id}/ensure-members`, {
             method: 'POST',
           })
         } catch (ensureError) {
-          // Continue anyway
         }
 
-        // Batch fetch all users at once for email/image
         try {
           const idsParam = memberIds.join(',')
           const res = await fetch(`/api/users/batch?ids=${idsParam}`)
@@ -66,15 +62,12 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
             const data = await res.json()
             const users = data.users || []
             
-            // Create a map for quick lookup
             const userMap = new Map<string, { id: string; email?: string | null; name?: string | null; image?: string | null }>(
               users.map((u: any) => [u.id, u])
             )
             
-            // Build member info array using stored usernames
             const memberData = memberIds.map((memberId: string, index: number) => {
               const user = userMap.get(memberId)
-              // Use stored username from members_usernames array, or fallback to user.name or email
               const storedUsername = memberUsernames[index] || user?.name || (user?.email ? user.email.split('@')[0] : null) || null
               
               return {
@@ -90,10 +83,8 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
             return
           }
         } catch (batchError) {
-          // Fallback to stored usernames
         }
 
-        // Fallback: use stored usernames directly if user fetch fails
         const memberData = memberIds.map((memberId: string, index: number) => {
           const storedUsername = memberUsernames[index] || null
             return {
@@ -143,22 +134,18 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
           ) : (
             <div className="space-y-3">
               {members.map((member) => {
-                // Show only username/name
                 const displayName = member.name || (member.email ? member.email.split('@')[0] : null) || "Pending User"
                 
-                // Generate initials from name or email username
                 let initials = 'U'
                 if (member.name) {
                   const nameParts = member.name.split(' ')
                   if (nameParts.length > 1) {
-                    // Multiple words: use first letter of each word
                     initials = nameParts
                     .map((n) => n[0])
                     .join('')
                     .toUpperCase()
                     .slice(0, 2)
                   } else {
-                    // Single word: use first 2 characters
                     initials = member.name.slice(0, 2).toUpperCase()
                   }
                 } else if (member.email) {
@@ -167,7 +154,6 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
                     .slice(0, 2)
                     .toUpperCase()
                 } else {
-                  // Use first 2 characters of ID as fallback
                   initials = member.id.replace(/-/g, '').slice(0, 2).toUpperCase()
                 }
 

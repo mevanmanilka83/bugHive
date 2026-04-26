@@ -1,26 +1,11 @@
-/**
- * Client-Safe Utilities
- * 
- * Utilities that are safe to use on the client side.
- * These don't depend on server-only modules like Supabase.
- * 
- * Import from this file in client components to avoid
- * triggering server-side code evaluation.
- */
 
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-/**
- * Merges Tailwind CSS classes with proper precedence
- */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/**
- * Generates a random UUID v4
- */
 export function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0
@@ -29,9 +14,6 @@ export function generateUUID(): string {
   })
 }
 
-/**
- * Generate a deterministic UUID from an email address
- */
 export function generateUUIDFromEmailSync(email: string): string {
   let hash = 0
   const normalizedEmail = email.toLowerCase().trim()
@@ -57,53 +39,32 @@ export function generateUUIDFromEmailSync(email: string): string {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-/**
- * Returns true if the string is a valid UUID (v4 format).
- * Use for client-side validation before calling APIs (e.g. bug id).
- */
 export function isValidUUID(str: string | undefined | null): boolean {
   return typeof str === "string" && UUID_REGEX.test(str.trim())
 }
 
-/**
- * Ensures a value is a valid UUID, generating one if needed
- */
 export function ensureValidUUID(userId: string | undefined): string {
   if (!userId) return '00000000-0000-0000-0000-000000000000'
   if (UUID_REGEX.test(userId)) return userId
   return generateUUID()
 }
 
-/**
- * Extracts username from email address
- */
 export function extractUsernameFromEmail(email: string | null | undefined, fallback: string = 'User'): string {
   if (!email) return fallback
   const parts = email.split('@')
   return parts[0] || fallback
 }
 
-/**
- * Strip HTML tags for plain-text snippet (e.g. list previews, search).
- * Does not sanitize; use only for display of trusted content.
- */
 export function stripHtml(html: string): string {
   if (!html || typeof html !== "string") return ""
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
 }
 
-/**
- * Removes markdown bold markers (**text** → text) for plain-text display (e.g. comments).
- * Use for content that may have been stored with markdown.
- */
 export function stripMarkdownBold(text: string): string {
   if (!text || typeof text !== "string") return ""
   return text.replace(/\*\*([^*]*)\*\*/g, "$1").trim()
 }
 
-/**
- * Whether the string looks like HTML (e.g. from rich editor).
- */
 export function isHtmlContent(s: string): boolean {
   if (!s || typeof s !== "string") return false
   const t = s.trim()
@@ -296,10 +257,6 @@ type RetryOptions = {
   retryOnStatuses?: number[]
 }
 
-/**
- * Fetch wrapper that retries transient failures (429/5xx + network errors).
- * Useful for non-idempotent calls when your server endpoints are safe to retry.
- */
 export async function fetchWithRetry(
   input: RequestInfo | URL,
   init?: RequestInit,

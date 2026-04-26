@@ -1,9 +1,3 @@
-/**
- * Type Definitions
- *
- * TypeScript types inferred from Zod schemas and form data types.
- * Import from @/lib/schemas/types
- */
 
 export type { NotificationPayload } from "./notification"
 export type { ClusterPayload, ClusterFormData, InviteFormData } from "./cluster"

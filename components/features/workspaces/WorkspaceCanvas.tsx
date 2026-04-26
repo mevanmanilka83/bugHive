@@ -335,7 +335,6 @@ export function WorkspaceCanvas({
 
     React.useEffect(() => {
         setMounted(true)
-        // Initialize save baseline (prevents "dirty" on load)
         const initial = JSON.stringify({
             nodes: (initialWorkspace.nodes || []) as Node[],
             edges: (initialWorkspace.edges || []) as Edge[],
@@ -368,8 +367,6 @@ export function WorkspaceCanvas({
     )
 
     const handleOpenAddIdea = () => {
-        // When user clicks "Idea Node", prepare the side Ideas & solutions panel
-        // for creating a new idea/solution instead of opening a modal.
         setShowIdeasPanel(true)
         setSelectedIdeaId(null)
         setIdeaDialogInitialKind("idea")
@@ -431,10 +428,8 @@ export function WorkspaceCanvas({
                     const data: any = n.data || {}
                     const dataIdeaId = data.ideaId as string | undefined
 
-                    // Preferred: match by explicit ideaId
                     if (dataIdeaId && dataIdeaId === ideaId) return false
 
-                    // Fallback for older nodes: id pattern
                     if (n.id === `idea-${ideaId}`) return false
 
                     return true
@@ -506,8 +501,6 @@ export function WorkspaceCanvas({
         [ideas]
     )
 
-    // Normalize existing nodes (ideaId/created_at) and inject handlers.
-    // Important: avoid triggering autosave/realtime churn by only updating when needed.
     React.useEffect(() => {
         setNodes((nds) => {
             let changed = false
@@ -548,7 +541,6 @@ export function WorkspaceCanvas({
                     ...n,
                     data: {
                         ...prevData,
-                        // Best-effort: keep time travel stable by putting unknown items at "now"
                         created_at: nowIso,
                     },
                 }
@@ -572,7 +564,6 @@ export function WorkspaceCanvas({
         })
     }, [setEdges])
 
-    // Auto-save graph when nodes or edges change (debounced)
     React.useEffect(() => {
         if (!rfInstance) return
         if (isFirstRender.current) {
@@ -593,7 +584,6 @@ export function WorkspaceCanvas({
         }
         autoSaveTimeout.current = window.setTimeout(() => {
             handleSave(true).catch(() => {
-                // errors are already handled inside handleSave
             })
         }, 1500)
     }, [nodes, edges, rfInstance, canEdit])
@@ -835,15 +825,12 @@ export function WorkspaceCanvas({
                     initialTitle={ideaDialogInitialTitle}
                     initialContent={ideaDialogInitialContent}
                     onCreated={(idea) => {
-                        // Refresh list
                         fetchIdeas()
-                        // Highlight in panel
                         if (idea.id) {
                             setSelectedIdeaId(idea.id)
                         }
                         setShowIdeasPanel(true)
 
-                        // Also place an idea node into the graph
                         setNodes((nds) => {
                             const nodeId = idea.id ? `idea-${idea.id}` : `idea-${Date.now()}`
                             if (
@@ -879,9 +866,7 @@ export function WorkspaceCanvas({
                             return nds.concat(newNode)
                         })
 
-                        // Immediately persist the new node so it doesn't disappear on reload
                         handleSave(true).catch(() => {
-                            // errors are already handled inside handleSave
                         })
                     }}
                 />

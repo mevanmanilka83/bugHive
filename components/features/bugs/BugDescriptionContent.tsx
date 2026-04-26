@@ -8,10 +8,6 @@ type Props = {
   fallback?: string
 }
 
-/**
- * Renders bug description as HTML (from rich editor) or plain text.
- * Use for detail view and review step.
- */
 export function BugDescriptionContent({ content, className = "", fallback = "—" }: Props) {
   const text = (content || "").trim()
   if (!text) return <span className={className}>{fallback}</span>

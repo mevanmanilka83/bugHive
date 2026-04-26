@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      // If Gemini is not configured, treat all tags as valid so UX still works.
       return NextResponse.json({
         tags: tags.map((tag) => ({ tag, valid: true })),
       })

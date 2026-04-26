@@ -4,21 +4,15 @@ import { getMultipleRecords } from "@/lib"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-/**
- * GET: List all unique tags with bug counts
- * Public endpoint - shows tags from public bugs
- */
 export async function GET(request: NextRequest) {
   try {
     const bugs = await getMultipleRecords("bugs")
     
-    // Filter to only public bugs
     const publicBugs = bugs.filter((bug: any) => {
       const visibility = String(bug?.visibility || "public").toLowerCase().trim()
       return visibility !== "private"
     })
 
-    // Count tags
     const tagCounts = new Map<string, number>()
     
     publicBugs.forEach((bug: any) => {
@@ -32,7 +26,6 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Convert to array and sort by count (descending), then alphabetically
     const tags = Array.from(tagCounts.entries())
       .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => {

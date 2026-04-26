@@ -16,17 +16,14 @@ import { getBugSolutionSchema } from "@/lib"
 
 export async function createBugSolution(formData: FormData, bugId: string): Promise<ActionResponse<{ solution?: any }>> {
   try {
-    // Check authentication
     const authResult = await requireAuth()
     if (!authResult.success) {
       return authResult
     }
     const { session } = authResult // session is guaranteed to be AuthenticatedSession here
 
-    // Extract form data
     const links = formData.get('links') as string | null
 
-    // Prepare data for validation (links should be a string for validation)
     const validationData = {
       title: (formData.get('title') as string) || '',
       description: (formData.get('description') as string) || '',
@@ -39,23 +36,19 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
       attachments: [], // Will be validated separately
     }
 
-    // Validate using Zod schema
     const validation = validateWithSchema(getBugSolutionSchema(), validationData)
     if (!validation.success) {
       return validation
     }
 
-    // Handle attachments using centralized utility
     const formDataObj: any = {}
     for (const [key, value] of formData.entries()) {
       formDataObj[key] = value
     }
     const attachment_urls = await handleFileUploads(formDataObj, 'solutions')
 
-    // Parse links from validated string to array for database
     const parsedLinks = validation.data.links ? parseArrayField(validation.data.links) : null
 
-    // Insert into database using Supabase
     const solutionData = {
       bug_id: bugId,
       title: validation.data.title.trim(),
@@ -80,11 +73,8 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
         return handleSupabaseError(error, 'Failed to save solution')
       }
 
-      // XP awarded only when another user verifies the solution (+150 BugXP)
 
-      // Create notifications for cluster members if bug belongs to a cluster
       try {
-        // Get the bug to check if it has a cluster_id
         const { data: bug } = await supabase
           .from('bugs')
           .select('id, cluster_id, title, created_by')
@@ -92,7 +82,6 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
           .single()
 
         if (bug?.cluster_id) {
-          // Get cluster members
           const { data: cluster } = await supabase
             .from('clusters')
             .select('id, members, name')
@@ -104,7 +93,6 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
             const solutionCreatorName = session.user.name || extractUsernameFromEmail(session.user.email) || 'Someone'
             const bugTitle = bug.title || 'Untitled Bug'
 
-            // Create notifications for all cluster members except the solution creator
             const notifications = cluster.members
               .filter((memberId: string) => ensureValidUUID(memberId) !== solutionCreatorId)
               .map((memberId: string) => ({
@@ -125,7 +113,6 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
           }
         }
       } catch (notificationError) {
-        // Don't fail solution creation if notification fails
         console.error('Failed to create notifications:', notificationError)
       }
 
@@ -138,9 +125,6 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
   }
 }
 
-/**
- * Fetch all solutions for charting purposes
- */
 export async function getAllSolutions(): Promise<ActionResponse<{ solutions: any[] }>> {
   try {
     const authResult = await requireAuth()
@@ -172,9 +156,6 @@ export async function getAllSolutions(): Promise<ActionResponse<{ solutions: any
   }
 }
 
-/**
- * Fetch solutions for bugs in a specific cluster
- */
 export async function getSolutionsByCluster(clusterId: string): Promise<ActionResponse<{ solutions: any[] }>> {
   try {
     const authResult = await requireAuth()
@@ -182,7 +163,6 @@ export async function getSolutionsByCluster(clusterId: string): Promise<ActionRe
       return { ...authResult, solutions: [] }
     }
 
-    // First get all bugs in this cluster
     const { data: bugs, error: bugsError } = await supabase
       .from('bugs')
       .select('id')
@@ -201,7 +181,6 @@ export async function getSolutionsByCluster(clusterId: string): Promise<ActionRe
 
     const bugIds = bugs.map(b => b.id)
 
-    // Then get all solutions for those bugs
     const { data, error } = await supabase
       .from('bug_solution_details')
       .select('id, created_at, bug_id')
@@ -227,9 +206,6 @@ export async function getSolutionsByCluster(clusterId: string): Promise<ActionRe
   }
 }
 
-/**
- * Fetch solutions for bugs created by a specific user
- */
 export async function getSolutionsByUser(userId: string): Promise<ActionResponse<{ solutions: any[] }>> {
   try {
     const authResult = await requireAuth()
@@ -237,7 +213,6 @@ export async function getSolutionsByUser(userId: string): Promise<ActionResponse
       return { ...authResult, solutions: [] }
     }
 
-    // First get all bugs created by this user
     const { data: bugs, error: bugsError } = await supabase
       .from('bugs')
       .select('id')
@@ -256,7 +231,6 @@ export async function getSolutionsByUser(userId: string): Promise<ActionResponse
 
     const bugIds = bugs.map(b => b.id)
 
-    // Then get all solutions for those bugs
     const { data, error } = await supabase
       .from('bug_solution_details')
       .select('id, created_at, bug_id')

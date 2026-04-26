@@ -1,7 +1,3 @@
-/**
- * LLM provider abstraction.
- * Uses Gemini when GEMINI_API_KEY is set, otherwise OpenAI.
- */
 
 import { GoogleGenAI } from "@google/genai"
 import OpenAI from "openai"
@@ -21,7 +17,6 @@ function useGemini(): boolean {
   return !!process.env.GEMINI_API_KEY
 }
 
-/** HTTP status from @google/genai ApiError and similar shapes */
 export function getLlmErrorHttpStatus(error: unknown): number | undefined {
   if (error && typeof error === "object") {
     const e = error as Record<string, unknown>
@@ -121,9 +116,6 @@ async function generateWithOpenAI(options: GenerateOptions): Promise<GenerateRes
   return { text }
 }
 
-/**
- * Generate a chat completion using the configured provider (Gemini or OpenAI).
- */
 export async function generateChatCompletion(options: GenerateOptions): Promise<GenerateResult> {
   if (useGemini()) {
     try {

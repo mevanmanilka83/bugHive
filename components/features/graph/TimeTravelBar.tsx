@@ -6,19 +6,13 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib"
 
 export type TimeTravelBarProps = {
-  /** 0–100 */
   percent: number
   onPercentChange: (percent: number) => void
-  /** Sorted timestamps (ms) for milestone markers */
   milestones: number[]
-  /** Min timestamp (ms) */
   minTime: number
-  /** Max timestamp (ms) */
   maxTime: number
-  /** Whether playback is active */
   isPlaying: boolean
   onPlayPause: () => void
-  /** Playback speed: 1 = real-time, 1 second of animation = 1 hour of real time */
   playbackSpeed?: number
   className?: string
 }
@@ -36,7 +30,6 @@ export function timeToOpacity(
   return ghostOpacity
 }
 
-/** Playback: speed = seconds to complete full timeline (default 10) */
 export function useTimeTravelPlayback(
   percent: number,
   onPercentChange: (p: number) => void,

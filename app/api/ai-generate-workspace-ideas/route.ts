@@ -19,11 +19,6 @@ type WorkspaceIdeaSuggestion = {
   viewType: WorkspaceViewType
 }
 
-/**
- * POST /api/ai-generate-workspace-ideas
- * Analyzes bugs in the graph and returns AI-generated idea/solution suggestions
- * grounded in supported BugHive workspace view types.
- */
 export async function POST(req: NextRequest) {
   try {
     const userId = await getAuthenticatedUserId()
@@ -139,7 +134,6 @@ Be practical and specific. Only return valid JSON.`
       )
     }
 
-    // Extract JSON from response (handles markdown code blocks or extra text)
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     const jsonStr = jsonMatch ? jsonMatch[0] : raw
     let parsed: { suggestions?: Array<{ kind?: string; title?: string; content?: string; viewType?: string }> }

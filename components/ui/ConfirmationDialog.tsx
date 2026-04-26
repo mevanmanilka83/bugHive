@@ -70,8 +70,6 @@ export function ConfirmationDialog({
                         )}
                         onClick={() => {
                             onConfirm()
-                            // We don't close automatically if loading is possible,
-                            // but the caller can close it on success.
                         }}
                         disabled={loading}
                     >

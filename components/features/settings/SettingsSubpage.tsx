@@ -2,14 +2,10 @@ import Link from "next/link"
 import { cn } from "@/lib"
 
 interface SettingsSubpageProps {
-  /** Link text and destination for back navigation */
   backHref?: string
   backLabel?: string
-  /** When false, the "Back to Settings" link is hidden (e.g. for FAQ page) */
   showBackLink?: boolean
-  /** Page title (e.g. "Profile", "Password") */
   title: string
-  /** Short description under the title */
   description: string
   children: React.ReactNode
 }
@@ -25,7 +21,7 @@ export function SettingsSubpage({
   children,
 }: SettingsSubpageProps) {
   return (
-    <div className="max-w-2xl">
+    <div className="w-full max-w-5xl">
       {showBackLink && (
         <nav className="mb-6">
           <Link

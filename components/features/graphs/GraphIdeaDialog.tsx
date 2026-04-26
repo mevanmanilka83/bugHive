@@ -27,7 +27,6 @@ function parseIdeaContent(raw: string | null | undefined): {
   const text = (raw ?? "").trim()
   if (!text) return { description: "", summary: "", details: "" }
 
-  // New format: "Description:\n...\n\nContext:\n...\n\nDetails:\n..."
   const sections: Record<string, string> = {}
   let current: string | null = null
 
@@ -53,7 +52,6 @@ function parseIdeaContent(raw: string | null | undefined): {
     }
   }
 
-  // Fallback for old/plain content
   if (!sections.description && !sections.summary && !sections.details) {
     return { description: text, summary: "", details: "" }
   }

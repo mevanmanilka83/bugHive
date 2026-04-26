@@ -16,7 +16,6 @@ export function ActivityPageClient({ initialSummary }: ActivityPageClientProps) 
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate loading delay for skeleton visibility
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 300)

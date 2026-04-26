@@ -1,20 +1,3 @@
-/**
- * User Data API Routes
- * 
- * Purpose: HTTP endpoints for fetching user data
- * - GET /api/users/[id] - Fetch single user by ID
- * - GET /api/users/[id]?ids=id1,id2,id3 - Batch fetch multiple users
- * 
- * Why API Routes here?
- * - Client-side components need HTTP endpoints to fetch user data
- * - Used by components like ClusterMembersDialog to get user details
- * - Provides RESTful API interface for user data access
- * 
- * Architecture:
- * - This module: API routes for reading user data (GET requests)
- * - /app/actions/user.ts: Server action for writing user data (saveUserToSupabase)
- * - /api/auth/signup: API route for user registration (uses saveUserToSupabase)
- */
 import { checkAuth, getSingleRecord, supabase } from "@/lib"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -30,12 +13,10 @@ export async function GET(
 
   const { id } = await context.params
   
-  // Check for batch request
   const searchParams = request.nextUrl.searchParams
   const ids = searchParams.get('ids')
   
   if (ids) {
-    // Batch fetch multiple users
     try {
       const userIds = ids.split(',').filter(Boolean)
       const { data, error } = await supabase
@@ -53,7 +34,6 @@ export async function GET(
     }
   }
   
-  // Single user fetch
   try {
     const user = await getSingleRecord('users', id)
     if (!user) {

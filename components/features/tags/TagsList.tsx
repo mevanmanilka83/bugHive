@@ -146,8 +146,6 @@ export function TagsList() {
                   if (existing.includes(tag)) return prev
 
                   const next = [...existing, tag]
-                  // Keep a trailing comma + space so the last token is empty,
-                  // which shows all tags again and lets the user type a new filter.
                   return `${next.join(", ")}, `
                 })
               }}

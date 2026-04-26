@@ -1,14 +1,8 @@
 import { z } from "zod"
 
-/**
- * Profile visibility options
- */
 export const ProfileVisibilityEnum = z.enum(["public", "private", "members_only"])
 export type ProfileVisibility = z.infer<typeof ProfileVisibilityEnum>
 
-/**
- * Validation schema for updating privacy settings
- */
 export function getPrivacySettingsValidationSchema() {
   return z.object({
     profile_visibility: ProfileVisibilityEnum.default("public"),

@@ -4,15 +4,10 @@ import { findRelatedItems } from "./findRelated"
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export type SubgraphOptions = {
-  /** Max total nodes (center + related). Default 25. */
   limit?: number
-  /** Min relevance (0–1) for similar internal bugs. Default 0.35. */
   similarityThreshold?: number
-  /** Max internal similar bugs to add. Default 8. */
   internalLimit?: number
-  /** Max external refs (GitHub/Stack Overflow). Default 6. */
   externalLimit?: number
-  /** Min confidence (0–1) for stored relationships. Default 0.5. */
   relationshipConfidenceMin?: number
 }
 
@@ -45,11 +40,6 @@ const DEFAULT_OPTIONS: Required<SubgraphOptions> = {
   relationshipConfidenceMin: 0.5,
 }
 
-/**
- * Build a focused subgraph for one bug: center node + direct relationships from DB
- * + top-ranked similar/internal bugs and external refs above thresholds.
- * Returns graph-shaped { center, nodes, edges }; no global dump.
- */
 export async function buildBugSubgraph(
   mainBug: { id: string; title?: string; description?: string; upvotes_count?: number; downvotes_count?: number },
   options: SubgraphOptions = {}
@@ -61,7 +51,6 @@ export async function buildBugSubgraph(
 
   const mainBugCreatedAt = (mainBug as { created_at?: string }).created_at ?? null
 
-  // 1. Primary node (center)
   nodes.push({
     id: centerId,
     type: "bug",
@@ -82,7 +71,6 @@ export async function buildBugSubgraph(
 
   const connectedIds = new Set<string>([centerId])
 
-  // 2. Stored relationships (direct: CAUSE_OF, EVIDENCE_FOR, SOLUTION_FOR, SIMILAR, DUPLICATE)
   const { data: rels } = await supabase
     .from("bug_relationships")
     .select("id, source_id, target_id, relationship_type, confidence, origin, created_at")
@@ -134,7 +122,6 @@ export async function buildBugSubgraph(
     }
   }
 
-  // 3. Top-ranked similar bugs (above threshold)
   const { internal, external } = await findRelatedItems(mainBug)
   const similarInternal = internal.filter(
     (b: { id: string; relevanceScore?: number }) =>
@@ -175,7 +162,6 @@ export async function buildBugSubgraph(
     })
   }
 
-  // 4. External refs (GitHub, Stack Overflow) — show as Similar like other relationship nodes
   let externalAdded = 0
   for (const ext of external) {
     if (nodes.length >= opts.limit || externalAdded >= opts.externalLimit) break
@@ -212,7 +198,6 @@ export async function buildBugSubgraph(
     })
   }
 
-  // Layout: circular around center
   const nonCenter = nodes.filter((n) => n.id !== centerId)
   const radius = 320
   nonCenter.forEach((n, i) => {
