@@ -12,10 +12,6 @@
 
 import { NextResponse } from "next/server"
 
-// ============================================================================
-// COMMON ERROR UTILITIES
-// ============================================================================
-
 /**
  * Convert any error to a standardized error message
  */
@@ -28,10 +24,6 @@ export function getErrorMessage(error: unknown): string {
   }
   return "Internal server error"
 }
-
-// ============================================================================
-// API ROUTE ERROR HANDLERS
-// ============================================================================
 
 /**
  * API Route Error Handler
@@ -62,10 +54,6 @@ export function errorResponse(message: string, status: number = 500) {
 export function successResponse(data: any, status: number = 200) {
   return NextResponse.json(data, { status })
 }
-
-// ============================================================================
-// SERVER ACTION ERROR HANDLERS
-// ============================================================================
 
 /**
  * Create a standardized error response for server actions

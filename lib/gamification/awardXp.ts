@@ -199,7 +199,6 @@ async function addBadgeIfMissing(userId: string, badge: string): Promise<void> {
     const supabase = getSupabaseAdmin() as any
     await supabase.rpc("add_badge_if_missing", { p_user_id: userId, p_badge: badge })
   } catch {
-    // ignore
   }
 }
 
@@ -219,7 +218,6 @@ export async function checkFirstResponderBadge(userId: string, bugId: string): P
 
     await addBadgeIfMissing(uid, BADGES.FIRST_RESPONDER)
   } catch {
-    // ignore
   }
 }
 
@@ -241,7 +239,6 @@ export async function checkDeepDiverBadge(userId: string): Promise<void> {
 
     await addBadgeIfMissing(uid, BADGES.DEEP_DIVER)
   } catch {
-    // ignore
   }
 }
 
@@ -276,7 +273,6 @@ export async function checkOnFireBadge(userId: string): Promise<void> {
 
     await addBadgeIfMissing(uid, BADGES.ON_FIRE)
   } catch {
-    // ignore
   }
 }
 
@@ -288,6 +284,5 @@ export async function awardGraphArchitectBadge(userId: string): Promise<void> {
     const uid = ensureValidUUID(userId)
     await addBadgeIfMissing(uid, BADGES.GRAPH_ARCHITECT)
   } catch {
-    // ignore
   }
 }

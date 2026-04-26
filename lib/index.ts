@@ -29,10 +29,6 @@
  * ```
  */
 
-// ============================================================================
-// CORE UTILITIES
-// ============================================================================
-
 export {
   cn,
   generateUUID,
@@ -72,10 +68,6 @@ export {
 } from "./utils/server"
 export type { ClusterViewMode, ClusterVisibility, AppLocale } from "./utils/server"
 
-// ============================================================================
-// ERROR HANDLING
-// ============================================================================
-
 export {
   getErrorMessage,
   errorResponse,
@@ -84,21 +76,9 @@ export {
   handleSupabaseError
 } from "./errors/httpResponses"
 
-// ============================================================================
-// VALIDATION
-// ============================================================================
-
 export { normalizeClusterDescription } from "./validation/formValidation"
 
-// ============================================================================
-// SCHEMAS (Zod & Types) - use @/lib/schemas or @/lib/schemas/types
-// ============================================================================
-
 export * from "./schemas"
-
-// ============================================================================
-// DATABASE OPERATIONS
-// ============================================================================
 
 export {
   getSingleRecord,
@@ -114,10 +94,6 @@ export {
   canUserViewBug
 } from "./db/crudOperations"
 
-// ============================================================================
-// CONFIGURATION (Database, Storage, Auth)
-// ============================================================================
-
 export { env } from "./config"
 export {
   supabase,
@@ -129,10 +105,6 @@ export {
   auth
 } from "./config"
 
-// ============================================================================
-// AUTH HELPERS
-// ============================================================================
-
 export {
   checkAuth,
   requireAuth,
@@ -143,15 +115,7 @@ export {
   type ActionResponse
 } from "./auth/helpers"
 
-// ============================================================================
-// API HANDLERS
-// ============================================================================
-
 export { createApiHandler, createBugHandler, createSolutionHandler } from "./api/routeHandlers"
-
-// ============================================================================
-// GAMIFICATION
-// ============================================================================
 
 export { getBadgeLabel, BADGE_LABELS, getRankForXp, getProgressToNextRank } from "./gamification/badgesRanks"
 export {
@@ -165,10 +129,6 @@ export {
   RANKS
 } from "./gamification/awardXp"
 
-// ============================================================================
-// FILE HANDLING
-// ============================================================================
-
 export { parseFormData } from "./api/parseForms"
 export {
   handleFileUploads,
@@ -176,15 +136,7 @@ export {
   uploadAvatarFile
 } from "./storage/s3Uploads"
 
-// ============================================================================
-// GRAPH
-// ============================================================================
-
 export { buildBugSubgraph } from "./graph/buildSubgraph"
-
-// ============================================================================
-// WORKSPACES
-// ============================================================================
 
 export {
   WORKSPACE_VIEW_TYPE_VALUES,
@@ -194,15 +146,7 @@ export {
 } from "./workspaces/viewTypes"
 export type { WorkspaceViewType, WorkspaceViewTypeDefinition } from "./workspaces/viewTypes"
 
-// ============================================================================
-// VIEWS
-// ============================================================================
-
 export { incrementViewCount, getViewCount } from "./views"
-
-// ============================================================================
-// AI / LLM
-// ============================================================================
 
 export {
   generateChatCompletion,
@@ -211,9 +155,5 @@ export {
   type GenerateOptions,
   type GenerateResult,
 } from "./ai/llm"
-
-// ============================================================================
-// FAQ
-// ============================================================================
 
 export { FAQ_ITEMS } from "./faq"

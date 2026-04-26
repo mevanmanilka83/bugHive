@@ -54,7 +54,6 @@ interface BugGraphDialogProps {
   clusterId?: string
 }
 
-// --- Local Types to avoid import issues from API routes ---
 type NodeType =
   | "bug"
   | "cluster"
@@ -154,8 +153,6 @@ type RelatedBugItem = {
 
 const GRAPH_DEPTH = 2
 const GRAPH_LIMIT = 25
-
-// --- Visual Configuration ---
 
 const nodeTypeColors: Record<string, string> = {
   bug: "bg-blue-500 border-blue-600",

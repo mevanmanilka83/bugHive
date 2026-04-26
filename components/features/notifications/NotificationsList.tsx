@@ -75,7 +75,6 @@ export function NotificationsList({ userId }: NotificationsListProps) {
         body: JSON.stringify({ read: true }),
       })
     } catch {
-      // ignore
     } finally {
       window.dispatchEvent(new Event("notification:updated"))
     }
@@ -92,7 +91,6 @@ export function NotificationsList({ userId }: NotificationsListProps) {
         body: JSON.stringify({ read: false }),
       })
     } catch {
-      // ignore
     } finally {
       window.dispatchEvent(new Event("notification:updated"))
     }

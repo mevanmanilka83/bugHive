@@ -11,10 +11,6 @@
  * For server components/API routes, import from @/lib or @/lib/utils.
  */
 
-// ============================================================================
-// RE-EXPORT CLIENT-SAFE UTILITIES
-// ============================================================================
-
 export {
   cn,
   generateUUID,
@@ -61,10 +57,6 @@ export {
   type AppLocale,
   fetchWithRetry,
 } from "./client"
-
-// ============================================================================
-// DATA PROCESSING UTILITIES (Server-only)
-// ============================================================================
 
 /**
  * Adds created_at and updated_at timestamps to data
@@ -116,10 +108,6 @@ export function parseQueryFilters(searchParams: URLSearchParams | null): {
   
   return { filterField, filterValue, limit }
 }
-
-// ============================================================================
-// ROUTE PARAMETER UTILITIES (Server-only)
-// ============================================================================
 
 /**
  * Extract route ID from Next.js 15 App Router context params

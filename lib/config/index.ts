@@ -14,21 +14,9 @@
 import { S3Client } from "@aws-sdk/client-s3"
 import { env } from "./environment"
 
-// ============================================================================
-// ENVIRONMENT VARIABLES
-// ============================================================================
-
 export { env }
 
-// ============================================================================
-// SUPABASE CONFIGURATION
-// ============================================================================
-
 export { supabase, getSupabaseAdmin } from "./supabaseClient"
-
-// ============================================================================
-// AWS S3 CONFIGURATION
-// ============================================================================
 
 function validateS3Config() {
   if (!env.awsAccessKeyId) {
@@ -45,7 +33,6 @@ function validateS3Config() {
   }
 }
 
-// Lazy initialization to ensure env vars are loaded
 let _s3Client: S3Client | null = null
 
 export function getS3Client(): S3Client {
@@ -61,9 +48,5 @@ export function getS3Client(): S3Client {
   }
   return _s3Client
 }
-
-// ============================================================================
-// AUTHENTICATION CONFIGURATION
-// ============================================================================
 
 export { handlers, signIn, signOut, auth } from "../auth/config"

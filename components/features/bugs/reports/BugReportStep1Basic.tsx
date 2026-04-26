@@ -50,7 +50,6 @@ export function BugReportStep1Basic({
         )
         if (!cancelled) setAllTitles(titles)
       } catch {
-        // ignore
       } finally {
         if (!cancelled) setIsLoadingTitles(false)
       }

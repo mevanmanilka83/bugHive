@@ -275,7 +275,6 @@ export async function findRelatedItems(bug: any) {
         signature,
     })
 
-    // --- GitHub Fetch ---
     const githubToken = process.env.GITHUB_TOKEN
     const headers: Record<string, string> = {
         Accept: "application/vnd.github+json",
@@ -306,7 +305,6 @@ export async function findRelatedItems(bug: any) {
         console.error("GitHub search failed", e)
     }
 
-    // --- Stack Overflow Fetch ---
     const stackExchangeKey = process.env.STACK_EXCHANGE_API
     let stackQuestions: RelatedResult[] = []
     try {
@@ -324,7 +322,6 @@ export async function findRelatedItems(bug: any) {
 
                 let soRes = await fetch(soUrl.toString())
                 if (!soRes.ok) {
-                    // Try fallback
                     if (title) {
                         stackQuery = title.replace(/bug|issue|error/gi, "").trim()
                         soUrl.searchParams.set("q", stackQuery)
@@ -344,7 +341,6 @@ export async function findRelatedItems(bug: any) {
         console.error("StackOverflow search failed", e)
     }
 
-    // --- Internal Bug Fetch ---
     const allRecords = await getMultipleRecords("bugs")
     const filteredRecords = allRecords.filter((record: any) => {
         if (record.id === bugId) return false
@@ -352,7 +348,6 @@ export async function findRelatedItems(bug: any) {
         return visibility !== "private"
     })
 
-    // Use calculateRelevance to find internal bugs that are semantically related
     const internalBugs = filteredRecords
         .map((record: any) => {
             const { score, reasons } = calculateRelevance(bug, record)

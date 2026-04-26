@@ -11,20 +11,12 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-// ============================================================================
-// TAILWIND UTILITIES
-// ============================================================================
-
 /**
  * Merges Tailwind CSS classes with proper precedence
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-
-// ============================================================================
-// UUID GENERATION & VALIDATION
-// ============================================================================
 
 /**
  * Generates a random UUID v4
@@ -82,10 +74,6 @@ export function ensureValidUUID(userId: string | undefined): string {
   return generateUUID()
 }
 
-// ============================================================================
-// EMAIL & USERNAME UTILITIES
-// ============================================================================
-
 /**
  * Extracts username from email address
  */
@@ -94,10 +82,6 @@ export function extractUsernameFromEmail(email: string | null | undefined, fallb
   const parts = email.split('@')
   return parts[0] || fallback
 }
-
-// ============================================================================
-// HTML UTILITIES
-// ============================================================================
 
 /**
  * Strip HTML tags for plain-text snippet (e.g. list previews, search).
@@ -126,10 +110,6 @@ export function isHtmlContent(s: string): boolean {
   return t.startsWith("<") && t.endsWith(">")
 }
 
-// ============================================================================
-// CLIENT PREFERENCES (localStorage)
-// ============================================================================
-
 export const CLUSTER_VIEW_MODE_KEY = "bugHive.clusterViewMode"
 export type ClusterViewMode = "grid" | "list" | "compact"
 
@@ -145,10 +125,6 @@ export function setClusterViewMode(mode: ClusterViewMode): void {
   window.localStorage.setItem(CLUSTER_VIEW_MODE_KEY, mode)
   window.dispatchEvent(new Event("settings:clusterViewMode"))
 }
-
-// ============================================================================
-// RECENTLY VIEWED (localStorage)
-// ============================================================================
 
 export const RECENTLY_VIEWED_BUGS_KEY = "bugHive.recentlyViewed.bugs"
 
@@ -196,10 +172,6 @@ export function addRecentlyViewedBug(
   window.dispatchEvent(new Event("recentlyViewed:bugs"))
 }
 
-// ============================================================================
-// CLUSTER PREFERENCES (localStorage)
-// ============================================================================
-
 export const CLUSTER_DEFAULT_VISIBILITY_KEY = "bugHive.clusterDefaults.visibility"
 export const CLUSTER_INVITE_ALLOW_ANYONE_KEY = "bugHive.clusterDefaults.inviteAllowAnyone"
 export const CLUSTER_INVITE_AUTO_ACCEPT_KEY = "bugHive.clusterDefaults.inviteAutoAccept"
@@ -217,10 +189,6 @@ export function setClusterDefaultVisibility(value: ClusterVisibility): void {
   window.localStorage.setItem(CLUSTER_DEFAULT_VISIBILITY_KEY, value)
   window.dispatchEvent(new Event("settings:clusters"))
 }
-
-// ============================================================================
-// NOTIFICATION PREFERENCES (localStorage)
-// ============================================================================
 
 export const NOTIFICATION_EMAIL_INVITES_KEY = "bugHive.notifications.emailInvites"
 export const NOTIFICATION_EMAIL_JOIN_REQUESTS_KEY = "bugHive.notifications.emailJoinRequests"
@@ -295,10 +263,6 @@ export function setClusterInviteAutoAccept(value: boolean): void {
   window.dispatchEvent(new Event("settings:clusters"))
 }
 
-// ============================================================================
-// LANGUAGE / LOCALE (localStorage)
-// ============================================================================
-
 export const LOCALE_KEY = "bugHive.locale"
 export type AppLocale = "en" | "es" | "fr" | "de"
 
@@ -325,10 +289,6 @@ export function setAppLocale(locale: AppLocale): void {
 export function getLocaleLabel(locale: AppLocale): string {
   return LOCALE_LABELS[locale]
 }
-
-// ============================================================================
-// HTTP UTILITIES (client-safe)
-// ============================================================================
 
 type RetryOptions = {
   attempts?: number
@@ -367,6 +327,5 @@ export async function fetchWithRetry(
       throw lastErr
     }
   }
-  // Unreachable, but keeps TS happy.
   throw lastErr
 }

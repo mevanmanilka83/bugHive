@@ -139,7 +139,6 @@ export function PublicSidebarNav({
           data?.notifications?.filter((n: any) => !n.read).length || 0
         setNotificationCount(unreadCount)
       } catch {
-        // ignore
       }
     }
 

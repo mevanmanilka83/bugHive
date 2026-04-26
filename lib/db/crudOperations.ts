@@ -123,10 +123,6 @@ export async function deleteRecord(
   if (error) throw error
 }
 
-// ============================================================================
-// CLUSTER OPERATIONS
-// ============================================================================
-
 /**
  * Fetch cluster by ID with error handling
  * 

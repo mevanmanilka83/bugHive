@@ -328,7 +328,6 @@ export function WorkspaceCanvas({
             const data = await res.json()
             setIdeas(data.ideas ?? [])
         } catch {
-            // ignore
         } finally {
             setIdeasLoading(false)
         }
