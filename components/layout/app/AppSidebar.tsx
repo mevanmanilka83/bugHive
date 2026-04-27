@@ -143,7 +143,7 @@ export function AppSidebar({
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="/dashboard" className="flex items-center gap-2">
+              <a href="/" className="flex items-center gap-2">
                 <Image
                   src="/logo.png"
                   alt="BugHive logo"
