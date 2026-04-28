@@ -93,22 +93,23 @@ export async function buildBugSubgraph(
         connectedIds.add(otherId)
         const nodeId = otherId
         const relCreatedAt = (rel as { created_at?: string }).created_at ?? null
+        const edgeType = normalizeRelationshipType(rel.relationship_type)
+        const nodeType = semanticNodeType(edgeType)
         if (!nodes.some((n) => n.id === nodeId)) {
           nodes.push({
             id: nodeId,
-            type: "bug",
+            type: nodeType,
             label: (otherBug.title || "Bug").slice(0, 40),
             data: {
               title: otherBug.title,
               description: otherBug.description?.slice(0, 100),
-              type: "bug",
+              type: nodeType,
               url: `/bugs/${otherBug.id}`,
               upvotes: otherBug.upvotes_count ?? 0,
               created_at: relCreatedAt,
             },
           })
         }
-        const edgeType = normalizeRelationshipType(rel.relationship_type)
         edges.push({
           id: `rel-${rel.id}`,
           source: isSourceCenter ? centerId : nodeId,
@@ -221,4 +222,11 @@ function normalizeRelationshipType(t: string): string {
     related_to: "RELATE",
   }
   return map[upper.toLowerCase()] || "RELATE"
+}
+
+function semanticNodeType(edgeType: string): string {
+  if (edgeType === "CAUSE_OF") return "cause"
+  if (edgeType === "SOLUTION_FOR") return "solution"
+  if (edgeType === "EVIDENCE_FOR") return "evidence"
+  return "bug"
 }

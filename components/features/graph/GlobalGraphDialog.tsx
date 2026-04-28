@@ -47,16 +47,16 @@ interface GlobalGraphDialogProps {
 }
 
 const nodeTypeColors: Record<string, string> = {
-    bug: "bg-blue-500/10 border-blue-500/50 text-blue-500",
-    cluster: "bg-purple-500/10 border-purple-500/50 text-purple-500",
-    tag: "bg-green-500/10 border-green-500/50 text-green-500",
-    environment: "bg-slate-500/10 border-slate-500/50 text-slate-500",
-    component: "bg-pink-500/10 border-pink-500/50 text-pink-500",
-    github_issue: "bg-zinc-700/10 border-zinc-500/50 text-zinc-500",
-    stack_overflow: "bg-slate-600/10 border-slate-600/50 text-slate-600",
-    cause: "bg-slate-500/10 border-slate-500/50 text-slate-500",
-    evidence: "bg-cyan-500/10 border-cyan-500/50 text-cyan-500",
-    solution: "bg-emerald-500/10 border-emerald-500/50 text-emerald-500",
+    bug: "bg-brand-blue/10 border-brand-blue/40 text-brand-blue",
+    cluster: "bg-primary/10 border-primary/40 text-primary",
+    tag: "bg-icon-orange/10 border-icon-orange/40 text-icon-orange",
+    environment: "bg-secondary/80 border-secondary-foreground/20 text-secondary-foreground",
+    component: "bg-accent/80 border-accent-foreground/20 text-accent-foreground",
+    github_issue: "bg-foreground/10 border-foreground/20 text-foreground",
+    stack_overflow: "bg-icon-orange/10 border-icon-orange/40 text-icon-orange",
+    cause: "bg-destructive/10 border-destructive/40 text-destructive",
+    evidence: "bg-brand-blue/10 border-brand-blue/40 text-brand-blue",
+    solution: "bg-primary/10 border-primary/40 text-primary",
 }
 
 const nodeTypeIcons: Record<string, React.ReactNode> = {
@@ -434,7 +434,7 @@ export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDia
                             <Button
                                 variant="default"
                                 size="sm"
-                                className="shrink-0 gap-2 bg-indigo-600 hover:bg-indigo-700 text-white border-transparent"
+                                className="shrink-0 gap-2"
                                 onClick={handleSaveWorkspace}
                                 disabled={saving}
                             >
@@ -442,14 +442,16 @@ export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDia
                                 Save to Workspace
                             </Button>
                         )}
-                        <button
+                        <Button
                             onClick={() => onOpenChange(false)}
-                            className="inline-flex items-center justify-center rounded-md p-2 hover:bg-muted/50 transition-colors"
+                            variant="default"
+                            size="sm"
+                            className="gap-2"
                             aria-label="Close dialog"
                         >
                             <X className="h-4 w-4" />
-                            <span className="sr-only">Close</span>
-                        </button>
+                            Close
+                        </Button>
                     </div>
                 </DialogHeader>
 
@@ -516,19 +518,19 @@ export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDia
                                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Legend</h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-none bg-blue-500" /> Bug
+                                            <div className="w-2 h-2 rounded-none bg-brand-blue" /> Bug
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-none bg-muted" /> Cluster
+                                            <div className="w-2 h-2 rounded-none bg-primary" /> Cluster
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-none bg-slate-500" /> Cause
+                                            <div className="w-2 h-2 rounded-none bg-destructive" /> Cause
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-none bg-cyan-500" /> Evidence
+                                            <div className="w-2 h-2 rounded-none bg-brand-blue" /> Evidence
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="w-2 h-2 rounded-none bg-emerald-500" /> Solution
+                                            <div className="w-2 h-2 rounded-none bg-primary" /> Solution
                                         </div>
                                     </div>
                                 </div>

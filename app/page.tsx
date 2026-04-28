@@ -62,7 +62,7 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="flex w-full justify-end sm:w-auto">
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             {session ? (
-              <Button asChild variant="outline" className="px-4 sm:w-auto">
+              <Button asChild variant="decorations" size="default" className="px-4 sm:w-auto">
                 <Link href="/unanswered">Unanswered Queue</Link>
               </Button>
             ) : null}
