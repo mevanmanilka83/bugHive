@@ -10,8 +10,8 @@ jobs:
   ci:
     name: Type Check & Build
     runs-on: ubuntu-latest
-
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       # Gemini
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       # Database / Supabase
@@ -48,7 +48,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
