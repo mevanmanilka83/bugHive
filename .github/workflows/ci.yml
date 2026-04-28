@@ -30,7 +30,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-      # AI / External APIs
+      # AI / External API
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       STACK_EXCHANGE_API: ${{ secrets.STACK_EXCHANGE_API }}
       BUGZILLA_API_KEY: ${{ secrets.BUGZILLA_API_KEY }}
