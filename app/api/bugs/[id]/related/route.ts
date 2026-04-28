@@ -23,7 +23,31 @@ export type RelatedResult = {
   | "stack_overflow_question"
   | "bughive_public"
   | "bughive_cluster"
+  | "bugzilla_bug"
   snippet: string
+}
+
+type BugzillaBug = {
+  id: number
+  summary: string
+  status: string
+  resolution: string
+  product: string
+  component: string
+  creation_time?: string
+}
+
+function normalizeBugzillaBug(item: BugzillaBug): RelatedResult {
+  const snippet = [item.product, item.component, item.status !== "RESOLVED" ? item.status : item.resolution]
+    .filter(Boolean)
+    .join(" · ") || "Bugzilla report"
+  return {
+    id: `bz-${item.id}`,
+    title: item.summary,
+    url: `${process.env.BUGZILLA_BASE_URL ?? "https://bugzilla.mozilla.org"}/show_bug.cgi?id=${item.id}`,
+    source: "bugzilla_bug",
+    snippet,
+  }
 }
 
 type StackOverflowQuestion = {
@@ -570,10 +594,32 @@ export async function GET(
     })
 
     if (!signature.hardError && signature.languageTerms.length === 0 && signature.softTerms.length === 0) {
-      return successResponse({
-        results: [],
-        message: "No related GitHub issues found for this bug.",
-      })
+      // No recognizable signature — still try Bugzilla before giving up
+      const bugzillaKey = process.env.BUGZILLA_API_KEY
+      const bugzillaBase = (process.env.BUGZILLA_BASE_URL ?? "https://bugzilla.mozilla.org").replace(/\/$/, "")
+      let bugzillaBugs: RelatedResult[] = []
+      try {
+        const bzQuery = title.slice(0, 100)
+        if (bzQuery) {
+          const bzUrl = new URL(`${bugzillaBase}/rest/bug`)
+          bzUrl.searchParams.set("quicksearch", bzQuery)
+          bzUrl.searchParams.set("limit", String(MAX_RESULTS_PER_SOURCE))
+          bzUrl.searchParams.set("include_fields", "id,summary,status,resolution,product,component,creation_time")
+          if (bugzillaKey) bzUrl.searchParams.set("api_key", bugzillaKey)
+          const bzRes = await fetch(bzUrl.toString(), { headers: { Accept: "application/json" } })
+          if (bzRes.ok) {
+            const bzData = await bzRes.json()
+            bugzillaBugs = Array.isArray(bzData?.bugs)
+              ? (bzData.bugs as BugzillaBug[]).slice(0, MAX_RESULTS_PER_SOURCE).map(normalizeBugzillaBug)
+              : []
+          } else {
+            console.error(`Bugzilla API error ${bzRes.status}:`, await bzRes.text().catch(() => ""))
+          }
+        }
+      } catch (e) {
+        console.error("Bugzilla search failed (no-signature path)", e)
+      }
+      return successResponse({ results: bugzillaBugs })
     }
 
     let queries = await generateQueries({
@@ -943,7 +989,48 @@ export async function GET(
       .slice(0, MAX_RESULTS_PER_SOURCE)
       .map((x) => normalizeClusterBug(x.record, clusterId))
 
-    const results = [...scoredClusterBugs, ...scoredPublicBugs, ...finalIssues]
+    const bugzillaKey = process.env.BUGZILLA_API_KEY
+    const bugzillaBase = (process.env.BUGZILLA_BASE_URL ?? "https://bugzilla.mozilla.org").replace(/\/$/, "")
+    let bugzillaBugs: RelatedResult[] = []
+    try {
+      const bzQuery = [
+        signature.hardError,
+        signature.languageTerms[0],
+        signature.symptomPhrases[0],
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || title.slice(0, 100)
+
+      if (bzQuery) {
+        const bzUrl = new URL(`${bugzillaBase}/rest/bug`)
+        bzUrl.searchParams.set("quicksearch", bzQuery)
+        bzUrl.searchParams.set("limit", String(MAX_RESULTS_PER_SOURCE))
+        bzUrl.searchParams.set(
+          "include_fields",
+          "id,summary,status,resolution,product,component,creation_time"
+        )
+        if (bugzillaKey) bzUrl.searchParams.set("api_key", bugzillaKey)
+
+        const bzRes = await fetch(bzUrl.toString(), {
+          headers: { Accept: "application/json" },
+        })
+        if (bzRes.ok) {
+          const bzData = await bzRes.json()
+          bugzillaBugs = Array.isArray(bzData?.bugs)
+            ? (bzData.bugs as BugzillaBug[])
+                .slice(0, MAX_RESULTS_PER_SOURCE)
+                .map(normalizeBugzillaBug)
+            : []
+        } else {
+          console.error(`Bugzilla API error ${bzRes.status}:`, await bzRes.text().catch(() => ""))
+        }
+      }
+    } catch (e) {
+      console.error("Bugzilla search failed", e)
+    }
+
+    const results = [...scoredClusterBugs, ...scoredPublicBugs, ...finalIssues, ...bugzillaBugs]
 
     return successResponse({
       results,

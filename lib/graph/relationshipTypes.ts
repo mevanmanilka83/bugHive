@@ -20,6 +20,7 @@ export type RelatedResult = {
     | "stack_overflow_question"
     | "bughive_public"
     | "bughive_cluster"
+    | "bugzilla_bug"
     snippet: string
     relevanceScore?: number
     relevanceReasons?: string[]

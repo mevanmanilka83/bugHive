@@ -13,6 +13,7 @@ export type RelatedBugSource =
   | "bughive_public"
   | "bughive_cluster"
   | "stack_overflow_question"
+  | "bugzilla_bug"
 
 export type RelatedBugItem = {
   id: string
@@ -25,6 +26,7 @@ export type RelatedBugItem = {
 const GITHUB_SOURCES: RelatedBugSource[] = ["github_issue", "github_repo"]
 const STACK_SOURCES: RelatedBugSource[] = ["stack_overflow_question"]
 const BUGHIVE_SOURCES: RelatedBugSource[] = ["bughive_public", "bughive_cluster"]
+const BUGZILLA_SOURCES: RelatedBugSource[] = ["bugzilla_bug"]
 
 function isGitHub(item: RelatedBugItem) {
   return GITHUB_SOURCES.includes(item.source)
@@ -36,6 +38,10 @@ function isStackOverflow(item: RelatedBugItem) {
 
 function isBugHive(item: RelatedBugItem) {
   return BUGHIVE_SOURCES.includes(item.source)
+}
+
+function isBugzilla(item: RelatedBugItem) {
+  return BUGZILLA_SOURCES.includes(item.source)
 }
 
 interface RelatedBugsPanelProps {
@@ -94,6 +100,7 @@ export function RelatedBugsPanel({
   const githubItems = React.useMemo(() => items.filter(isGitHub), [items])
   const stackItems = React.useMemo(() => items.filter(isStackOverflow), [items])
   const bughiveItems = React.useMemo(() => items.filter(isBugHive), [items])
+  const bugzillaItems = React.useMemo(() => items.filter(isBugzilla), [items])
 
   const linkBaseClass = cn(
     "flex items-start w-full min-w-0 rounded-md px-2 py-2 text-left text-sm leading-normal",
@@ -150,7 +157,8 @@ export function RelatedBugsPanel({
             </p>
           ) : githubItems.length === 0 &&
             stackItems.length === 0 &&
-            bughiveItems.length === 0 ? (
+            bughiveItems.length === 0 &&
+            bugzillaItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center px-4">
               <p className="text-sm font-medium text-foreground/80">No related bugs found</p>
               <p className="text-xs text-muted-foreground mt-1.5">We couldn&apos;t find similar issues in your linked sources.</p>
@@ -190,6 +198,30 @@ export function RelatedBugsPanel({
                   <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
                     {stackItems.map((item) => (
                       <li key={`so-${item.id}`}>
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className={linkBaseClass}
+                          title={decodeHtml(item.title)}
+                        >
+                          <span className="flex-1">{decodeHtml(item.title)}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {/* Bugzilla bugs */}
+              {bugzillaItems.length > 0 && (
+                <section aria-label="Bugzilla bugs" className="w-full">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
+                    Bugzilla bugs
+                  </h4>
+                  <ul className="space-y-0.5 m-0 p-0 list-none" role="list">
+                    {bugzillaItems.map((item) => (
+                      <li key={`bz-${item.id}`}>
                         <a
                           href={item.url}
                           target="_blank"
