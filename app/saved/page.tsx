@@ -14,7 +14,7 @@ export default async function SavedPage() {
         <div className="rounded-lg border border-border/40 bg-card p-6 mb-6 mt-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h1 className="text-xl font-semibold sm:text-2xl">Saved bugs</h1>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild className="px-4">
               <Link href="/saved/board">Open board</Link>
             </Button>
           </div>

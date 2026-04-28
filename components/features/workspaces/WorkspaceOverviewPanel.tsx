@@ -119,7 +119,7 @@ export function WorkspaceOverviewPanel({
       </div>
 
       <div className="flex justify-end">
-        <Button asChild variant="outline" size="sm">
+        <Button asChild className="px-4">
           <Link href="/workspaces">Back to saved graphs</Link>
         </Button>
       </div>

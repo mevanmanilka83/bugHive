@@ -40,7 +40,7 @@ export default async function WorkspacesOverviewPage() {
       <div className="max-w-5xl">
         <div className="mb-6 mt-4 rounded-none border border-border/40 bg-card p-6">
           <div className="mb-3">
-            <Button asChild variant="outline" size="sm">
+            <Button asChild className="px-4">
               <Link href="/workspaces" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Saved graphs

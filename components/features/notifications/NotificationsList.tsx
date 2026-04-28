@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { IconBell, IconCheck, IconUsers, IconMail, IconBug, IconX, IconUserPlus, IconBulb } from "@tabler/icons-react"
+import { IconAlertTriangle, IconBell, IconCheck, IconUsers, IconX, IconUserPlus, IconBulb } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -198,7 +198,7 @@ export function NotificationsList({
         return <IconUsers className="size-5" />
       case 'bug_assigned':
       case 'bug_updated':
-        return <IconBug className="size-5" />
+        return <IconAlertTriangle className="size-5" />
       case 'solution_created':
         return <IconBulb className="size-5" />
       default:
@@ -406,7 +406,7 @@ function NotificationCard({
                 ) : null}
                 {notification.bug_id && notification.type !== "cluster_join_request" ? (
                   <span className="flex items-center gap-1">
-                    <IconBug className="size-3" />
+                    <IconAlertTriangle className="size-3" />
                     Bug
                   </span>
                 ) : null}
@@ -416,7 +416,7 @@ function NotificationCard({
 
           <div className="flex items-center gap-2 flex-shrink-0">
             {canOpen ? (
-              <Button asChild variant="outline" size="sm" className="h-8">
+              <Button asChild className="px-4">
                 <Link
                   href={href as string}
                   onClick={() => {
@@ -428,9 +428,7 @@ function NotificationCard({
               </Button>
             ) : null}
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8"
+              className="px-4"
               onClick={() => (isUnread ? onMarkRead() : onMarkUnread())}
             >
               {isUnread ? "Mark read" : "Mark unread"}

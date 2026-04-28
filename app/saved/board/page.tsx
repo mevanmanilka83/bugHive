@@ -13,7 +13,7 @@ export default async function SavedBoardPage() {
       <div className="max-w-6xl">
         <div className="rounded-lg border border-border/40 bg-card p-6 mb-6 mt-4">
           <div className="mb-3">
-            <Button asChild variant="outline" size="sm">
+            <Button asChild className="px-4">
               <Link href="/saved" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Saved bugs list

@@ -112,10 +112,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
               />
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
                 disabled={isUploadingAvatar}
                 onClick={() => avatarInputRef.current?.click()}
+                className="px-4"
               >
                 {isUploadingAvatar ? (
                   <IconLoader2 className="size-4 animate-spin" />
@@ -190,7 +189,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               type="button"
               onClick={() => router.push("/settings")}
               disabled={isSubmitting}
-              className="font-semibold bg-background border-border hover:bg-muted/50"
+              className="px-4"
             >
               Cancel
             </Button>
