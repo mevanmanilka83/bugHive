@@ -93,7 +93,6 @@ export async function GET(request: Request) {
                             data: {
                                 type: "SIMILAR",
                                 confidence: score,
-                                origin: "fallback_similarity",
                                 created_at: new Date().toISOString(),
                             },
                         })
