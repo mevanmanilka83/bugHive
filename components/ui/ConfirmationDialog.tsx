@@ -47,7 +47,6 @@ export function ConfirmationDialog({
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="mt-6 flex flex-row justify-end gap-2 sm:gap-3">
-                    {/* secondary: one clear frame (outline + extra border classes stacked visually) */}
                     <Button
                         variant="secondary"
                         size="lg"
@@ -58,7 +57,6 @@ export function ConfirmationDialog({
                     >
                         {cancelText}
                     </Button>
-                    {/* Avoid shared `variant="destructive"` here: it stacks borders + ring-inset and reads as a broken “double box”. */}
                     <Button
                         variant={variant === "destructive" ? "ghost" : variant}
                         size="lg"

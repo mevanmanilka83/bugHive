@@ -44,12 +44,12 @@ export async function GET() {
     const stats: StatsResponse = {
       questions,
       answers,
-      comments: 0, // No dedicated comments table; solutions serve as answers
+      comments: 0,
       upvotes,
-      teams: clusters, // Teams = clusters in BugHive
+      teams: clusters,
       clusters,
       unanswered,
-      usersOnline: null, // Presence not implemented; optional for future
+      usersOnline: null,
     }
 
     return NextResponse.json(stats)

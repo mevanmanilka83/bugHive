@@ -90,7 +90,6 @@ export function TagsList() {
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
         <Input
@@ -121,7 +120,6 @@ export function TagsList() {
         ) : null}
       </div>
 
-      {/* Tags Grid */}
       <div className="rounded-none border border-border/40 bg-card p-6">
         {filteredTags.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -165,7 +163,6 @@ export function TagsList() {
         )}
       </div>
 
-      {/* Stats */}
       <div className="rounded-none border border-border/40 bg-card p-4">
         <p className="text-xs text-muted-foreground">
           Showing {filteredTags.length} of {tags.length} tags

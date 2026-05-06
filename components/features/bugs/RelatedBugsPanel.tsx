@@ -120,7 +120,6 @@ export function RelatedBugsPanel({
   return (
     <div className={cn("flex flex-col min-h-0", className)}>
       <div className="rounded-xl border border-border/60 bg-card shadow-sm flex flex-col w-full overflow-hidden min-h-0 h-[360px]">
-        {/* Header with clear refresh affordance */}
         <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-border/50 shrink-0 bg-muted/30">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Related bugs
@@ -144,7 +143,6 @@ export function RelatedBugsPanel({
           </Button>
         </div>
 
-        {/* Scrollable content with restrained max height */}
         <div
           className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-1 pb-6 scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent"
           style={{ scrollbarGutter: "stable" }}
@@ -165,7 +163,6 @@ export function RelatedBugsPanel({
             </div>
           ) : (
             <div className="flex flex-col gap-5 items-start">
-              {/* GitHub issues */}
               {githubItems.length > 0 && (
                 <section aria-label="GitHub issues" className="w-full">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
@@ -189,7 +186,6 @@ export function RelatedBugsPanel({
                 </section>
               )}
 
-              {/* Stack Overflow questions */}
               {stackItems.length > 0 && (
                 <section aria-label="Stack Overflow questions" className="w-full">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
@@ -213,7 +209,6 @@ export function RelatedBugsPanel({
                 </section>
               )}
 
-              {/* Bugzilla bugs */}
               {bugzillaItems.length > 0 && (
                 <section aria-label="Bugzilla bugs" className="w-full">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">
@@ -237,7 +232,6 @@ export function RelatedBugsPanel({
                 </section>
               )}
 
-              {/* BugHive bugs */}
               {bughiveItems.length > 0 && (
                 <section aria-label="BugHive bugs" className="w-full">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/90 pb-1.5 mb-1.5 border-b border-border/40 flex items-center gap-2 px-1">

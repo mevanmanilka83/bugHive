@@ -120,7 +120,6 @@ export function HomeHeaderUser({ session }: HomeHeaderUserProps) {
           </div>
         </DialogContent>
       </Dialog>
-      {/* User menu (single, consistent trigger across breakpoints) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button

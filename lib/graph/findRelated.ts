@@ -355,11 +355,11 @@ export async function findRelatedItems(bug: any) {
                 ...normalizePublicBug(record),
                 relevanceScore: score,
                 relevanceReasons: reasons,
-                description: record.description || "", // preserve description for graph prompt
+                description: record.description || "",
                 created_at: record.created_at ?? undefined,
             }
         })
-        .filter((item: any) => item.relevanceScore > 0.1) // Only return relevant
+        .filter((item: any) => item.relevanceScore > 0.1)
         .sort((a: any, b: any) => b.relevanceScore - a.relevanceScore)
         .slice(0, 10)
 

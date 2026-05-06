@@ -74,7 +74,6 @@ export function PasswordForm({ authProvider }: PasswordFormProps) {
 
       {canChangePassword && (
         <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-          {/* Current Password */}
           <div className="space-y-2.5">
             <Label htmlFor="currentPassword" className="flex items-center gap-2">
               <IconLock className="size-4 text-muted-foreground" />
@@ -102,7 +101,6 @@ export function PasswordForm({ authProvider }: PasswordFormProps) {
             )}
           </div>
 
-          {/* New Password */}
           <div className="space-y-2.5">
             <Label htmlFor="newPassword" className="flex items-center gap-2">
               <IconLock className="size-4 text-muted-foreground" />
@@ -133,7 +131,6 @@ export function PasswordForm({ authProvider }: PasswordFormProps) {
             </p>
           </div>
 
-          {/* Confirm New Password */}
           <div className="space-y-2.5">
             <Label htmlFor="confirmPassword" className="flex items-center gap-2">
               <IconLock className="size-4 text-muted-foreground" />

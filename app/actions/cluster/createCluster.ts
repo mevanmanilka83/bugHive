@@ -39,7 +39,7 @@ export async function createCluster(
     if (!authResult.success) {
       return authResult
     }
-    const { session } = authResult // session is guaranteed to be AuthenticatedSession here
+    const { session } = authResult
 
     if (!formData) {
       return { success: false, error: "Form data is required" }
@@ -95,8 +95,8 @@ export async function createCluster(
       visibility,
       owner_id: userId,
       owner_username: ownerUsername,
-      members: [userId], // Owner is automatically a member
-      members_usernames: [ownerUsername], // Owner is automatically a member
+      members: [userId],
+      members_usernames: [ownerUsername],
       invites: inviteTargets.map((target) => target.userId),
     }
 

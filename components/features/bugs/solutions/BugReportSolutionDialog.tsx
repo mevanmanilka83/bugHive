@@ -78,10 +78,10 @@ export function SolutionDialog({
   }
 
     const stepFields: Record<number, (keyof SolutionPayload)[]> = {
-      1: ['title', 'description'], // Required fields
-      2: ['solution_type', 'priority', 'status'], // Required fields
-      3: [], // Optional fields - no validation needed
-      4: [] // Review step
+      1: ['title', 'description'],
+      2: ['solution_type', 'priority', 'status'],
+      3: [],
+      4: []
     }
 
   function validateStep(stepNumber: number): boolean {
@@ -267,7 +267,7 @@ export function SolutionDialog({
     })
 
     setAttachments(prev => [...prev, ...newAttachments])
-    event.target.value = '' // Reset input
+    event.target.value = ''
   }
 
   function removeAttachment(id: string) {
@@ -331,7 +331,6 @@ export function SolutionDialog({
             </div>
           )}
 
-          {/* Multi-step progress indicator – compact on mobile */}
           <div className="w-full min-w-0 py-3 sm:py-5">
             <div className="flex items-start w-full gap-0 min-w-0">
               {[
@@ -348,7 +347,6 @@ export function SolutionDialog({
                 return (
                   <React.Fragment key={num}>
                     <div className="flex flex-col items-center shrink-0">
-                      {/* Fixed-height row so connector line aligns with circle center */}
                       <div className="flex h-7 items-center justify-center sm:h-9">
                         <div
                           className={`
@@ -403,12 +401,10 @@ export function SolutionDialog({
             </div>
           </div>
 
-          {/* Mobile: show current step name when stepper labels are hidden */}
           <p className="sm:hidden text-sm font-medium text-muted-foreground mt-1 mb-2 min-w-0" aria-live="polite">
             Step {step}: {["Basic Info", "Solution Type", "Details", "Review"][step - 1]}
           </p>
 
-          {/* Step 1: Basic Information */}
           {step === 1 && (
             <SolutionStep1Basic
               title={formData.title}
@@ -424,7 +420,6 @@ export function SolutionDialog({
             />
           )}
 
-          {/* Step 2: Solution Type & Priority */}
           {step === 2 && (
             <SolutionStep2Type
               solutionType={formData.solution_type}
@@ -441,7 +436,6 @@ export function SolutionDialog({
             />
           )}
 
-          {/* Step 3: Additional Details & Attachments */}
           {step === 3 && (
             <SolutionStep3Details
               assignee={formData.assignee}
@@ -461,7 +455,6 @@ export function SolutionDialog({
             />
           )}
 
-          {/* Step 4: Review & Submit */}
           {step === 4 && (
             <SolutionStep4Review
               title={formData.title}

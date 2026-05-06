@@ -153,7 +153,6 @@ export function GraphIdeaDialog({
           <DialogTitle className="text-base sm:text-lg">Add idea / solution</DialogTitle>
         </DialogHeader>
 
-        {/* Multi-step progress indicator – copied from BugReportDialog for visual parity */}
         <div className="w-full min-w-0 py-3 sm:py-5">
           <div className="flex items-start w-full gap-0 min-w-0">
             {[
@@ -169,7 +168,6 @@ export function GraphIdeaDialog({
               return (
                 <React.Fragment key={num}>
                   <div className="flex flex-col items-center shrink-0">
-                    {/* Fixed-height row so connector line aligns with circle center */}
                     <div className="flex h-7 items-center justify-center sm:h-9">
                       <div
                         className={`
@@ -223,12 +221,10 @@ export function GraphIdeaDialog({
           </div>
         </div>
 
-        {/* Mobile: show current step name when stepper labels are hidden */}
         <p className="sm:hidden text-sm font-medium text-muted-foreground mt-1 mb-2 min-w-0" aria-live="polite">
           Step {step}: {["Basic Info", "Priority", "Behavior", "Details"][step - 1]}
         </p>
 
-        {/* Step Content */}
         <div className="px-2 pb-2">
           {step === 1 && (
             <GraphIdeaStep1Basics

@@ -73,7 +73,7 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
               return {
                 id: memberId,
                 email: user?.email || null,
-                name: storedUsername, // Use stored username
+                name: storedUsername,
                 image: user?.image || null,
                 isOwner: memberId === ownerId,
               }
@@ -90,7 +90,7 @@ export function ClusterMembersDialog({ open, onOpenChange, cluster }: ClusterMem
             return {
               id: memberId,
               email: null,
-            name: storedUsername, // Use stored username
+            name: storedUsername,
               image: null,
               isOwner: memberId === ownerId,
           }

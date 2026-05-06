@@ -89,7 +89,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
   return (
     <div className="max-w-2xl">
       <form onSubmit={handleSubmit} className="flex flex-col">
-        {/* Section 1: Profile picture */}
         <section className={cn(SECTION_DIVIDER, "pb-8")}>
           <h2 className={SECTION_LABEL}>Profile picture</h2>
           <div className="flex items-center gap-5">
@@ -127,7 +126,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </div>
         </section>
 
-        {/* Section 2: Personal details */}
         <section className={cn(SECTION_DIVIDER, "pb-8 pt-10")}>
           <h2 className={SECTION_LABEL}>Personal details</h2>
           <div className="space-y-6">
@@ -178,7 +176,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </div>
         </section>
 
-        {/* Section 3: Form actions */}
         <section className="pt-12" aria-label="Form actions">
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isSubmitting}>
@@ -197,7 +194,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </section>
       </form>
 
-      {/* Section 4: Account information — secondary, read-only metadata */}
       <section
         className="mt-8 rounded-lg border border-border/50 bg-muted/20 px-6 py-6"
         aria-label="Account information"

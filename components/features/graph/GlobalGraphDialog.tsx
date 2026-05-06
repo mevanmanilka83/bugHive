@@ -297,21 +297,21 @@ export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDia
             }))
 
             const flowEdges: Edge[] = (data.edges || []).map((edge: any, idx: number) => {
-                let stroke = "hsl(var(--muted-foreground))" // default gray
+                let stroke = "hsl(var(--muted-foreground))"
                 const type = String(edge.type || "")
                 const normalizedType = type.toUpperCase()
                 if (normalizedType === "SOLUTION_FOR" || normalizedType === "EVIDENCE_FOR" || type === "solution_for" || type === "verified_by") {
-                    stroke = "#10b981" // green
+                    stroke = "#10b981"
                 } else if (normalizedType === "CAUSE_OF" || type === "cause_of") {
-                    stroke = "#64748b" // slate
+                    stroke = "#64748b"
                 } else if (normalizedType === "SIMILAR" || normalizedType === "DUPLICATE" || type === "similar_to" || type === "duplicate_of") {
-                    stroke = "#3b82f6" // blue
+                    stroke = "#3b82f6"
                 } else if (type === "contradicts" || type === "disputes" || type === "conflicts" || type === "condractary" || type === "condractary-dispute" || type === "conflict") {
-                    stroke = "#ef4444" // red
+                    stroke = "#ef4444"
                 } else if (type === "supports" || type === "complements" || type === "support" || type === "complement" || type === "complementary -support") {
-                    stroke = "#8b5cf6" // violet
+                    stroke = "#8b5cf6"
                 } else if (type === "belongs_to") {
-                    stroke = "#a855f7" // purple
+                    stroke = "#a855f7"
                 }
 
                 return {
@@ -456,7 +456,6 @@ export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDia
                 </DialogHeader>
 
                 <div className="flex-1 relative w-full h-full min-h-0 overflow-hidden bg-muted/5">
-                    {/* Graph Canvas - Absolute Full Fill */}
                     <div className="absolute inset-0 z-0">
                         {loading && (
                             <div className="absolute inset-0 flex flex-col gap-3 items-center justify-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl z-50">
@@ -538,7 +537,6 @@ export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDia
                         </ReactFlow>
                     </div>
 
-                    {/* Insights Sidebar - Absolute Overlay */}
                     <div className={cn(
                         "absolute top-0 right-0 bottom-0 w-80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-l border-white/20 dark:border-white/10 shadow-2xl shadow-black/10 z-20 transition-transform duration-300 ease-in-out",
                         selectedNode ? "translate-x-0" : "translate-x-full"
@@ -609,7 +607,6 @@ export function GlobalGraphDialog({ open, onOpenChange, userId }: GlobalGraphDia
                                                                     </Badge>
                                                                 </div>
 
-                                                                {/* Metrics Row */}
                                                                 <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground pl-4">
                                                                     {edgeData.confidence && (
                                                                         <div className="flex items-center gap-1">

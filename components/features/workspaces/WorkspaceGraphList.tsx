@@ -65,7 +65,6 @@ export function WorkspaceGraphList({
 
   return (
     <div className="w-full">
-      {/* Search Bar */}
       <div className="px-4 pt-3 pb-2 border-b">
         <div className="relative w-full">
           <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -96,7 +95,6 @@ export function WorkspaceGraphList({
         </div>
       </div>
 
-      {/* Graph List */}
       <div className="space-y-0">
         {filteredGraphs.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
@@ -118,7 +116,6 @@ export function WorkspaceGraphList({
                 href={`${detailBasePath}/${g.id}`}
                 className="group flex items-center justify-between gap-3 py-3 px-4 border-b hover:bg-muted/40 transition-colors sm:gap-3"
               >
-                {/* Main Content Area */}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-semibold text-brand-blue group-hover:underline mb-1.5 line-clamp-2 transition-all">
                     {g.title || "Untitled graph"}
@@ -141,7 +138,6 @@ export function WorkspaceGraphList({
                     </span>
                   </div>
                 </div>
-                {/* Right Column - Metadata */}
                 <div className="flex flex-col items-end gap-0.5 min-w-[80px] flex-shrink-0 text-xs sm:min-w-[120px]">
                   <div className="mt-auto text-muted-foreground text-right text-xs">
                     {g.updated_at ? new Date(g.updated_at).toLocaleDateString() : "—"}

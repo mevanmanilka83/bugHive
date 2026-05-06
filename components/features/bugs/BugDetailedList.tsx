@@ -223,8 +223,8 @@ export function BugDetailedList({
         })
       case "most_viewed":
         return working.sort((a, b) => {
-          const viewsA = a.views || 0 // Dynamic view count
-          const viewsB = b.views || 0 // Dynamic view count
+          const viewsA = a.views || 0
+          const viewsB = b.views || 0
           return viewsB - viewsA
         })
       default:
@@ -344,9 +344,7 @@ export function BugDetailedList({
 
   return (
     <div className="w-full">
-      {/* Page Header */}
       <div className="mb-6 space-y-2">
-        {/* Title and primary actions */}
         {(showTitle || showReportButton) && (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             {showTitle && (
@@ -374,14 +372,12 @@ export function BugDetailedList({
           </div>
         ) : (
           <>
-            {/* Count, tabs, and filter – styled similar to StackOverflow */}
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 sm:flex-1">
                 <p className="shrink-0 text-sm text-muted-foreground">
                   {displayCount.toLocaleString()} bugs
                 </p>
 
-                {/* Tabs group – wraps on small screens, inline on larger */}
                 <div className="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
                   <div className="flex flex-wrap sm:inline-flex sm:flex-nowrap items-center gap-1 rounded-none border bg-background px-1 py-1 min-w-0">
                     <button
@@ -429,7 +425,6 @@ export function BugDetailedList({
                       Unanswered
                     </button>
 
-                    {/* More dropdown for extra, project-specific modes */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
@@ -457,7 +452,6 @@ export function BugDetailedList({
                 </div>
               </div>
 
-              {/* Filter Button */}
               {onOpenFilters && (
                 <div className="flex justify-end sm:justify-end">
                   <Button
@@ -473,7 +467,6 @@ export function BugDetailedList({
               )}
             </div>
 
-            {/* Filters panel (rendered directly under tabs when open) */}
             {filtersOpen && renderFiltersPanel && (
               <div className="mt-3">
                 {renderFiltersPanel()}
@@ -483,7 +476,6 @@ export function BugDetailedList({
         )}
       </div>
 
-      {/* Bug List */}
       <div className="space-y-0 border-t">
         {isLoading ? (
           <div className="pt-3">
@@ -520,9 +512,7 @@ export function BugDetailedList({
               key={bug.id}
               className="flex gap-2 py-2 px-2 border-b hover:bg-muted/50 transition-colors sm:gap-3 sm:py-3 sm:px-3"
             >
-              {/* Left Column - Vote Buttons and Engagement Metrics */}
               <div className="flex flex-col items-center gap-1 min-w-[56px] flex-shrink-0 sm:min-w-[70px]">
-                {/* Vote Buttons */}
                 <VoteButtons
                   bugId={bug.id}
                   initialUpvotes={upvotes}
@@ -532,7 +522,6 @@ export function BugDetailedList({
                 />
               </div>
 
-              {/* Main Content Area */}
               <div className="flex-1 min-w-0">
                 <h3
                   className="text-base font-semibold text-brand-blue hover:underline mb-1.5 cursor-pointer line-clamp-2 transition-all"
@@ -568,7 +557,6 @@ export function BugDetailedList({
                   )}
                 </div>
 
-                {/* Engagement pills – votes, answers, views, share */}
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
                   <div className="inline-flex items-center gap-2  bg-muted px-3 py-1 text-muted-foreground">
                     <span className="font-semibold text-foreground">
@@ -636,7 +624,6 @@ export function BugDetailedList({
                 </div>
               </div>
 
-              {/* Right Column - User Metadata (aligned vertically, date at bottom-right) */}
               <div className="flex flex-col items-end gap-0.5 min-w-[80px] flex-shrink-0 text-xs sm:min-w-[120px]">
                 <div className="flex items-center gap-1.5">
                   <Avatar className="size-5">
@@ -670,7 +657,6 @@ export function BugDetailedList({
         )}
       </div>
 
-      {/* Pagination */}
       {!isLoading && totalPages > 0 && (
         <div className="border-t bg-background/60 px-3 py-2">
           <Pagination className="mx-0">

@@ -20,7 +20,7 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
     if (!authResult.success) {
       return authResult
     }
-    const { session } = authResult // session is guaranteed to be AuthenticatedSession here
+    const { session } = authResult
 
     const links = formData.get('links') as string | null
 
@@ -32,8 +32,8 @@ export async function createBugSolution(formData: FormData, bugId: string): Prom
       status: (formData.get('status') as string) || 'draft',
       assignee: formData.get('assignee') as string | null || undefined,
       estimated_hours: formData.get('estimated_hours') as string | null || undefined,
-      links: links || undefined, // Pass as string for validation
-      attachments: [], // Will be validated separately
+      links: links || undefined,
+      attachments: [],
     }
 
     const validation = validateWithSchema(getBugSolutionSchema(), validationData)

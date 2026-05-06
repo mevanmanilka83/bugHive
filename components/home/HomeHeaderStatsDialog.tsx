@@ -249,7 +249,6 @@ export function HomeHeaderStatsDialog() {
         showCloseButton={false}
         className="sm:max-w-2xl lg:max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden sm:rounded-xl shadow-2xl border-border/60"
       >
-        {/* Sticky header with explicit close */}
         <div className="sticky top-0 z-20 border-b border-border/50 bg-background/95 backdrop-blur-md px-5 py-4 flex-shrink-0 flex items-center justify-between shadow-sm">
           <div>
             <DialogTitle className="text-lg font-bold leading-tight tracking-tight text-foreground">
@@ -268,13 +267,11 @@ export function HomeHeaderStatsDialog() {
           </button>
         </div>
 
-        {/* Main scrollable content */}
         <div className="flex-1 overflow-y-auto p-5 min-h-0">
           {loading ? (
             <HomeHeaderStatsDialogSkeleton />
           ) : data ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* Left column */}
               <div className="flex flex-col gap-5">
                 <SectionCard
                   title="Community stats"
@@ -369,7 +366,6 @@ export function HomeHeaderStatsDialog() {
                 </SectionCard>
               </div>
 
-              {/* Right column */}
               <div className="flex flex-col gap-5">
                 <SectionCard
                   title="Popular unanswered"

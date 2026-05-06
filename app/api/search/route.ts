@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const q = (searchParams.get("q") ?? "").trim()
-    const type = searchParams.get("type") ?? "all" // bugs | clusters | all
+    const type = searchParams.get("type") ?? "all"
 
     const supabase = getSupabaseAdmin() as any
 

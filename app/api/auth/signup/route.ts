@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
     const result = await saveUserToSupabase(
       email,
       name,
-      null, // image
-      null, // email_verified
+      null,
+      null,
       passwordHash
     )
 

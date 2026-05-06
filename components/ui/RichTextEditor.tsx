@@ -218,7 +218,6 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
       className={`flex flex-wrap items-center gap-0.5 border-b bg-muted/40 px-2 py-1.5 ${hasError ? "border-red-500" : "border-border"}`}
       role="toolbar"
     >
-      {/* Block type */}
       <div className="relative">
         <button
           type="button"
@@ -248,7 +247,6 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
         )}
       </div>
       <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-      {/* Bold, Italic, Underline, Strikethrough, Code */}
       <button
         type="button"
         onClick={() => commands.toggleBold?.()}
@@ -295,7 +293,6 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
         &lt; &gt;
       </button>
       <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-      {/* Link */}
       <button
         type="button"
         onClick={() => (linkOpen ? setLinkOpen(false) : openLinkCard())}
@@ -349,7 +346,6 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
         </>
       )}
       <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-      {/* Lists */}
       <button
         type="button"
         onClick={() => commands.toggleUnorderedList?.()}
@@ -377,7 +373,6 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
         </svg>
       </button>
       <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-      {/* Undo, Redo */}
       <button
         type="button"
         onClick={() => commands.undo?.()}
@@ -401,7 +396,6 @@ function Toolbar({ hasError }: { hasError?: boolean }) {
         </svg>
       </button>
       <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-      {/* Clear formatting */}
       <button
         type="button"
         onClick={clearFormatting}

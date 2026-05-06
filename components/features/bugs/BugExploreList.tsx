@@ -197,7 +197,7 @@ export function BugExploreList({
     }
     if (filters.dateCreatedTo) {
       const toDate = new Date(filters.dateCreatedTo)
-      toDate.setHours(23, 59, 59, 999) // End of day
+      toDate.setHours(23, 59, 59, 999)
       filtered = filtered.filter(bug => {
         const created = bug.created_at ? new Date(bug.created_at) : null
         return created && created <= toDate
@@ -213,7 +213,7 @@ export function BugExploreList({
     }
     if (filters.dateModifiedTo) {
       const toDate = new Date(filters.dateModifiedTo)
-      toDate.setHours(23, 59, 59, 999) // End of day
+      toDate.setHours(23, 59, 59, 999)
       filtered = filtered.filter(bug => {
         const modified = bug.updated_at ? new Date(bug.updated_at) : null
         return modified && modified <= toDate
@@ -356,9 +356,7 @@ export function BugExploreList({
         )}
       </div>
 
-      {/* Status and Priority in columns */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* Bug Status */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Bug Status</Label>
           <div className="space-y-2">
@@ -380,7 +378,6 @@ export function BugExploreList({
           </div>
         </div>
 
-        {/* Priority Level */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Priority Level</Label>
           <div className="space-y-2">
@@ -404,7 +401,6 @@ export function BugExploreList({
       </div>
       <Separator />
 
-      {/* Environment */}
       <div className="space-y-2">
         <Label className="text-sm font-medium">Environment</Label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -445,9 +441,7 @@ export function BugExploreList({
       </div>
       <Separator />
 
-      {/* Date filters in columns */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Date Created */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Date Created</Label>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -474,7 +468,6 @@ export function BugExploreList({
           </div>
         </div>
 
-        {/* Date Modified */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Date Modified</Label>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -503,7 +496,6 @@ export function BugExploreList({
       </div>
       <Separator />
 
-      {/* Assignee */}
       {availableAssignees.length > 0 && (
         <div className="space-y-2">
           <Label htmlFor="assignee" className="text-sm font-medium">Assignee</Label>
@@ -531,7 +523,6 @@ export function BugExploreList({
         </div>
       )}
 
-      {/* Tags - Full width with scroll */}
       {availableTags.length > 0 && (
         <>
           <Separator />
@@ -582,7 +573,6 @@ export function BugExploreList({
 
   return (
     <div>
-      {/* Search Bar */}
       <div className="mb-4">
         <div className="relative">
           <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />

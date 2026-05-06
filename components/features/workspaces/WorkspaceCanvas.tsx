@@ -52,7 +52,7 @@ type GraphIdea = { id: string; kind: string; title: string; content: string | nu
 type IdeaKind = "idea" | "solution" | "fix"
 
 const nodeTypeColors: Record<string, string> = {
-    bug: "bg-rose-500/10 border-rose-500/50 text-rose-600",          // issue/bug = red
+    bug: "bg-rose-500/10 border-rose-500/50 text-rose-600",
     cluster: "bg-purple-500/10 border-purple-500/50 text-purple-500",
     cause: "bg-slate-500/10 border-slate-500/50 text-slate-500",
     solution: "bg-emerald-500/10 border-emerald-500/50 text-emerald-600",
@@ -104,7 +104,6 @@ function IdeaNode({ id, data, selected }: { id: string; data: any; selected: boo
             selected ? "ring-2 ring-primary border-primary scale-105" : "hover:border-primary/50",
             "bg-card/90"
         )}>
-            {/* Edit & delete icons for this idea node */}
             <div className="absolute right-1.5 top-1.5 z-10 flex items-center gap-1">
                 <button
                     type="button"
@@ -716,7 +715,6 @@ export function WorkspaceCanvas({
                             })
                         )}
                     </div>
-                    {/* Creation/edit is handled in GraphIdeaDialog */}
                 </Panel>
             )}
 

@@ -466,7 +466,6 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
 
   return (
     <>
-      {/* Title row only: votes left, title + subtitle right */}
       <div className="mt-2 flex flex-row gap-2 sm:gap-3 items-start flex-nowrap mb-4">
         <div className="flex flex-col items-center gap-1 min-w-[56px] flex-shrink-0 sm:min-w-[70px]">
           <VoteButtons
@@ -706,7 +705,7 @@ export function BugDetailsView({ bug, userId = null }: BugDetailsViewProps) {
                 const upvotes = (solution as any).upvotes_count || 0
                 const downvotes = (solution as any).downvotes_count || 0
                 const score = upvotes - downvotes
-                const views = (solution as any).views || 0 // Dynamic view count
+                const views = (solution as any).views || 0
                 const tags = Array.isArray(currentBug.tags) ? currentBug.tags : []
                 const plainDescription = stripHtml(solution.description || "")
                 const descriptionSnippet =

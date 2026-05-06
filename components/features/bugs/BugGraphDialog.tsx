@@ -32,8 +32,6 @@ import { cn } from "@/lib"
 import { TimeTravelBar, timeToOpacity, useTimeTravelPlayback } from "@/components/features/graph/TimeTravelBar"
 import dagre from "@dagrejs/dagre"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface BugGraphDialogProps {
   open: boolean; onOpenChange: (open: boolean) => void
   bugId: string; clusterId?: string
@@ -55,8 +53,6 @@ interface GraphData {
 type RelatedBugItem = { id: string; title: string; url: string; source: string; snippet: string; relevanceScore?: number; created_at?: string }
 type LayoutMode = "radial"|"dagre-tb"|"dagre-lr"
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
-
 const GRAPH_DEPTH = 2
 const GRAPH_LIMIT = 25
 const NODE_W = 320
@@ -70,7 +66,6 @@ const NODE_CFG: Record<string, { bg: string; text: string; dot: string; label: s
   component:      { bg: "#9A3412", text: "#fff", dot: "#9A3412", label: "Component" },
   github_issue:   { bg: "#44403C", text: "#fff", dot: "#78716C", label: "GitHub Issue" },
   stack_overflow: { bg: "#EA580C", text: "#fff", dot: "#EA580C", label: "Stack Overflow" },
-  // Semantic trio — each a clearly distinct universal color
   cause:          { bg: "#DC2626", text: "#fff", dot: "#DC2626", label: "Cause" },
   solution:       { bg: "#16A34A", text: "#fff", dot: "#16A34A", label: "Solution" },
   evidence:       { bg: "#7C3AED", text: "#fff", dot: "#7C3AED", label: "Evidence" },
@@ -120,8 +115,6 @@ const EDGE_STYLES: Record<string, { stroke: string; strokeDasharray?: string }> 
   condractary_dispute: { stroke: "#B91C1C", strokeDasharray: "4,3" },
 }
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
-
 function radialLayout(nodes: Node[], edges: Edge[], centerId: string): Node[] {
   if (!nodes.length) return nodes
   const adj = new Map<string, Set<string>>()
@@ -143,7 +136,6 @@ function radialLayout(nodes: Node[], edges: Edge[], centerId: string): Node[] {
   const orphans = nodes.filter((n) => !visited.has(n.id)).map((n) => n.id)
   if (orphans.length) rings.push(orphans)
 
-  // Much larger radii so nodes never overlap
   const RADII = [0, 380, 700, 990, 1240, 1460]
   const pos = new Map<string, { x: number; y: number }>()
   pos.set(rootId, { x: 0, y: 0 })
@@ -151,7 +143,6 @@ function radialLayout(nodes: Node[], edges: Edge[], centerId: string): Node[] {
   rings.forEach((ring, ri) => {
     if (ri === 0) return
     const r = RADII[ri] ?? RADII[RADII.length - 1] + (ri - RADII.length + 1) * 240
-    // Spread nodes in the ring evenly, start from top (-π/2)
     const angleStep = (Math.PI * 2) / ring.length
     ring.forEach((id, i) => {
       const angle = angleStep * i - Math.PI / 2
@@ -168,7 +159,7 @@ function dagreLayout(nodes: Node[], edges: Edge[], dir: "TB" | "LR"): Node[] {
   g.setDefaultEdgeLabel(() => ({}))
   g.setGraph({ rankdir: dir, nodesep: dir === "TB" ? 80 : 60, ranksep: dir === "TB" ? 180 : 220, marginx: 100, marginy: 100 })
   nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: NODE_H }))
-  edges.forEach((e) => { try { g.setEdge(e.source, e.target) } catch { /* skip */ } })
+  edges.forEach((e) => { try { g.setEdge(e.source, e.target) } catch {} })
   dagre.layout(g)
   return nodes.map((n) => { const p = g.node(n.id); return { ...n, position: { x: (p?.x ?? 0) - NODE_W / 2, y: (p?.y ?? 0) - NODE_H / 2 } } })
 }
@@ -178,25 +169,22 @@ function layoutNodes(nodes: Node[], edges: Edge[], mode: LayoutMode, centerId: s
   return dagreLayout(nodes, edges, mode === "dagre-tb" ? "TB" : "LR")
 }
 
-// ─── Custom Node ──────────────────────────────────────────────────────────────
-
 function CustomNode({ data, selected }: { data: any; selected: boolean }) {
   const type: string = data.type || "bug"
   const isFocus = Boolean(data.isFocus)
   const cfg = isFocus ? { bg: FOCUS_BG, text: "#fff", label: "Root Bug" } : (NODE_CFG[type] ?? NODE_CFG.bug)
   const icon = NODE_ICONS[type] ?? <Bug className="h-4 w-4" />
   const conns: number = data._conns ?? 0
+  const isSemantic = type === "cause" || type === "solution" || type === "evidence"
 
   return (
     <div style={{ width: NODE_W }} className="relative">
-      {/* Focus pulse rings */}
       {isFocus && (
         <>
           <div className="absolute pointer-events-none animate-pulse" style={{ inset: -4, borderRadius: 20, border: `2px solid ${FOCUS_BG}66`, animationDuration: "2.2s" }} />
         </>
       )}
 
-      {/* Card */}
       <div
         className="rounded-2xl overflow-hidden"
         style={{
@@ -210,13 +198,11 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
           transition: "box-shadow 0.2s, transform 0.2s",
         }}
       >
-        {/* Handles */}
         <FlowHandle type="target"  position={Position.Top}    className="!w-2 !h-2 !border-2 !border-white !opacity-0 !top-[-4px]" />
         <FlowHandle type="target"  position={Position.Left}   id="lt" className="!w-2 !h-2 !border-2 !border-white !opacity-0 !left-[-4px]" />
         <FlowHandle type="source"  position={Position.Right}  id="rs" className="!w-2 !h-2 !border-2 !border-white !opacity-0 !right-[-4px]" />
         <FlowHandle type="source"  position={Position.Bottom} className="!w-2 !h-2 !border-2 !border-white !opacity-0 !bottom-[-4px]" />
 
-        {/* Header */}
         <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: cfg.bg }}>
           <div className="rounded-lg p-1.5 shrink-0" style={{ background: "rgba(255,255,255,0.2)" }}>
             <div style={{ color: cfg.text }}>{icon}</div>
@@ -235,8 +221,10 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
           ) : null}
         </div>
 
-        {/* Body */}
-        <div className="flex max-h-[calc(190px-44px-3px)] flex-col overflow-hidden bg-card px-3 pt-2.5 pb-2.5">
+        <div
+          className="flex flex-col overflow-hidden bg-card px-3 pt-2.5 pb-2.5"
+          style={{ maxHeight: `calc(${NODE_H}px - 44px - 4px${isSemantic ? " - 26px" : ""})` }}
+        >
           <p className="mb-1.5 overflow-hidden text-[14px] font-semibold leading-snug text-foreground [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
             {data.label || "Untitled"}
           </p>
@@ -245,7 +233,6 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
               {data.description}
             </p>
           )}
-          {/* Chips row */}
           {(data.confidence || data.impact || (data.upvotes ?? 0) > 0 || (data.downvotes ?? 0) > 0) && (
             <div className="flex flex-wrap gap-1 mt-1.5">
               {data.confidence && (
@@ -270,24 +257,22 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
               )}
             </div>
           )}
-
-          {/* Semantic type badge — only for cause / solution / evidence */}
-          {(type === "cause" || type === "solution" || type === "evidence") && (
-            <div className="mt-2 pt-1.5" style={{ borderTop: `1px solid ${cfg.bg}28` }}>
-              <span
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold tracking-wide"
-                style={{ background: `${cfg.bg}18`, color: cfg.bg }}
-              >
-                {type === "cause"    && <AlertTriangle className="h-2.5 w-2.5" style={{ animation: "none" }} />}
-                {type === "solution" && <CheckCircle2  className="h-2.5 w-2.5" style={{ animation: "none" }} />}
-                {type === "evidence" && <ShieldCheck   className="h-2.5 w-2.5" style={{ animation: "none" }} />}
-                {type === "cause" ? "Root Cause" : type === "solution" ? "Solution" : "Evidence"}
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Bottom accent bar */}
+        {isSemantic && (
+          <div className="px-3 py-1 bg-card" style={{ borderTop: `1px solid ${cfg.bg}28` }}>
+            <span
+              className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold tracking-wide"
+              style={{ background: `${cfg.bg}18`, color: cfg.bg }}
+            >
+              {type === "cause"    && <AlertTriangle className="h-2.5 w-2.5" />}
+              {type === "solution" && <CheckCircle2  className="h-2.5 w-2.5" />}
+              {type === "evidence" && <ShieldCheck   className="h-2.5 w-2.5" />}
+              {type === "cause" ? "Root Cause" : type === "solution" ? "Solution" : "Evidence"}
+            </span>
+          </div>
+        )}
+
         <div style={{ height: 4, background: cfg.bg }} />
       </div>
     </div>
@@ -299,8 +284,6 @@ const nodeTypes: NodeTypes = {
   evidence: CustomNode, github_issue: CustomNode, stack_overflow: CustomNode,
   cluster: CustomNode, tag: CustomNode, environment: CustomNode, component: CustomNode,
 }
-
-// ─── Custom Edge ──────────────────────────────────────────────────────────────
 
 function CustomBadgeEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd, label, data }: EdgeProps) {
   const [hovered, setHovered] = React.useState(false)
@@ -354,8 +337,6 @@ function CustomBadgeEdge({ id, sourceX, sourceY, targetX, targetY, sourcePositio
 
 const edgeTypes = { custom: CustomBadgeEdge }
 
-// ─── Cache + SO merge ─────────────────────────────────────────────────────────
-
 const graphCache = new Map<string, GraphData>()
 
 function mergeSOIntoGraph(graph: GraphData, items: RelatedBugItem[], fallback: string): GraphData {
@@ -379,8 +360,6 @@ function mergeSOIntoGraph(graph: GraphData, items: RelatedBugItem[], fallback: s
   })
   return { ...graph, center: centerId, nodes, edges }
 }
-
-// ─── Toolbar ──────────────────────────────────────────────────────────────────
 
 function LayoutToolbar({ layout, onLayout, onFitView, nodeCount, edgeCount }: {
   layout: LayoutMode; onLayout: (m: LayoutMode) => void; onFitView: () => void; nodeCount: number; edgeCount: number
@@ -420,8 +399,6 @@ function LayoutToolbar({ layout, onLayout, onFitView, nodeCount, edgeCount }: {
   )
 }
 
-// ─── Legend ───────────────────────────────────────────────────────────────────
-
 function LegendPanel() {
   const [open, setOpen] = React.useState(true)
   return (
@@ -451,8 +428,6 @@ function LegendPanel() {
     </div>
   )
 }
-
-// ─── Insights panel ───────────────────────────────────────────────────────────
 
 function InsightsPanel({ graphData }: { graphData: GraphData | null }) {
   const [open, setOpen] = React.useState(true)
@@ -501,8 +476,6 @@ function InsightsPanel({ graphData }: { graphData: GraphData | null }) {
   )
 }
 
-// ─── Search bar ───────────────────────────────────────────────────────────────
-
 function SearchBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div className="flex h-10 items-center gap-2 rounded-xl border border-primary/20 bg-card shadow-lg px-3 w-[220px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
@@ -522,8 +495,6 @@ function SearchBar({ value, onChange }: { value: string; onChange: (v: string) =
   )
 }
 
-// ─── Inner graph ──────────────────────────────────────────────────────────────
-
 interface InnerProps {
   nodes: Node[]; edges: Edge[]; onNodesChange: any; onEdgesChange: any
   onNodeClick: (e: React.MouseEvent, n: Node) => void; onPaneClick: () => void; onInit: (i: ReactFlowInstance) => void
@@ -537,7 +508,6 @@ interface InnerProps {
 function InnerGraph(p: InnerProps) {
   const { fitView } = useReactFlow()
 
-  // Re-centre whenever nodes are set or layout changes
   React.useEffect(() => {
     if (!p.nodes.length) return
     const t = setTimeout(() => fitView({ padding: 0.18, duration: 700 }), 80)
@@ -615,18 +585,15 @@ function InnerGraph(p: InnerProps) {
             style={{ bottom: 88, right: 8 }}
           />
 
-          {/* Top-left: search + insights */}
           <Panel position="top-left" className="flex flex-col gap-2 mt-2">
             <SearchBar value={p.searchQuery} onChange={p.onSearchChange} />
             <InsightsPanel graphData={p.graphData} />
           </Panel>
 
-          {/* Top-right: legend */}
           <Panel position="top-right" className="mt-2">
             <LegendPanel />
           </Panel>
 
-          {/* Bottom-center: layout toolbar */}
           <Panel position="bottom-center">
             <LayoutToolbar
               layout={p.layoutMode}
@@ -649,8 +616,6 @@ function InnerGraph(p: InnerProps) {
     </div>
   )
 }
-
-// ─── Main dialog ──────────────────────────────────────────────────────────────
 
 export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGraphDialogProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
@@ -771,7 +736,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
     buildAndSet(graphData, layout, selTime)
   }, [layout])
 
-  // Search dim
   React.useEffect(() => {
     if (!nodes.length) return
     if (!search.trim()) {
@@ -837,14 +801,12 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
 
   const nd = selectedNode?.data as any
 
-  // Lock body scroll while open
   React.useEffect(() => {
     if (open) { document.body.style.overflow = "hidden" }
     else { document.body.style.overflow = "" }
     return () => { document.body.style.overflow = "" }
   }, [open])
 
-  // Escape key to close
   React.useEffect(() => {
     if (!open) return
     const h = (e: KeyboardEvent) => { if (e.key === "Escape" && !saveOpen && !selectedNode) onOpenChange(false) }
@@ -854,20 +816,16 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
 
   return (
     <>
-      {/* ── Fullscreen graph – plain portal, bypasses Radix Dialog ── */}
       {open && typeof window !== "undefined" && createPortal(
         <>
-          {/* Backdrop */}
           <div className="fixed inset-0 bg-black/40 z-[9998]" aria-hidden="true" />
 
-          {/* Canvas – we own this element 100%, no Radix interference */}
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Bug Relationship Graph"
             className="fixed inset-0 z-[9999] flex flex-col overflow-hidden bg-background"
           >
-            {/* Header */}
             <div className="flex items-center gap-3 px-5 py-3 bg-card border-b border-border shrink-0 shadow-sm">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <GitBranch className="h-4 w-4 text-primary" />
@@ -903,7 +861,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
               </div>
             </div>
 
-            {/* Graph */}
             <div className="flex-1 min-h-0 flex flex-col">
               <ReactFlowProvider>
                 <InnerGraph
@@ -923,7 +880,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
         document.body
       )}
 
-      {/* ── Save dialog ───────────────────────────────────────────── */}
       <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -960,7 +916,6 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
         </DialogContent>
       </Dialog>
 
-      {/* ── Node detail dialog ────────────────────────────────────── */}
       <Dialog open={!!selectedNode} onOpenChange={(o) => !o && setSelectedNode(null)}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>

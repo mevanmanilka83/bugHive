@@ -17,7 +17,7 @@ export function getBugSolutionSchema() {
       .optional(),
     estimated_hours: z.string()
       .refine((val) => {
-        if (!val) return true // Optional field
+        if (!val) return true
         const num = parseFloat(val)
         return !isNaN(num) && num >= 0 && num <= 1000
       }, "Estimated hours must be a valid number between 0 and 1000")

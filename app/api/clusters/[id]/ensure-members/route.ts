@@ -35,7 +35,7 @@ export async function POST(
   const allMemberIds = [
     cluster.owner_id,
     ...(cluster.members || [])
-  ].filter((id, index, self) => self.indexOf(id) === index) // Remove duplicates
+  ].filter((id, index, self) => self.indexOf(id) === index)
 
   const { data: existingUsers } = await supabase
     .from('users')
@@ -55,7 +55,7 @@ export async function POST(
       .from('users')
       .upsert({
         id: memberId,
-        email: null, // We don't know the email
+        email: null,
         name: `User ${memberId.slice(0, 8)}`,
         image: null,
         email_verified: null,

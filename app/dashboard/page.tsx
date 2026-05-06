@@ -27,7 +27,7 @@ export default async function DashboardPage() {
       userEmail,
       user?.name || null,
       user?.image || null,
-      null // email_verified - could be set based on provider
+      null
     ).catch(() => {
     })
   }

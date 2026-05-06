@@ -146,7 +146,6 @@ export function TimeTravelBar({
           className="w-full h-2 rounded-full appearance-none bg-muted accent-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="Slide back in time to see how the graph grew"
         />
-        {/* Milestone markers */}
         {milestones.length > 0 &&
           milestones.map((t) => {
             const p = ((t - minTime) / range) * 100

@@ -44,7 +44,7 @@ export function isValidUrl(url: string): boolean {
 export function getLinksSchema() {
   return z.string()
     .refine((val) => {
-      if (!val) return true // Optional field
+      if (!val) return true
       const links = val.split(',').map(s => s.trim()).filter(Boolean)
       return links.every((link) => isValidUrl(link))
     }, "All links must be valid URLs starting with http(s)://")
