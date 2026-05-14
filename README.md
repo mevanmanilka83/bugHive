@@ -6,7 +6,11 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1-purple?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-3ecf8e?style=for-the-badge&logo=supabase)](https://supabase.com)
 
-A modern community-driven platform for discovering, reporting, and solving real bugs with AI-powered suggestions and collaborative workspaces.
+## About BugHive
+
+BugHive is a community-driven bug reporting and collaboration platform built to help teams and contributors discover, report, organize, and resolve real software issues. It combines AI-powered suggestions, structured workspaces, and shared activity tracking so bug triage and fixes stay coordinated.
+
+Whether you're managing an open-source project, coordinating across teams, or building a collaborative bug-squashing community, BugHive provides the tools to streamline issue triage, reduce duplicates, and accelerate resolution. Intelligent clustering groups related bugs, AI suggestions offer solutions, and real-time collaboration keeps contributors aligned every step of the way.
 
 ## Quick Start
 
@@ -28,17 +32,13 @@ Visit `http://localhost:3000` to get started.
 
 ## Features
 
-- 🐛 **Bug Reporting** - Share real issues with rich formatting and images
-- 🏷️ **Smart Tagging** - Organize by technology, domain, and custom tags
-- 🤖 **AI Solutions** - Get AI-powered suggestions for fixing bugs
-- 👥 **Collaboration** - Cluster related bugs and work with teams
-- 🔔 **Real-time Updates** - Stay notified of activity and contributions
-- 🏆 **Gamification** - Earn recognition and climb leaderboards
-- 📊 **Analytics** - Track trends and contributor stats
-
-## Tech Stack
-
-Next.js 15 • React 19 • TypeScript • Tailwind CSS • Supabase • Prisma • Auth.js • Google GenAI
+- **Bug Reporting** - Share real issues with rich formatting and images
+- **Smart Tagging** - Organize by technology, domain, and custom tags
+- **AI Solutions** - Get AI-powered suggestions for fixing bugs
+- **Collaboration** - Cluster related bugs and work with teams
+- **Real-time Updates** - Stay notified of activity and contributions
+- **Gamification** - Earn recognition and climb leaderboards
+- **Analytics** - Track trends and contributor stats
 
 ## Development
 
@@ -79,6 +79,3 @@ test/            # Test files
 
 Contributions are welcome! Please submit a Pull Request with your improvements.
 
-## License
-
-MIT
