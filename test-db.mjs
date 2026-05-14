@@ -25,4 +25,5 @@ client.connect()
   })
   .catch(err => {
     console.error('❌ Connection failed:', err.message)
+    process.exit(1)
   })
