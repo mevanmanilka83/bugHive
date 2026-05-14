@@ -804,7 +804,7 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
       toast.success(xp > 0 ? `+${xp} BugXP – Diagram saved to workspace` : "Diagram saved to your workspace")
       if (xp > 0) window.dispatchEvent(new CustomEvent("hunter:xp", { detail: { xp } }))
       setSaveOpen(false); onOpenChange(false)
-      setTimeout(() => router.push(`/workspaces/${d.graph.id}`), 150)
+      setTimeout(() => router.push(`/workspaces/${d.graph!.id}`), 150)
     } catch (e: any) { const message = e?.message || "Failed to save graph"; setError(message); toast.error(message) }
     finally { setSaving(false) }
   }

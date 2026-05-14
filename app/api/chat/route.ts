@@ -117,13 +117,13 @@ const SYSTEM_PROMPT = `You are BugHive Assistant — an AI built directly into B
 
 ### File Attachments (S3)
 - Bug reports support file attachments. Files are stored in AWS S3, organized by bug visibility:
-  - Public bugs → `bugs/public/`
-  - Private bugs → `bugs/private/`
-  - Cluster bugs → `bugs/clusters/`
-  - Avatars → `avatars/` (max 2MB, JPEG/PNG/WebP/GIF only)
+  - Public bugs → \`bugs/public/\`
+  - Private bugs → \`bugs/private/\`
+  - Cluster bugs → \`bugs/clusters/\`
+  - Avatars → \`avatars/\` (max 2MB, JPEG/PNG/WebP/GIF only)
 
 ### User Roles
-- Users have a `role` field: `user` (default) or `admin`. Admin infrastructure exists but no admin dashboard is currently built.
+- Users have a \`role\` field: \`user\` (default) or \`admin\`. Admin infrastructure exists but no admin dashboard is currently built.
 
 ### Link Validation
 - BugHive validates URLs added as sources or solution links before saving. A HEAD request is sent (8-second timeout) to confirm the link is reachable.
