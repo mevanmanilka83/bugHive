@@ -2,12 +2,6 @@
 
 import * as React from "react"
 import { createPortal } from "react-dom"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radioGroup"
@@ -784,15 +778,31 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
   async function handleSave() {
     try {
       setSaving(true)
-      const obj = rfi?.toObject() ?? { nodes, edges }
-      if (!obj.nodes?.length || !obj.edges) throw new Error("Graph is not ready to save yet")
+      const raw = rfi?.toObject() ?? { nodes, edges }
+      const saveNodes = Array.isArray(raw.nodes) ? raw.nodes : []
+      const saveEdges = Array.isArray(raw.edges) ? raw.edges : []
+      if (!saveNodes.length) throw new Error("Graph is not ready to save yet")
       const res = await fetch("/api/workspaces", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: saveTitle.trim() || `Graph – Bug #${bugId.slice(0,8)}`, nodes: obj.nodes, edges: obj.edges, origin_bug_id: bugId, origin_cluster_id: clusterId ?? null, is_public: savePublic }),
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: saveTitle.trim() || `Graph – Bug #${bugId.slice(0, 8)}`,
+          nodes: saveNodes,
+          edges: saveEdges,
+          origin_bug_id: bugId,
+          origin_cluster_id: clusterId ?? null,
+          is_public: savePublic,
+        }),
       })
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error) }
-      const d = await res.json()
-      if (d.xpEarned) { toast.success(`+${d.xpEarned} BugXP – Graph saved!`); window.dispatchEvent(new CustomEvent("hunter:xp", { detail: { xp: d.xpEarned } })) }
+      const d = (await res.json().catch(() => ({}))) as { error?: string; graph?: { id: string }; xpEarned?: number }
+      if (!res.ok) {
+        throw new Error(typeof d.error === "string" ? d.error : `Save failed (${res.status})`)
+      }
+      if (!d.graph?.id) throw new Error(typeof d.error === "string" ? d.error : "Save did not return a workspace graph")
+      const xp = typeof d.xpEarned === "number" ? d.xpEarned : 0
+      toast.success(xp > 0 ? `+${xp} BugXP – Diagram saved to workspace` : "Diagram saved to your workspace")
+      if (xp > 0) window.dispatchEvent(new CustomEvent("hunter:xp", { detail: { xp } }))
       setSaveOpen(false); onOpenChange(false)
       setTimeout(() => router.push(`/workspaces/${d.graph.id}`), 150)
     } catch (e: any) { const message = e?.message || "Failed to save graph"; setError(message); toast.error(message) }
@@ -876,97 +886,123 @@ export function BugGraphDialog({ open, onOpenChange, bugId, clusterId }: BugGrap
               </ReactFlowProvider>
             </div>
           </div>
+
+          {/* Save dialog — must live inside the portal to sit above z-[9999] */}
+          {saveOpen && (
+            <>
+              <div className="fixed inset-0 z-[10000] bg-black/60" onClick={() => setSaveOpen(false)} aria-hidden="true" />
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Save relationship diagram"
+                className="fixed left-1/2 top-1/2 z-[10001] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 shadow-2xl"
+              >
+                <div className="flex items-center gap-2 mb-5">
+                  <Save className="h-5 w-5 text-foreground" />
+                  <h2 className="text-base font-semibold">Save relationship diagram</h2>
+                </div>
+                <div className="grid gap-5">
+                  <div className="grid gap-2">
+                    <Label htmlFor="st" className="text-sm font-semibold">Title</Label>
+                    <input
+                      id="st"
+                      value={saveTitle}
+                      onChange={(e) => setSaveTitle(e.target.value)}
+                      placeholder="e.g. Crash on divide by zero – graph"
+                      className="w-full border-2 border-border focus:border-primary rounded-xl px-3 py-2.5 text-sm outline-none transition-colors bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-sm font-semibold">Visibility</Label>
+                    <RadioGroup value={savePublic ? "public" : "private"} onValueChange={(v) => setSavePublic(v === "public")} className="flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="private" id="vp" />
+                        <Label htmlFor="vp" className="cursor-pointer text-sm">{isCluster ? "Cluster private" : "Private – only you"}</Label>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem value="public" id="vb" />
+                        <Label htmlFor="vb" className="cursor-pointer text-sm">{isCluster ? "Cluster public" : "Public – anyone can view"}</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-3 mt-6">
+                  <Button variant="decorations" size="default" className="px-4" onClick={() => setSaveOpen(false)}>Close</Button>
+                  <Button variant="decorations" size="default" className="px-4" onClick={handleSave} disabled={saving}>
+                    {saving ? <div className="h-4 w-4 rounded-full border-2 border-current/30 border-t-current" style={{ animation: "spin 0.9s linear infinite" }} /> : <Save className="h-4 w-4" />}
+                    {saving ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Node details panel — must live inside the portal to sit above z-[9999] */}
+          {selectedNode && (
+            <>
+              <div className="fixed inset-0 z-[10000] bg-black/60" onClick={() => { setSelectedNode(null); if (graphData) buildAndSet(graphData, layout, selTime) }} aria-hidden="true" />
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Node Details"
+                className="fixed left-1/2 top-1/2 z-[10001] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
+              >
+                <div className="flex items-center gap-3 mb-4 pr-6">
+                  {nd?.type && (
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white" style={{ background: NODE_CFG[nd.type]?.dot ?? FOCUS_BG }}>
+                      {NODE_ICONS[nd.type] ?? <Bug className="h-4 w-4" />}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-semibold">{nd?.label || "Node Details"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {NODE_CFG[nd?.type]?.label ?? nd?.type?.replace(/_/g, " ")}
+                      {(nd?._conns ?? 0) > 0 && ` · ${nd._conns} connections`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setSelectedNode(null); if (graphData) buildAndSet(graphData, layout, selTime) }}
+                    className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {nd?.description && (
+                    <div className="text-[13px] text-muted-foreground bg-muted/50 p-3 rounded-xl leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words"
+                      dangerouslySetInnerHTML={{ __html: nd.description }} />
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {nd?.confidence && (
+                      <span className="text-[12px] bg-primary/10 text-primary rounded-full px-2.5 py-1 font-semibold">
+                        {Math.round(nd.confidence * 100)}% confidence
+                      </span>
+                    )}
+                    {nd?.impact && (
+                      <span className="text-[12px] bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full px-2.5 py-1 font-semibold">
+                        {nd.impact} impact
+                      </span>
+                    )}
+                  </div>
+                  {nd?.url && (
+                    <Button className="w-full gap-2" asChild>
+                      <a href={nd.url} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-4 w-4" />Open Resource
+                      </a>
+                    </Button>
+                  )}
+                  <div className="border-t pt-3 grid grid-cols-2 text-[10px] text-muted-foreground font-mono">
+                    <span>ID: {selectedNode.id.slice(0,20)}…</span>
+                    <span className="text-right">{Math.round(selectedNode.position.x)}, {Math.round(selectedNode.position.y)}</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </>,
         document.body
       )}
-
-      <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Save className="h-5 w-5" />Save relationship diagram</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="st" className="text-sm font-semibold">Title</Label>
-              <input id="st" value={saveTitle} onChange={(e) => setSaveTitle(e.target.value)}
-                placeholder="e.g. Crash on divide by zero – graph"
-                className="w-full border-2 border-border focus:border-primary rounded-xl px-3 py-2.5 text-sm outline-none transition-colors bg-card dark:focus:border-primary" />
-            </div>
-            <div className="grid gap-2">
-              <Label className="text-sm font-semibold">Visibility</Label>
-              <RadioGroup value={savePublic ? "public" : "private"} onValueChange={(v) => setSavePublic(v === "public")} className="flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <RadioGroupItem value="private" id="vp" />
-                  <Label htmlFor="vp" className="cursor-pointer text-sm">{isCluster ? "Cluster private" : "Private – only you"}</Label>
-                </div>
-                <div className="flex items-center gap-3">
-                  <RadioGroupItem value="public" id="vb" />
-                  <Label htmlFor="vb" className="cursor-pointer text-sm">{isCluster ? "Cluster public" : "Public – anyone can view"}</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="decorations" size="default" className="px-4" onClick={() => setSaveOpen(false)}>Close</Button>
-            <Button variant="decorations" size="default" className="px-4" onClick={handleSave} disabled={saving}>
-              {saving ? <div className="h-4 w-4 rounded-full border-2 border-current/30 border-t-current" style={{ animation: "spin 0.9s linear infinite" }} /> : <Save className="h-4 w-4" />}
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!selectedNode} onOpenChange={(o) => !o && setSelectedNode(null)}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-3 pr-6">
-              {nd?.type && (
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white" style={{ background: NODE_CFG[nd.type]?.dot ?? FOCUS_BG }}>
-                  {NODE_ICONS[nd.type] ?? <Bug className="h-4 w-4" />}
-                </div>
-              )}
-              <div className="min-w-0">
-                <DialogTitle className="truncate text-[15px]">{nd?.label || "Node Details"}</DialogTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {NODE_CFG[nd?.type]?.label ?? nd?.type?.replace(/_/g, " ")}
-                  {(nd?._conns ?? 0) > 0 && ` · ${nd._conns} connections`}
-                </p>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            {nd?.description && (
-              <div className="text-[13px] text-muted-foreground bg-muted/50 p-3 rounded-xl leading-relaxed prose prose-sm dark:prose-invert max-w-none break-words"
-                dangerouslySetInnerHTML={{ __html: nd.description }} />
-            )}
-            <div className="flex flex-wrap gap-2">
-              {nd?.confidence && (
-                <span className="text-[12px] bg-primary/10 text-primary rounded-full px-2.5 py-1 font-semibold">
-                  {Math.round(nd.confidence * 100)}% confidence
-                </span>
-              )}
-              {nd?.impact && (
-                <span className="text-[12px] bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full px-2.5 py-1 font-semibold">
-                  {nd.impact} impact
-                </span>
-              )}
-            </div>
-            {nd?.url && (
-              <Button className="w-full gap-2" asChild>
-                <a href={nd.url} target="_blank" rel="noreferrer">
-                  <ExternalLink className="h-4 w-4" />Open Resource
-                </a>
-              </Button>
-            )}
-            {selectedNode && (
-              <div className="border-t pt-3 grid grid-cols-2 text-[10px] text-muted-foreground font-mono">
-                <span>ID: {selectedNode.id.slice(0,20)}…</span>
-                <span className="text-right">{Math.round(selectedNode.position.x)}, {Math.round(selectedNode.position.y)}</span>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

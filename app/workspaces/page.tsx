@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react"
 import { PublicPageLayout } from "@/components/layout/public/PublicPageLayout"
 import { WorkspaceSuccessBanner } from "@/components/features/workspaces/WorkspaceSuccessBanner"
 import { WorkspaceGraphsPanel } from "@/components/features/workspaces/WorkspaceGraphsPanel"
+import { WorkspacesRealtimeSync } from "@/components/features/workspaces/WorkspacesRealtimeSync"
 import { Button } from "@/components/ui/button"
 
 export default async function WorkspacesPage({
@@ -67,6 +68,7 @@ export default async function WorkspacesPage({
 
   return (
     <PublicPageLayout session={session} sidebarActive="workspaces">
+      <WorkspacesRealtimeSync userId={session.user.id} />
       <div className="max-w-4xl">
         <WorkspaceSuccessBanner show={showSuccess} />
 
